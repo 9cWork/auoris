@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Auoris</title>
-<meta name="description" content="Auoris — a desktop AI agent for local and cloud models, with friends, parties and a game.">
+<meta name="description" content="Auoris — a desktop AI agent for local and cloud models, with friends, chat and rich presence.">
 <link rel="icon" href="logo.png">
 <style>
   :root { --bg: #0e1119; --panel: #161b27; --panel2: #1d2331; --border: #262d3d; --text: #e9edf5; --muted: #8b93a7;
@@ -48,8 +48,6 @@
   footer { text-align: center; padding: 40px 24px; color: var(--muted); font-size: 13.5px; }
 
   /* ---- account panel ---- */
-  #account { display: none; }
-  #account.show { display: block; }
   .acard { max-width: 400px; margin: 0 auto; background: var(--panel); border: 1px solid var(--border); border-radius: 18px; padding: 30px; }
   .acard h2 { text-align: center; margin-top: 0; font-size: 22px; }
   .asub { text-align: center; color: var(--muted); font-size: 13.5px; margin-top: -4px; margin-bottom: 20px; }
@@ -61,10 +59,37 @@
   #authErr.ok { color: var(--ok); }
   #authLinks { display: flex; justify-content: center; gap: 16px; font-size: 13px; margin-top: 14px; flex-wrap: wrap; }
   #authLinks a { cursor: pointer; }
-  .profcard { text-align: center; }
-  .pavatar { width: 64px; height: 64px; border-radius: 50%; display: grid; place-items: center; font-size: 26px; font-weight: 700; color: #fff; margin: 0 auto 14px; }
-  .profcard h3 { margin: 0 0 2px; } .profcard small { color: var(--muted); }
   .badge { display: inline-block; margin-top: 8px; font-size: 11px; border: 1px solid var(--acc); color: var(--acc); border-radius: 6px; padding: 2px 7px; }
+
+  /* ---- dashboard ---- */
+  #dash { display: grid; grid-template-columns: 260px 1fr; gap: 20px; align-items: start; }
+  @media (max-width: 760px) { #dash { grid-template-columns: 1fr; } }
+  .dcard { background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 20px; }
+  .pavatar { width: 60px; height: 60px; border-radius: 50%; display: grid; place-items: center; font-size: 24px; font-weight: 700; color: #fff; margin: 0 auto 10px; }
+  .dcard.prof { text-align: center; }
+  .dcard.prof input[type=text] { width: 100%; background: var(--panel2); border: 1px solid var(--border); color: var(--text); border-radius: 9px; padding: 8px 10px; font: inherit; text-align: center; margin-top: 10px; }
+  .swatches { display: flex; justify-content: center; gap: 6px; margin-top: 10px; }
+  .swatches i { width: 22px; height: 22px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; }
+  .swatches i.on { border-color: #fff; }
+  .dcard h4 { margin: 0 0 12px; font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+  #addFriendForm { display: flex; gap: 8px; margin-bottom: 14px; }
+  #addFriendForm input { flex: 1; background: var(--panel2); border: 1px solid var(--border); color: var(--text); border-radius: 9px; padding: 9px 12px; font: inherit; }
+  .frow { display: flex; align-items: center; gap: 10px; padding: 9px 4px; border-bottom: 1px solid var(--border); }
+  .frow:last-child { border-bottom: none; }
+  .fav { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; color: #fff; font-size: 13px; flex: none; background: var(--c, #5b9dff); }
+  .fname { flex: 1; min-width: 0; } .fname b { display: block; font-size: 14px; } .fname small { color: var(--muted); font-size: 12px; }
+  .frow button { background: var(--panel2); border: 1px solid var(--border); color: var(--text); border-radius: 8px; padding: 5px 10px; font-size: 12.5px; cursor: pointer; }
+  .fsec { color: var(--muted); font-size: 11.5px; text-transform: uppercase; letter-spacing: .05em; margin: 14px 0 4px; }
+  .fsec:first-child { margin-top: 0; }
+  .fempty { color: var(--muted); font-size: 13.5px; padding: 6px 4px; }
+  #chatPanel { display: none; flex-direction: column; height: 420px; margin-top: 16px; }
+  #chatPanel.open { display: flex; }
+  #chatLog { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding: 6px 2px; }
+  .dmrow { max-width: 78%; padding: 8px 12px; border-radius: 14px; font-size: 13.5px; white-space: pre-wrap; word-break: break-word; }
+  .dmrow.me { align-self: flex-end; background: linear-gradient(135deg, var(--acc), var(--acc2)); color: #fff; border-bottom-right-radius: 4px; }
+  .dmrow.them { align-self: flex-start; background: var(--panel2); border: 1px solid var(--border); border-bottom-left-radius: 4px; }
+  #chatForm { display: flex; gap: 8px; margin-top: 10px; }
+  #chatForm input { flex: 1; background: var(--panel2); border: 1px solid var(--border); color: var(--text); border-radius: 9px; padding: 9px 12px; font: inherit; }
 </style>
 </head>
 <body>
@@ -83,7 +108,7 @@
 <section class="hero" style="border-top:none">
   <img src="logo.png" alt="">
   <h1>Meet Auoris</h1>
-  <p>A desktop AI agent that runs local Ollama models or your own cloud keys, with friends, parties, a phone companion, and a game to play together.</p>
+  <p>A desktop AI agent that runs local Ollama models or your own cloud keys, with friends, chat, parties and a phone companion.</p>
   <div class="btns">
     <a class="btn primary" href="#dl">⬇ Download for Windows</a>
     <a class="btn" href="#account">Create an account</a>
@@ -97,8 +122,8 @@
     <div class="grid">
       <div class="card"><div class="ic">🧠</div><h3>Local + cloud AI</h3><p>Chat with local Ollama models or bring your own Anthropic / OpenAI-style API keys.</p></div>
       <div class="card"><div class="ic">🛠</div><h3>Real tool access</h3><p>Reads and edits files, runs commands, and browses the web when you let it.</p></div>
-      <div class="card"><div class="ic">👥</div><h3>Friends & parties</h3><p>Add friends by username, message them, and group up before jumping into a world.</p></div>
-      <div class="card"><div class="ic">🏝</div><h3>Wildlands</h3><p>A 3D island to explore with friends — climb towers, find shrines, unlock abilities.</p></div>
+      <div class="card"><div class="ic">👥</div><h3>Friends & parties</h3><p>Add friends by username, message them, and group up into parties.</p></div>
+      <div class="card"><div class="ic">🎮</div><h3>Rich presence</h3><p>See what game your friends are playing — Steam, Epic, Rockstar, Roblox, Minecraft and more — with a link to get it.</p></div>
       <div class="card"><div class="ic">📱</div><h3>Phone companion</h3><p>Pair your phone by QR code and chat with your PC's AI from the couch.</p></div>
       <div class="card"><div class="ic">🔒</div><h3>Secure accounts</h3><p>Password resets and optional two-factor authentication, backed by Supabase.</p></div>
     </div>
@@ -138,12 +163,28 @@
       <div id="authErr"></div>
       <div id="authLinks"></div>
     </div>
-    <div id="profBox" class="acard profcard" style="display:none">
-      <div class="pavatar" id="pAvatar"></div>
-      <h3 id="pName"></h3><small id="pUser"></small>
-      <div id="pAdmin"></div>
-      <p style="color:var(--muted);font-size:13.5px;margin-top:18px">Use this same account to sign in inside the Auoris app.</p>
-      <button class="btn" id="signOutBtn" style="margin-top:6px">Sign out</button>
+    <div id="dash" style="display:none">
+      <div class="dcard prof">
+        <div class="pavatar" id="pAvatar"></div>
+        <div id="pAdmin"></div>
+        <input type="text" id="pDisplay" maxlength="40" placeholder="Display name">
+        <div class="swatches" id="pSwatches"></div>
+        <small style="color:var(--muted);display:block;margin-top:10px" id="pUser"></small>
+        <p style="color:var(--muted);font-size:12.5px;margin-top:14px">This account also signs you in inside the Auoris app.</p>
+        <button class="btn" id="signOutBtn" style="width:100%;margin-top:4px">Sign out</button>
+      </div>
+      <div class="dcard">
+        <h4>Friends</h4>
+        <form id="addFriendForm"><input id="addFriendName" placeholder="Add a friend by username…" autocomplete="off"><button class="btn">Add</button></form>
+        <div id="friendsBody"></div>
+        <div id="chatPanel">
+          <div class="uhead" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <b id="chatTitle"></b><button class="btn" id="chatClose">Close</button>
+          </div>
+          <div id="chatLog"></div>
+          <form id="chatForm"><input id="chatInput" placeholder="Message…" maxlength="2000" autocomplete="off"><button class="btn">Send</button></form>
+        </div>
+      </div>
     </div>
   </div>
 </section>
@@ -267,18 +308,118 @@ async function afterSignIn() {
   if (!prof) return authShow('username');
   if (prof.banned) { await sb.auth.signOut(); return authShow('login', 'This account has been suspended.'); }
   me = user; myProfile = prof;
-  $('authBox').style.display = 'none'; $('profBox').style.display = '';
-  $('navAccount').textContent = prof.display_name || prof.username;
-  $('pAvatar').textContent = (prof.display_name || prof.username)[0].toUpperCase();
-  $('pAvatar').style.background = prof.color || '#5b9dff';
-  $('pName').textContent = prof.display_name || prof.username; $('pUser').textContent = '@' + prof.username;
-  $('pAdmin').innerHTML = prof.is_admin ? '<span class="badge">ADMIN</span>' : '';
+  $('authBox').style.display = 'none'; $('dash').style.display = '';
+  renderProfile();
+  loadFriends();
+  openDms();
 }
+
+// ---------------------------------------------------------------- dashboard: profile
+const COLORS = ['#5b9dff', '#8b6bff', '#e5484d', '#f5a524', '#30a46c', '#12a594', '#e93d82', '#8e8c99'];
+function renderProfile() {
+  const p = myProfile, name = p.display_name || p.username;
+  $('navAccount').textContent = name;
+  $('pAvatar').textContent = [...name][0].toUpperCase(); $('pAvatar').style.background = p.color || '#5b9dff';
+  $('pDisplay').value = p.display_name || '';
+  $('pUser').textContent = '@' + p.username;
+  $('pAdmin').innerHTML = p.is_admin ? '<span class="badge">ADMIN</span>' : '';
+  $('pSwatches').innerHTML = COLORS.map(c => `<i style="background:${c}" data-c="${c}" class="${c === p.color ? 'on' : ''}"></i>`).join('');
+  $('pSwatches').querySelectorAll('i').forEach(i => i.onclick = () => saveProfile({ color: i.dataset.c }));
+}
+async function saveProfile(patch) {
+  const { error } = await sb.from('profiles').update(patch).eq('id', me.id);
+  if (error) return alert(error.message);
+  Object.assign(myProfile, patch); renderProfile();
+}
+$('pDisplay').onchange = () => saveProfile({ display_name: $('pDisplay').value.trim() || null });
 $('signOutBtn').onclick = () => sb.auth.signOut();
+
+// ---------------------------------------------------------------- dashboard: friends
+let friends = [];
+const initial = n => ([...(n || '?')][0] || '?').toUpperCase();
+function frow(p, sub, actions) {
+  return `<div class="frow" data-id="${esc(p.id)}"><span class="fav" style="--c:${esc(p.color || '#5b9dff')}">${esc(initial(p.display_name || p.username))}</span>
+    <span class="fname"><b>${esc(p.display_name || p.username)}</b><small>@${esc(p.username)}${sub ? ' · ' + sub : ''}</small></span>${actions}</div>`;
+}
+async function loadFriends() {
+  const { data, error } = await sb.from('friendships').select('requester,addressee,status,'
+    + 'r:profiles!friendships_requester_fkey(id,username,display_name,color),a:profiles!friendships_addressee_fkey(id,username,display_name,color)');
+  if (error) { $('friendsBody').innerHTML = `<div class="fempty">Couldn't load friends: ${esc(error.message)}</div>`; return; }
+  friends = data.filter(f => f.r && f.a).map(f => ({ ...f, other: f.requester === me.id ? f.a : f.r, incoming: f.addressee === me.id }));
+  const inc = friends.filter(f => f.status === 'pending' && f.incoming), out = friends.filter(f => f.status === 'pending' && !f.incoming);
+  const acc = friends.filter(f => f.status === 'accepted');
+  let h = '';
+  if (inc.length) h += '<div class="fsec">Requests</div>' + inc.map(f => frow(f.other, 'wants to be friends', '<button data-a="accept">Accept</button><button data-a="remove">Decline</button>')).join('');
+  h += `<div class="fsec">Friends — ${acc.length}</div>` + (acc.length ? acc.map(f => frow(f.other, '', '<button data-a="chat">💬 Message</button><button data-a="remove">Remove</button>')).join('')
+    : '<div class="fempty">No friends yet - add someone by username above.</div>');
+  if (out.length) h += '<div class="fsec">Sent</div>' + out.map(f => frow(f.other, 'pending', '<button data-a="remove">Cancel</button>')).join('');
+  $('friendsBody').innerHTML = h;
+  $('friendsBody').querySelectorAll('.frow button').forEach(b => b.onclick = () => friendAction(b.dataset.a, b.closest('.frow').dataset.id));
+}
+async function friendAction(a, id) {
+  if (a === 'chat') return openChat(id);
+  let r;
+  if (a === 'accept') r = await sb.from('friendships').update({ status: 'accepted' }).eq('requester', id).eq('addressee', me.id);
+  if (a === 'remove') r = await sb.from('friendships').delete().or(`and(requester.eq.${me.id},addressee.eq.${id}),and(requester.eq.${id},addressee.eq.${me.id})`);
+  if (r && r.error) alert(r.error.message);
+  loadFriends();
+}
+$('addFriendForm').onsubmit = async e => {
+  e.preventDefault();
+  const name = $('addFriendName').value.trim().replace(/^@/, '');
+  if (!/^[A-Za-z0-9_]{3,20}$/.test(name)) return alert('Usernames are 3-20 letters, numbers or _.');
+  const { data: p } = await sb.from('profiles').select('id,username').eq('username', name).maybeSingle();
+  if (!p) return alert(`No one is called "${name}".`);
+  if (p.id === me.id) return alert('That\'s you!');
+  const ex = friends.find(f => f.other.id === p.id);
+  if (ex && ex.incoming && ex.status === 'pending') return friendAction('accept', p.id);
+  const { error } = await sb.from('friendships').insert({ requester: me.id, addressee: p.id });
+  if (error) return alert(error.code === '23505' ? `You and @${p.username} are already friends or have a pending request.` : error.message);
+  $('addFriendName').value = ''; loadFriends();
+};
+
+// ---------------------------------------------------------------- dashboard: direct messages
+let dmCh = null, activeChat = null;
+function openDms() {
+  if (dmCh) return;
+  dmCh = sb.channel('dm-web:' + me.id).on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, ({ new: m }) => {
+    const other = m.sender === me.id ? m.recipient : m.sender;
+    if (other === activeChat) addDm(m);
+  }).subscribe();
+}
+function addDm(m) {
+  if ($('chatLog').querySelector('.fempty')) $('chatLog').innerHTML = '';
+  const el = document.createElement('div'); el.className = 'dmrow ' + (m.sender === me.id ? 'me' : 'them'); el.textContent = m.body;
+  $('chatLog').appendChild(el); $('chatLog').scrollTop = 1e9;
+}
+async function openChat(id) {
+  const f = friends.find(x => x.other.id === id); if (!f) return;
+  activeChat = id;
+  $('chatTitle').textContent = f.other.display_name || f.other.username;
+  $('chatPanel').classList.add('open'); $('chatLog').innerHTML = '<div class="fempty">Loading…</div>';
+  const { data, error } = await sb.from('messages').select('*').or(`and(sender.eq.${me.id},recipient.eq.${id}),and(sender.eq.${id},recipient.eq.${me.id})`)
+    .order('created_at', { ascending: true }).limit(200);
+  if (activeChat !== id) return;
+  $('chatLog').innerHTML = error ? `<div class="fempty">${esc(error.message)}</div>` : data.length ? '' : '<div class="fempty">Say hi 👋</div>';
+  (data || []).forEach(addDm);
+  $('chatInput').focus();
+}
+$('chatClose').onclick = () => { activeChat = null; $('chatPanel').classList.remove('open'); };
+$('chatForm').onsubmit = async e => {
+  e.preventDefault();
+  const body = $('chatInput').value.trim();
+  if (!body || !activeChat) return;
+  $('chatInput').value = '';
+  const { error } = await sb.from('messages').insert({ sender: me.id, recipient: activeChat, body });
+  if (error) alert(error.message);
+};
+
 sb.auth.onAuthStateChange(ev => {
   if (ev !== 'SIGNED_OUT') return;
-  me = myProfile = null;
-  $('profBox').style.display = 'none'; $('authBox').style.display = ''; $('navAccount').textContent = 'Sign in';
+  me = myProfile = null; activeChat = null;
+  if (dmCh) { sb.removeChannel(dmCh); dmCh = null; }
+  $('dash').style.display = 'none'; $('chatPanel').classList.remove('open');
+  $('authBox').style.display = ''; $('navAccount').textContent = 'Sign in';
   authShow('login');
 });
 (async () => {

@@ -175,7 +175,7 @@ const acceptedFriends = () => friends.filter(f => f.status === 'accepted').map(f
 
 // ---------------------------------------------------------------- router
 const main = () => $('view');
-const NEEDS_AUTH = new Set(['servers', 'dms', 'groups', 'profile', 'settings', 'hosting', 'projects']);
+const NEEDS_AUTH = new Set(['servers', 'dms', 'groups', 'profile', 'settings', 'hosting', 'projects', 'admin']);
 function go(path) { history.pushState(null, '', '/' + path); route(); }
 async function route() {
   pageSubs.forEach(f => { try { f(); } catch (e) {} }); pageSubs = [];
@@ -188,7 +188,7 @@ async function route() {
 }
 function renderHeader() {
   const links = me
-    ? [['', 'Home'], ['servers', 'Servers'], ['dms', 'DMs'], ['groups', 'Group Chats'], ['projects', 'Projects'], ['hosting', 'Hosting'], ['plus', 'Plus']]
+    ? [['', 'Home'], ['servers', 'Servers'], ['dms', 'DMs'], ['groups', 'Group Chats'], ['projects', 'Projects'], ['hosting', 'Hosting'], ['plus', 'Plus'], ...(myProfile && myProfile.is_admin ? [['admin', 'Admin']] : [])]
     : [['', 'Home'], ['plus', 'Plus']];
   $('topnav').innerHTML = links.map(([r, t]) => `<a href="/${r}" data-r="${r}">${t}</a>`).join('');
   $('me').innerHTML = me && myProfile
@@ -651,6 +651,52 @@ async function renderMfa() {
     };
   };
 }
+
+// ---- admin panel (visible only to admins; owner - the "Auoris" account - additionally gets admin_set_admin)
+PAGES.admin = async () => {
+  if (!myProfile.is_admin) { toast("You don't have admin access."); return go(''); }
+  const isOwner = (myProfile.username || '').toLowerCase() === 'auoris';
+  main().innerHTML = `<div class="wrap page"><h1>Admin</h1><p class="lead">Search a username to moderate their account.</p>
+    <div class="row" style="margin-bottom:16px"><input class="in" id="adQ" placeholder="Search username…" style="max-width:320px" autocomplete="off"></div>
+    <div id="adBody"><div class="empty">Type a username, or leave it blank for the most recent accounts.</div></div></div>`;
+  const cols = 'id,username,display_name,is_admin,is_mod,banned,plus_until';
+  const row = p => `<div class="card" data-id="${esc(p.id)}" style="margin-bottom:10px">
+    <div class="row" style="align-items:center;flex-wrap:wrap">
+      <b>${esc(p.display_name || p.username)}</b><span class="muted small">@${esc(p.username)}</span>
+      ${p.is_admin ? '<span class="pill">Admin</span>' : ''}${p.is_mod ? '<span class="pill">Moderator</span>' : ''}
+      ${p.banned ? '<span class="pill" style="color:var(--err)">Banned</span>' : ''}${isPlus(p) ? '<span class="pill" style="color:var(--acc2)">Plus</span>' : ''}
+      <span style="flex:1"></span>
+      <button class="btn sm" data-a="mod">${p.is_mod ? 'Remove mod' : 'Make mod'}</button>
+      <button class="btn sm" data-a="plus3">+3mo Plus</button>
+      <button class="btn sm" data-a="unplus">Clear Plus</button>
+      ${isOwner ? `<button class="btn sm" data-a="admin">${p.is_admin ? 'Remove admin' : 'Make admin'}</button>` : ''}
+      <button class="btn sm danger" data-a="ban">${p.banned ? 'Unban' : 'Ban'}</button>
+    </div></div>`;
+  async function search(q) {
+    const query = sb.from('profiles').select(cols).order('created_at', { ascending: false }).limit(30);
+    const { data, error } = q ? await query.ilike('username', `%${q}%`) : await query;
+    if (error) { $('adBody').innerHTML = `<div class="empty">${esc(error.message)}</div>`; return; }
+    $('adBody').innerHTML = data.length ? data.map(row).join('') : '<div class="empty">No matches.</div>';
+    $('adBody').querySelectorAll('[data-a]').forEach(btn => btn.onclick = async () => {
+      const id = btn.closest('[data-id]').dataset.id, a = btn.dataset.a;
+      btn.disabled = true;
+      try {
+        if (a === 'ban') { const { data: cur } = await sb.from('profiles').select('banned').eq('id', id).single();
+          const { error } = await sb.rpc('admin_set_banned', { target: id, value: !cur.banned }); if (error) throw error; }
+        if (a === 'mod') { const { data: cur } = await sb.from('profiles').select('is_mod').eq('id', id).single();
+          const { error } = await sb.rpc('admin_set_mod', { target: id, value: !cur.is_mod }); if (error) throw error; }
+        if (a === 'admin') { const { data: cur } = await sb.from('profiles').select('is_admin').eq('id', id).single();
+          const { error } = await sb.rpc('admin_set_admin', { target: id, value: !cur.is_admin }); if (error) throw error; }
+        if (a === 'plus3') { const { error } = await sb.rpc('admin_set_plus', { target: id, n_months: 3 }); if (error) throw error; }
+        if (a === 'unplus') { const { error } = await sb.rpc('admin_set_plus', { target: id, n_months: 0 }); if (error) throw error; }
+        search($('adQ').value.trim());
+      } catch (e) { fail(e); btn.disabled = false; }
+    });
+  }
+  let t;
+  $('adQ').oninput = () => { clearTimeout(t); t = setTimeout(() => search($('adQ').value.trim()), 250); };
+  search('');
+};
 
 // ---- AI providers
 PAGES.ai = async () => {

@@ -149,6 +149,7 @@ button.item { border: none; background: none; font: inherit; }
 @keyframes aur { to { background-position: 300% 0; } }
 .locked { opacity: .55; pointer-events: none; cursor: not-allowed; }
 .pluspill { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; padding: 3px 9px; border-radius: 999px; background: #ffffff12; }
+.pill { display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: var(--panel2); color: var(--text); }
 
 /* ---- plus page */
 .plushero { text-align: center; padding: 50px 20px 30px; }

@@ -858,6 +858,16 @@ sb.auth.onAuthStateChange(ev => {
   me = myProfile = null; renderHeader(); go('');
 });
 window.addEventListener('popstate', route);
+// Re-run the current page when the tab comes back (switching browser tabs/apps and back, or the page being
+// restored from the browser's back/forward cache) instead of leaving whatever was last rendered on screen -
+// otherwise switching away and back shows stale data until a manual reload.
+let lastRouteAt = Date.now();
+const realRoute = route;
+route = async (...a) => { lastRouteAt = Date.now(); return realRoute(...a); };
+window.addEventListener('pageshow', e => { if (e.persisted) route(); });
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && Date.now() - lastRouteAt > 15000) route();
+});
 // Intercept same-origin path links (href="/...") so they route client-side instead of hitting GitHub Pages'
 // server (which has no real file at e.g. /servers - only index.html exists). Plain "#..." in-page anchors like
 // the Download button's href="#dl", and external/absolute links, are left alone to behave natively.

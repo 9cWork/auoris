@@ -107,9 +107,10 @@ function renderBody(text) {
 
 // ---------------------------------------------------------------- shared chat pane (channels, DMs, groups, projects)
 function chatPane(pane, o) {
-  pane.innerHTML = `<div class="head">${o.title}<span class="sp"></span>${o.headExtra || ''}</div><div class="msgs"></div>
+  pane.innerHTML = `<div class="head">${o.onBack ? '<button type="button" class="btn sm mob-back" id="paneBack" title="Back to list">← Back</button>' : ''}${o.title}<span class="sp"></span>${o.headExtra || ''}</div><div class="msgs"></div>
     <div class="composer"><form autocomplete="off"><button type="button" class="emo" title="Emoji">😊</button>
     <input maxlength="2000" placeholder="${esc(o.placeholder || 'Message')}"><button class="btn primary sm">Send</button></form></div>`;
+  if (o.onBack) pane.querySelector('#paneBack').onclick = o.onBack;
   const box = pane.querySelector('.msgs'), input = pane.querySelector('input'), seen = new Set();
   let last = null;
   const add = async m => {
@@ -349,27 +350,46 @@ async function afterSignIn(fromForm) {
 }
 
 // ---- servers
-let serverCache = [];
-PAGES.servers = async (sid, cid) => {
+const rankRole = r => ({ owner: 3, admin: 2, moderator: 1, member: 0 })[r] ?? -1;
+// svCache holds the server list/channels/members for whichever server is currently open, so switching channels
+// within the same server (the common case) doesn't re-query all of that again - only a server switch, or an
+// edit that changes it (new channel, rename, kick, role change), refetches. Set svCache = null to force a refetch.
+let svCache = null; // { sid, serverCache, s, chans, members, roles, mine }
+async function svLoad(sid) {
   const { data: mem, error } = await sb.from('server_members').select('server_id, role, servers(id,name,icon,invite_code,owner_id)').eq('user_id', me.id);
   if (error) throw error;
-  serverCache = mem.filter(m => m.servers).map(m => ({ ...m.servers, myRole: m.role }));
+  const serverCache = mem.filter(m => m.servers).map(m => ({ ...m.servers, myRole: m.role }));
+  const s = serverCache.find(x => x.id === sid) || null;
+  let chans = [], members = [], roles = new Map(), mine = -1;
+  if (s) {
+    const [{ data: chansData, error: chErr }, { data: membersData, error: mErr }] = await Promise.all([
+      sb.from('channels').select('*').eq('server_id', s.id).order('position').order('created_at'),
+      sb.from('server_members').select('user_id, role').eq('server_id', s.id)]);
+    if (chErr) throw chErr; if (mErr) throw mErr;
+    chans = chansData; members = membersData;
+    roles = new Map(members.map(m => [m.user_id, m.role]));
+    await getProfiles(members.map(m => m.user_id));
+    mine = rankRole(s.myRole);
+  }
+  svCache = { sid, serverCache, s, chans, members, roles, mine };
+}
+function svRenderShell() {
+  const { serverCache, s, sid, chans, members, mine } = svCache;
   main().innerHTML = `<div class="chat3" id="sv"><div class="rail" id="svRail"></div><div class="side2" id="svSide"></div><div class="pane" id="svPane"></div><div class="members" id="svMembers"></div></div>`;
-  $('svRail').innerHTML = serverCache.map(s => `<button title="${esc(s.name)}" data-s="${s.id}" class="${s.id === sid ? 'on' : ''}">${esc(s.icon || [...s.name][0].toUpperCase())}</button>`).join('')
+  $('svRail').innerHTML = serverCache.map(x => `<button title="${esc(x.name)}" data-s="${x.id}" class="${x.id === sid ? 'on' : ''}">${esc(x.icon || [...x.name][0].toUpperCase())}</button>`).join('')
     + '<hr><button title="Create a server" id="svNew">＋</button><button title="Join with an invite code" id="svJoin">🔗</button>';
   $('svRail').querySelectorAll('[data-s]').forEach(b => b.onclick = () => go('servers/' + b.dataset.s));
   $('svNew').onclick = async () => {
     const name = prompt('Server name'); if (!name) return;
     const icon = prompt('Icon (an emoji or a couple of letters, optional)') || null;
     const { data, error } = await sb.rpc('create_server', { name: name.trim().slice(0, 40), icon: icon && icon.trim().slice(0, 8) });
-    if (error) return fail(error); go('servers/' + data);
+    if (error) return fail(error); svCache = null; go('servers/' + data);
   };
   $('svJoin').onclick = async () => {
     const code = prompt('Invite code'); if (!code) return;
     const { data, error } = await sb.rpc('join_server', { code: code.trim() });
-    if (error) return fail(error); go('servers/' + data);
+    if (error) return fail(error); svCache = null; go('servers/' + data);
   };
-  const s = serverCache.find(x => x.id === sid) || null;
   if (!s) {
     $('sv').classList.add('nomembers'); $('svMembers').remove();
     $('svSide').innerHTML = '<div class="head">Servers</div><div class="list"><div class="empty">Pick a server, create one with ＋, or join one with an invite code 🔗.</div></div>';
@@ -377,16 +397,9 @@ PAGES.servers = async (sid, cid) => {
     if (serverCache.length && !sid) go('servers/' + serverCache[0].id);
     return;
   }
-  const [{ data: chans }, { data: members }] = await Promise.all([
-    sb.from('channels').select('*').eq('server_id', s.id).order('position').order('created_at'),
-    sb.from('server_members').select('user_id, role').eq('server_id', s.id)]);
-  const roles = new Map(members.map(m => [m.user_id, m.role]));
-  await getProfiles(members.map(m => m.user_id));
-  const rank = r => ({ owner: 3, admin: 2, moderator: 1, member: 0 })[r] ?? -1, mine = rank(s.myRole);
-  const c = chans.find(x => x.id === cid) || chans[0];
   $('svSide').innerHTML = `<div class="head"><span style="flex:1">${esc(s.name)}</span>${mine >= 2 ? '<button class="btn sm" id="svSettings" title="Server settings">⚙</button>' : ''}</div>
-    <div class="list">${chans.map(x => `<div class="item ${c && x.id === c.id ? 'on' : ''}" data-c="${x.id}"># ${esc(x.name)}</div>`).join('')}
-    ${mine >= 2 ? '<div class="item" id="chNew">＋ Add channel</div>' : ''}</div>
+    <div class="list">${chans.map(x => `<button type="button" class="item" data-c="${x.id}"># ${esc(x.name)}</button>`).join('')}
+    ${mine >= 2 ? '<button type="button" class="item" id="chNew">＋ Add channel</button>' : ''}</div>
     <div style="padding:10px;border-top:1px solid var(--border)" class="small muted">Invite code: <b style="color:var(--text)">${esc(s.invite_code)}</b>
       <button class="btn sm" id="svCopy">Copy</button>${s.myRole !== 'owner' ? ' <button class="btn sm danger" id="svLeave">Leave</button>' : ''}</div>`;
   $('svSide').querySelectorAll('[data-c]').forEach(el => el.onclick = () => go(`servers/${s.id}/${el.dataset.c}`));
@@ -394,21 +407,21 @@ PAGES.servers = async (sid, cid) => {
   if ($('svLeave')) $('svLeave').onclick = async () => {
     if (!confirm(`Leave ${s.name}?`)) return;
     const { error } = await sb.from('server_members').delete().eq('server_id', s.id).eq('user_id', me.id);
-    if (error) return fail(error); go('servers');
+    if (error) return fail(error); svCache = null; go('servers');
   };
   if ($('chNew')) $('chNew').onclick = async () => {
     const name = (prompt('Channel name (lowercase letters, numbers, dashes)') || '').trim().toLowerCase().replace(/\s+/g, '-');
     if (!name) return;
     const { data, error } = await sb.from('channels').insert({ server_id: s.id, name, position: chans.length }).select().single();
-    if (error) return fail(error); go(`servers/${s.id}/${data.id}`);
+    if (error) return fail(error); svCache = null; go(`servers/${s.id}/${data.id}`);
   };
   if ($('svSettings')) $('svSettings').onclick = async () => {
     const act = prompt('Type "rename", "icon", or (owner only) "delete"'); if (!act) return;
     let r;
     if (act === 'rename') { const n = prompt('New name', s.name); if (n) r = await sb.from('servers').update({ name: n.slice(0, 40) }).eq('id', s.id); }
     else if (act === 'icon') { const n = prompt('New icon (emoji or letters)', s.icon || ''); r = await sb.from('servers').update({ icon: (n || '').slice(0, 8) || null }).eq('id', s.id); }
-    else if (act === 'delete' && s.myRole === 'owner' && confirm(`Delete ${s.name} for everyone? This can't be undone.`)) { r = await sb.from('servers').delete().eq('id', s.id); if (!r.error) return go('servers'); }
-    if (r && r.error) fail(r.error); else route();
+    else if (act === 'delete' && s.myRole === 'owner' && confirm(`Delete ${s.name} for everyone? This can't be undone.`)) { r = await sb.from('servers').delete().eq('id', s.id); if (!r.error) { svCache = null; return go('servers'); } }
+    if (r && r.error) fail(r.error); else { svCache = null; route(); }
   };
   const order = ['owner', 'admin', 'moderator', 'member'], label = { owner: 'Owner', admin: 'Admins', moderator: 'Moderators', member: 'Members' };
   $('svMembers').innerHTML = order.map(r => {
@@ -418,8 +431,9 @@ PAGES.servers = async (sid, cid) => {
   }).join('');
   // role controls live on the profile card, and only for people ranked below you
   profileCardExtra = (uid, box, close) => {
+    const { roles, mine, s } = svCache;
     const theirs = roles.get(uid);
-    if (!theirs || uid === me.id || mine <= rank(theirs) || mine < 1) return;
+    if (!theirs || uid === me.id || mine <= rankRole(theirs) || mine < 1) return;
     const acts = [['kick', 'Kick', 'danger']];
     if (mine >= 2) { if (theirs !== 'moderator') acts.unshift(['moderator', 'Make moderator']); if (theirs !== 'member') acts.unshift(['member', 'Make member']); }
     if (mine >= 3 && theirs !== 'admin') acts.unshift(['admin', 'Make admin']);
@@ -430,25 +444,37 @@ PAGES.servers = async (sid, cid) => {
       const r = a === 'kick' ? await sb.from('server_members').delete().eq('server_id', s.id).eq('user_id', uid)
         : await sb.rpc('set_member_role', { sid: s.id, target: uid, new_role: a });
       if (r.error) return fail(r.error);
-      close(); route();
+      close(); svCache = null; route();
     });
   };
   pageSubs.push(() => { profileCardExtra = null; });
+}
+function svRenderChannel(cid) {
+  const { chans, roles, mine } = svCache;
+  const c = chans.find(x => x.id === cid) || chans[0];
+  $('svSide').querySelectorAll('[data-c]').forEach(el => el.classList.toggle('on', !!c && el.dataset.c === c.id));
+  $('sv').classList.toggle('mob-pane', !!c);
   if (!c) { $('svPane').innerHTML = '<div class="head">No channels</div><div class="msgs"><div class="empty">This server has no channels yet.</div></div>'; return; }
   chatPane($('svPane'), {
     title: `# ${esc(c.name)}`, placeholder: `Message #${c.name}`, roleOf: uid => roles.get(uid),
+    onBack: () => $('sv').classList.remove('mob-pane'),
     load: async () => { const { data, error } = await sb.from('channel_messages').select('*').eq('channel_id', c.id).order('created_at', { ascending: false }).limit(150); if (error) throw error; return data.reverse(); },
     subscribe: add => subscribeTable('ch', 'channel_messages', `channel_id=eq.${c.id}`, add),
     send: async body => (await sb.from('channel_messages').insert({ channel_id: c.id, sender: me.id, body })).error,
     canDelete: m => m.sender === me.id || mine >= 1,
     del: async m => (await sb.from('channel_messages').delete().eq('id', m.id)).error,
   });
+}
+PAGES.servers = async (sid, cid) => {
+  if (!svCache || svCache.sid !== sid) { await svLoad(sid); svRenderShell(); }
+  if (!svCache.s) return;
+  svRenderChannel(cid);
 };
 
 // ---- DMs (+ friends)
 PAGES.dms = async uid => {
   await loadFriends();
-  main().innerHTML = `<div class="chat2"><div class="side2"><div class="head">Direct messages</div>
+  main().innerHTML = `<div class="chat2" id="dm"><div class="side2"><div class="head">Direct messages</div>
     <form id="addF" style="padding:10px;display:flex;gap:6px"><input class="in" id="addFName" placeholder="Add friend by username" autocomplete="off"><button class="btn sm">Add</button></form>
     <div class="list" id="fList"></div></div><div class="pane" id="dmPane"></div></div>`;
   const inc = friends.filter(f => f.status === 'pending' && f.incoming), out = friends.filter(f => f.status === 'pending' && !f.incoming);
@@ -457,7 +483,7 @@ PAGES.dms = async uid => {
     (inc.length ? '<div class="small muted" style="margin:6px 8px">Requests</div>' + inc.map(f => { const p = profiles.get(f.other);
       return `<div class="item">${plainAv(p, 'sm')}<span style="flex:1">${esc(dname(p))}</span><button class="btn sm" data-acc="${f.other}">✓</button><button class="btn sm" data-rm="${f.other}">✕</button></div>`; }).join('') : '')
     + '<div class="small muted" style="margin:6px 8px">Friends</div>'
-    + (acc.length ? acc.map(p => `<div class="item ${p.id === uid ? 'on' : ''}" data-u="${p.id}">${plainAv(p, 'sm')}<span style="min-width:0">${esc(dname(p))}</span></div>`).join('') : '<div class="empty">No friends yet.</div>')
+    + (acc.length ? acc.map(p => `<button type="button" class="item ${p.id === uid ? 'on' : ''}" data-u="${p.id}">${plainAv(p, 'sm')}<span style="min-width:0">${esc(dname(p))}</span></button>`).join('') : '<div class="empty">No friends yet.</div>')
     + (out.length ? '<div class="small muted" style="margin:6px 8px">Sent</div>' + out.map(f => { const p = profiles.get(f.other);
       return `<div class="item">${plainAv(p, 'sm')}<span style="flex:1">${esc(dname(p))}</span><button class="btn sm" data-rm="${f.other}">Cancel</button></div>`; }).join('') : '');
   $('fList').querySelectorAll('[data-u]').forEach(el => el.onclick = () => go('dms/' + el.dataset.u));
@@ -484,9 +510,11 @@ PAGES.dms = async uid => {
     toast(`Friend request sent to @${p.username}`); route();
   };
   const p = uid && acc.find(x => x.id === uid);
+  $('dm').classList.toggle('mob-pane', !!p);
   if (!p) { $('dmPane').innerHTML = '<div class="head">Direct messages</div><div class="msgs"><div class="empty">Pick a friend to start chatting.</div></div>'; return; }
   chatPane($('dmPane'), {
     title: `${avatar(p, 'sm')} ${nameHtml(p)}`, placeholder: `Message @${p.username}`,
+    onBack: () => $('dm').classList.remove('mob-pane'),
     load: async () => { const { data, error } = await sb.from('messages').select('*').or(`and(sender.eq.${me.id},recipient.eq.${p.id}),and(sender.eq.${p.id},recipient.eq.${me.id})`).order('created_at', { ascending: false }).limit(150); if (error) throw error; return data.reverse(); },
     subscribe: add => subscribeTable('dm', 'messages', null, m => { if ((m.sender === p.id && m.recipient === me.id) || (m.sender === me.id && m.recipient === p.id)) add(m); }),
     send: async body => (await sb.from('messages').insert({ sender: me.id, recipient: p.id, body })).error,
@@ -499,8 +527,8 @@ PAGES.groups = async gid => {
   const { data: gm, error } = await sb.from('group_members').select('group_id, group_chats(id,name,owner_id)').eq('user_id', me.id);
   if (error) throw error;
   const groups = gm.filter(x => x.group_chats).map(x => x.group_chats);
-  main().innerHTML = `<div class="chat2"><div class="side2"><div class="head"><span style="flex:1">Group chats</span><button class="btn sm" id="gNew">＋ New</button></div>
-    <div class="list">${groups.length ? groups.map(g => `<div class="item ${g.id === gid ? 'on' : ''}" data-g="${g.id}">👥 ${esc(g.name)}</div>`).join('') : '<div class="empty">No group chats yet.</div>'}</div></div>
+  main().innerHTML = `<div class="chat2" id="gr"><div class="side2"><div class="head"><span style="flex:1">Group chats</span><button class="btn sm" id="gNew">＋ New</button></div>
+    <div class="list">${groups.length ? groups.map(g => `<button type="button" class="item ${g.id === gid ? 'on' : ''}" data-g="${g.id}">👥 ${esc(g.name)}</button>`).join('') : '<div class="empty">No group chats yet.</div>'}</div></div>
     <div class="pane" id="gPane"></div></div>`;
   main().querySelectorAll('[data-g]').forEach(el => el.onclick = () => go('groups/' + el.dataset.g));
   $('gNew').onclick = () => {
@@ -516,12 +544,14 @@ PAGES.groups = async gid => {
     };
   };
   const g = groups.find(x => x.id === gid);
+  $('gr').classList.toggle('mob-pane', !!g);
   if (!g) { $('gPane').innerHTML = '<div class="head">Group chats</div><div class="msgs"><div class="empty">Pick a group or make a new one with friends.</div></div>'; return; }
   const { data: mems } = await sb.from('group_members').select('user_id').eq('group_id', g.id);
   const ps = await getProfiles(mems.map(m => m.user_id));
   chatPane($('gPane'), {
     title: `👥 ${esc(g.name)} <span class="muted small" style="font-weight:400">· ${ps.filter(Boolean).map(p => esc(dname(p))).join(', ')}</span>`,
     headExtra: `<button class="btn sm" id="gAdd">Add friend</button><button class="btn sm danger" id="gLeave">Leave</button>`, placeholder: `Message ${g.name}`,
+    onBack: () => $('gr').classList.remove('mob-pane'),
     load: async () => { const { data, error } = await sb.from('group_messages').select('*').eq('group_id', g.id).order('created_at', { ascending: false }).limit(150); if (error) throw error; return data.reverse(); },
     subscribe: add => subscribeTable('gm', 'group_messages', `group_id=eq.${g.id}`, add),
     send: async body => (await sb.from('group_messages').insert({ group_id: g.id, sender: me.id, body })).error,
@@ -716,8 +746,8 @@ PAGES.projects = async pid => {
   const { data: pm, error } = await sb.from('ai_project_members').select('role, ai_projects(*)').eq('user_id', me.id);
   if (error) throw error;
   const projects = pm.filter(x => x.ai_projects).map(x => ({ ...x.ai_projects, myRole: x.role }));
-  main().innerHTML = `<div class="chat2"><div class="side2"><div class="head"><span style="flex:1">AI projects</span><button class="btn sm" id="pNew">＋ New</button></div>
-    <div class="list">${projects.length ? projects.map(x => `<div class="item ${x.id === pid ? 'on' : ''}" data-p="${x.id}">🤝 ${esc(x.name)}</div>`).join('') : '<div class="empty">No projects yet.</div>'}</div></div>
+  main().innerHTML = `<div class="chat2" id="pr"><div class="side2"><div class="head"><span style="flex:1">AI projects</span><button class="btn sm" id="pNew">＋ New</button></div>
+    <div class="list">${projects.length ? projects.map(x => `<button type="button" class="item ${x.id === pid ? 'on' : ''}" data-p="${x.id}">🤝 ${esc(x.name)}</button>`).join('') : '<div class="empty">No projects yet.</div>'}</div></div>
     <div class="pane" id="pPane"></div></div>`;
   main().querySelectorAll('[data-p]').forEach(el => el.onclick = () => go('projects/' + el.dataset.p));
   $('pNew').onclick = () => {
@@ -735,6 +765,7 @@ PAGES.projects = async pid => {
     };
   };
   const x = projects.find(p => p.id === pid);
+  $('pr').classList.toggle('mob-pane', !!x);
   if (!x) { $('pPane').innerHTML = '<div class="head">AI projects</div><div class="msgs"><div class="empty">Shared AI projects with friends. Pick one or make a new one.</div></div>'; return; }
   const { data: mems } = await sb.from('ai_project_members').select('user_id, role').eq('project_id', x.id);
   await getProfiles(mems.map(m => m.user_id));
@@ -742,6 +773,7 @@ PAGES.projects = async pid => {
   chatPane($('pPane'), {
     title: `🤝 ${esc(x.name)} <span class="muted small" style="font-weight:400">· ${esc(x.provider || '')}${x.model ? ' / ' + esc(x.model) : ''} · ${mems.length} member${mems.length === 1 ? '' : 's'}</span>`,
     headExtra: `<button class="btn sm" id="pInfo">Project</button>`, placeholder: `Message ${x.name}`, emptyText: 'Start the conversation - everyone in the project sees it.',
+    onBack: () => $('pr').classList.remove('mob-pane'),
     load: async () => { const { data, error } = await sb.from('ai_project_messages').select('*').eq('project_id', x.id).order('created_at', { ascending: false }).limit(150); if (error) throw error; return data.reverse(); },
     subscribe: add => subscribeTable('pm', 'ai_project_messages', `project_id=eq.${x.id}`, add),
     send: async body => {

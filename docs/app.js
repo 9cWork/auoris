@@ -196,10 +196,12 @@ function renderHeader() {
     : `<a class="btn primary sm" href="#/signin">Sign in</a>`;
   if ($('meBtn')) {
     $('meBtn').onclick = e => { e.stopPropagation(); $('meMenu').hidden = !$('meMenu').hidden; };
-    document.addEventListener('click', () => { if ($('meMenu')) $('meMenu').hidden = true; });
     $('signOut').onclick = e => { e.preventDefault(); sb.auth.signOut(); };
   }
 }
+// renderHeader() runs on every sign-in/out/profile-save - registered once here instead of inside it, or every
+// call would stack another document-wide click listener that's never cleaned up.
+document.addEventListener('click', () => { if ($('meMenu')) $('meMenu').hidden = true; });
 
 // ---------------------------------------------------------------- pages
 const PAGES = {};
@@ -237,7 +239,7 @@ PAGES.signin = async () => { if (me) return go('servers'); authPage(AUTH.resume 
 PAGES.signup = async () => { if (me) return go('servers'); authPage('signup'); };
 function authPage(mode) {
   main().innerHTML = `<div class="authwrap"><div class="card authcard"><img src="logo.png" alt="" style="width:56px;border-radius:14px">
-    <h2 id="authTitle"></h2><p class="sub" id="authSub"></p><form id="authForm" autocomplete="on"></form><div id="authErr"></div><div id="authLinks"></div></div></div>`;
+    <h2 id="authTitle"></h2><p class="sub" id="authSub"></p><form id="authForm" autocomplete="on" novalidate></form><div id="authErr"></div><div id="authLinks"></div></div></div>`;
   authShow(mode);
 }
 function authShow(mode, sub) {
@@ -249,8 +251,8 @@ function authShow(mode, sub) {
     mfa: ['Two-factor code', 'Enter the code from your authenticator app'],
   }[mode];
   $('authTitle').textContent = T[0]; $('authSub').textContent = sub || T[1];
-  const inp = (id, label, type, extra) => `<label class="lbl" for="${id}">${label}</label><input class="in" id="${id}" type="${type}" ${extra}>`;
-  const code = '<input class="in code" id="aCode" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="000000" required>';
+  const inp = (id, label, type, extra) => `<label class="lbl" for="${id}">${label}</label><input class="in" id="${id}" name="${id}" type="${type}" ${extra}>`;
+  const code = '<input class="in code" id="aCode" name="aCode" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="000000" required>';
   const email = inp('aEmail', 'Email', 'email', 'autocomplete="email" required');
   $('authForm').innerHTML = {
     login: email + inp('aPass', 'Password', 'password', 'autocomplete="current-password" required') + '<button class="btn primary">Sign in</button>',
@@ -277,9 +279,18 @@ function authShow(mode, sub) {
   setTimeout(() => $('authForm').querySelector('input')?.focus());
 }
 function authErr(msg, ok) { $('authErr').textContent = msg; $('authErr').className = ok ? 'ok' : ''; }
+function authValidate(m, v) {
+  if ($('aEmail') && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v('aEmail'))) return 'Enter a valid email address.';
+  if ($('aPass') && (m === 'signup' || m === 'reset') && $('aPass').value.length < 8) return 'Your password needs to be at least 8 characters.';
+  if ($('aUser') && !/^[A-Za-z0-9_]{3,20}$/.test(v('aUser'))) return 'Usernames are 3-20 letters, numbers or _.';
+  if ($('aCode') && v('aCode').length !== 6) return 'Enter the 6-digit code we emailed you.';
+  return null;
+}
 async function authSubmit(e) {
   e.preventDefault();
   const btn = $('authForm').querySelector('button'), v = id => ($(id)?.value || '').trim(), m = AUTH.mode;
+  const problem = authValidate(m, v);
+  if (problem) return authErr(problem);
   btn.disabled = true; authErr('');
   try {
     if ($('aEmail')) AUTH.email = v('aEmail');
@@ -326,7 +337,8 @@ async function afterSignIn(fromForm) {
   if (AUTH.pendingPass) { const { error } = await sb.auth.updateUser({ password: AUTH.pendingPass }); AUTH.pendingPass = null; if (error) throw error; }
   const { data: { user }, error } = await sb.auth.getUser();
   if (error) throw error;
-  const { data: prof } = await sb.from('profiles').select(PCOLS + ',banned').eq('id', user.id).maybeSingle();
+  const { data: prof, error: profErr } = await sb.from('profiles').select(PCOLS + ',banned').eq('id', user.id).maybeSingle();
+  if (profErr) throw profErr;  // a lookup failure isn't "no profile yet" - don't send an existing user to claim_username
   if (!prof) { if (!fromForm) { AUTH.resume = 'username'; return go('signin'); } return authShow('username'); }
   if (prof.banned) { await sb.auth.signOut(); return authShow('login', 'This account has been suspended.'); }
   me = user; myProfile = prof; profiles.set(prof.id, prof);

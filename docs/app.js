@@ -664,7 +664,9 @@ PAGES.plus = async () => {
     <div class="grid">${perks.map(([i, h, d]) => `<div class="card feat"><div class="ic">${i}</div><h3>${h}</h3><p>${d}</p></div>`).join('')}</div>
     <h2 style="margin:40px 0 6px">Your Plus badge grows with you</h2><p class="muted" style="margin:0 0 18px">The sun-and-asteroid badge next to your name changes colour the longer you stay subscribed.</p>
     <div class="ladder"><div>${ICON.plus('#ffffff')}<b>Plus</b><span>from day one</span></div>
-      ${TIERS.slice().reverse().map(([m, n, c]) => `<div>${ICON.plus(c)}<b style="color:${c}">${n}</b><span>${m} months</span></div>`).join('')}</div></div>`;
+      ${TIERS.slice().reverse().map(([m, n, c]) => `<div>${ICON.plus(c)}<b style="color:${c}">${n}</b><span>${m} months</span></div>`).join('')}</div>
+    ${me ? `<div class="card" style="margin-top:40px"><h3 style="margin-top:0">🎁 Gift Auoris Plus</h3><p class="muted">Give a friend Plus - a one-time payment, no subscription for them to manage.</p>
+      <div id="giftBox"></div></div>` : ''}</div>`;
   if ($('plusBuy')) $('plusBuy').onclick = async () => {
     if (!me) return go('signin');
     const { data, error } = await sb.functions.invoke('stripe-checkout', { body: { action: 'checkout', return_url: location.origin + location.pathname + '#/plus' } });
@@ -676,6 +678,20 @@ PAGES.plus = async () => {
     if (error || !data || !data.url) return toast('Subscription management isn\'t live yet.');
     location.href = data.url;
   };
+  if ($('giftBox')) {
+    await loadFriends();
+    const acc = acceptedFriends();
+    $('giftBox').innerHTML = acc.length ? `<div class="row">
+      <select class="in" id="giftWho" style="max-width:220px">${acc.map(f => `<option value="${f.id}">@${esc(f.username)}</option>`).join('')}</select>
+      <select class="in" id="giftLen" style="max-width:160px"><option value="1">1 month · $19.99</option><option value="3">3 months · $49.99</option><option value="12">12 months · $179.99</option></select>
+      <button class="btn primary" id="giftBtn">Send gift</button></div>` : '<div class="empty">Add a friend first to gift them Plus.</div>';
+    if ($('giftBtn')) $('giftBtn').onclick = async () => {
+      const recipient_id = $('giftWho').value, months = $('giftLen').value;
+      const { data, error } = await sb.functions.invoke('stripe-checkout', { body: { action: 'gift', recipient_id, months, return_url: location.origin + location.pathname + '#/plus' } });
+      if (error || !data || !data.url) return toast('Gifting isn\'t live yet - check back soon.');
+      location.href = data.url;
+    };
+  }
 };
 
 // ---- AI collaboration projects

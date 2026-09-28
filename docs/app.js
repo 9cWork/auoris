@@ -305,7 +305,9 @@ async function authSubmit(e) {
       if (data.session) await afterSignIn(true); else authShow('verify');
     } else if (m === 'username') {
       const { error } = await sb.rpc('claim_username', { name: v('aUser') });
-      if (error) throw error;
+      // "you already have a username" means the profile row already exists (from an earlier attempt that
+      // actually succeeded, or a transient re-check) - that's not a real error, just log them in.
+      if (error && !/already have a username/i.test(error.message)) throw error;
       await afterSignIn(true);
     } else if (m === 'verify') {
       const { error } = await sb.auth.verifyOtp({ email: AUTH.email, token: v('aCode'), type: 'email' });

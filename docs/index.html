@@ -7,10 +7,21 @@
 <meta name="description" content="Auoris - a desktop AI agent with servers, DMs, group chats, rich presence and AI projects.">
 <link rel="icon" href="logo.png">
 <link rel="stylesheet" href="app.css">
+<!-- Undoes 404.html's redirect: GitHub Pages has no real file for a path like /plus, so 404.html sends the
+     browser to /?/plus instead; this restores the real /plus URL via the History API before app.js's router
+     reads location.pathname. See https://github.com/rafgraph/spa-github-pages for the technique. -->
+<script>
+  (function(l) {
+    if (l.search[1] === '/') {
+      var decoded = l.search.slice(1).split('&').map(function(s) { return s.replace(/~and~/g, '&'); }).join('?');
+      window.history.replaceState(null, null, l.pathname.slice(0, -1) + decoded + l.hash);
+    }
+  }(window.location));
+</script>
 </head>
 <body>
 <header><div class="bar">
-  <a class="brand" href="#/"><img src="logo.png" alt=""><span>Auoris</span></a>
+  <a class="brand" href="/"><img src="logo.png" alt=""><span>Auoris</span></a>
   <nav id="topnav"></nav>
   <div id="me"></div>
 </div></header>

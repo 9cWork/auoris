@@ -77,8 +77,8 @@ async function showProfileCard(uid, role) {
       ${t ? `<div class="pluspill" style="margin-top:10px">${ICON.plus(t.color).replace('<svg', '<svg width="15" height="15"')} Auoris Plus · ${esc(t.name)}${t.months ? ` · ${t.months} months` : ''}</div>` : ''}
       ${p.bio ? `<p style="margin:12px 0 0">${emojify(esc(p.bio))}</p>` : ''}
       ${p.discord_name ? `<p class="muted small" style="margin:10px 0 0">Discord: ${esc(p.discord_name)}</p>` : ''}
-      <div class="row" style="margin-top:14px">${isMe ? '<a class="btn sm" href="#/profile">Edit profile</a>'
-        : friend && friend.status === 'accepted' ? `<a class="btn sm primary" href="#/dms/${esc(uid)}">Message</a>` : me && !friend ? '<button class="btn sm" id="pcAdd">Add friend</button>' : ''}
+      <div class="row" style="margin-top:14px">${isMe ? '<a class="btn sm" href="/profile">Edit profile</a>'
+        : friend && friend.status === 'accepted' ? `<a class="btn sm primary" href="/dms/${esc(uid)}">Message</a>` : me && !friend ? '<button class="btn sm" id="pcAdd">Add friend</button>' : ''}
         </div><div class="row" id="pcExtra" style="margin-top:8px"></div></div></div>`;
   document.body.appendChild(card);
   card.onclick = e => { if (e.target === card) card.remove(); };
@@ -176,10 +176,10 @@ const acceptedFriends = () => friends.filter(f => f.status === 'accepted').map(f
 // ---------------------------------------------------------------- router
 const main = () => $('view');
 const NEEDS_AUTH = new Set(['servers', 'dms', 'groups', 'profile', 'settings', 'hosting', 'projects']);
-function go(path) { location.hash = '#/' + path; }
+function go(path) { history.pushState(null, '', '/' + path); route(); }
 async function route() {
   pageSubs.forEach(f => { try { f(); } catch (e) {} }); pageSubs = [];
-  const [name = '', ...args] = location.hash.replace(/^#\/?/, '').split('/').map(decodeURIComponent);
+  const [name = '', ...args] = location.pathname.replace(/^\/?/, '').split('/').map(decodeURIComponent);
   document.querySelectorAll('#topnav a').forEach(a => a.classList.toggle('on', a.dataset.r === name));
   if (NEEDS_AUTH.has(name) && !me) return go('signin');
   const page = PAGES[name] || PAGES[''];
@@ -190,11 +190,11 @@ function renderHeader() {
   const links = me
     ? [['', 'Home'], ['servers', 'Servers'], ['dms', 'DMs'], ['groups', 'Group Chats'], ['projects', 'Projects'], ['hosting', 'Hosting'], ['plus', 'Plus']]
     : [['', 'Home'], ['plus', 'Plus']];
-  $('topnav').innerHTML = links.map(([r, t]) => `<a href="#/${r}" data-r="${r}">${t}</a>`).join('');
+  $('topnav').innerHTML = links.map(([r, t]) => `<a href="/${r}" data-r="${r}">${t}</a>`).join('');
   $('me').innerHTML = me && myProfile
     ? `<button id="meBtn">${plainAv(myProfile, 'sm')}<span class="name">${esc(dname(myProfile))}</span></button>
-       <div id="meMenu" hidden><a href="#/profile">Profile</a><a href="#/settings">Settings</a><a href="#/ai">AI Providers</a><a href="#/plus">Auoris Plus</a><hr><a href="#" id="signOut">Sign out</a></div>`
-    : `<a class="btn primary sm" href="#/signin">Sign in</a>`;
+       <div id="meMenu" hidden><a href="/profile">Profile</a><a href="/settings">Settings</a><a href="/ai">AI Providers</a><a href="/plus">Auoris Plus</a><hr><a href="#" id="signOut">Sign out</a></div>`
+    : `<a class="btn primary sm" href="/signin">Sign in</a>`;
   if ($('meBtn')) {
     $('meBtn').onclick = e => { e.stopPropagation(); $('meMenu').hidden = !$('meMenu').hidden; };
     $('signOut').onclick = e => { e.preventDefault(); sb.auth.signOut(); };
@@ -211,7 +211,7 @@ PAGES[''] = async () => {
   main().innerHTML = `
   <section class="hero"><img src="logo.png" alt=""><h1>Meet Auoris</h1>
     <p>A desktop AI agent for local Ollama models or your own cloud keys, with servers, DMs, group chats, rich presence and a phone companion.</p>
-    <div class="row"><a class="btn primary" href="#dl" id="dlTop">⬇ Download for Windows</a>${me ? '<a class="btn" href="#/servers">Open Servers</a>' : '<a class="btn" href="#/signup">Create an account</a>'}</div></section>
+    <div class="row"><a class="btn primary" href="#dl" id="dlTop">⬇ Download for Windows</a>${me ? '<a class="btn" href="/servers">Open Servers</a>' : '<a class="btn" href="/signup">Create an account</a>'}</div></section>
   <section class="band"><div class="wrap"><h2>What's inside</h2><p class="lead">Your chats, files and models stay on your own PC.</p><div class="grid">
     <div class="card feat"><div class="ic">🧠</div><h3>Local + cloud AI</h3><p>Local Ollama models, or your own Anthropic / OpenAI-style keys.</p></div>
     <div class="card feat"><div class="ic">🛠</div><h3>Real tool access</h3><p>Reads and edits files, runs commands and browses the web when you let it.</p></div>
@@ -264,7 +264,7 @@ function authShow(mode, sub) {
     mfa: code + '<button class="btn primary">Verify</button>',
   }[mode];
   $('authLinks').innerHTML = {
-    login: '<a href="#/signup">Create an account</a><a data-m="forgot">Forgot password?</a>', signup: '<a href="#/signin">I already have an account</a>',
+    login: '<a href="/signup">Create an account</a><a data-m="forgot">Forgot password?</a>', signup: '<a href="/signin">I already have an account</a>',
     username: '<a data-m="signout">Use a different account</a>', verify: '<a data-m="resend">Resend code</a><a data-m="login">Back to sign in</a>',
     forgot: '<a data-m="login">Back to sign in</a>', reset: '<a data-m="login">Back to sign in</a>', mfa: '<a data-m="signout">Use a different account</a>',
   }[mode];
@@ -580,7 +580,7 @@ PAGES.profile = async () => {
     <div class="card" style="padding:0;overflow:hidden"><div class="banner ${p.effect === 'aurora' && plus ? 'effect-aurora' : ''}" style="${bannerStyle}"></div>
       <div class="profhead">${avatar(p, 'lg')}<div style="padding-bottom:8px"><h2 style="margin:0">${esc(dname(p))}${badges(p)}</h2><div class="muted">@${esc(p.username)}${p.discord_name ? ` · Discord: ${esc(p.discord_name)}` : ''}</div></div></div>
       <div style="padding:20px 22px">
-        ${t ? `<span class="pluspill">${ICON.plus(t.color).replace('<svg', '<svg width="16" height="16"')} Auoris Plus · ${esc(t.name)}${t.months ? ` · ${t.months} months` : ''}</span>` : '<a class="pluspill" href="#/plus" style="text-decoration:none;color:var(--muted)">Get Auoris Plus for banners & effects →</a>'}
+        ${t ? `<span class="pluspill">${ICON.plus(t.color).replace('<svg', '<svg width="16" height="16"')} Auoris Plus · ${esc(t.name)}${t.months ? ` · ${t.months} months` : ''}</span>` : '<a class="pluspill" href="/plus" style="text-decoration:none;color:var(--muted)">Get Auoris Plus for banners & effects →</a>'}
         <label class="lbl">Display name</label><input class="in" id="pfName" maxlength="40" value="${esc(p.display_name || '')}">
         <label class="lbl">Bio</label><textarea class="in" id="pfBio" maxlength="200" rows="2">${esc(p.bio || '')}</textarea>
         <label class="lbl">Avatar colour</label><div class="swatches" id="pfColor">${COLORS.map(c => `<i style="background:${c}" data-c="${c}" class="${c === p.color ? 'on' : ''}"></i>`).join('')}</div>
@@ -659,7 +659,7 @@ PAGES.ai = async () => {
     ['Mistral', 'Mistral & Codestral'], ['xAI', 'Grok'], ['DeepSeek', 'DeepSeek chat & reasoner'], ['Ollama', 'Free local models on your PC']];
   main().innerHTML = `<div class="wrap page"><h1>AI Providers</h1><p class="lead">Local Ollama models are free for everyone. Cloud providers with your own API keys are an Auoris Plus feature,
     set up in the app under Settings → AI Providers. Your keys are encrypted on your PC and never uploaded.</p>
-    <div class="card" style="margin-bottom:16px">${plus ? '✅ You have Plus - AI Providers are unlocked in your app.' : 'You\'re on the free plan. <a href="#/plus">Get Plus</a> to use cloud providers.'}</div>
+    <div class="card" style="margin-bottom:16px">${plus ? '✅ You have Plus - AI Providers are unlocked in your app.' : 'You\'re on the free plan. <a href="/plus">Get Plus</a> to use cloud providers.'}</div>
     <div class="grid">${provs.map(([n, d]) => `<div class="card feat"><h3 style="margin-top:0">${n}</h3><p>${d}${n === 'Ollama' ? ' · free' : ' · Plus'}</p></div>`).join('')}</div></div>`;
 };
 
@@ -681,7 +681,7 @@ PAGES.hosting = async () => {
       <label class="lbl">Game</label><select class="in" id="hGame">${Object.entries(GAMES).map(([k, [ic, n]]) => `<option value="${k}">${ic} ${n}</option>`).join('')}</select>
       <label class="lbl">Address</label><div class="row"><input class="in" id="hName" maxlength="31" placeholder="myserver" style="flex:1;max-width:260px"><span class="muted">.servers.auoris.org</span></div>
       <button class="btn primary" id="hCreate" style="margin-top:14px" ${rows.length >= 3 ? 'disabled' : ''}>Create server</button></div>
-    ${plus ? '' : '<p style="margin-top:14px"><a class="btn primary" href="#/plus">Get Plus to host servers</a></p>'}</div>`;
+    ${plus ? '' : '<p style="margin-top:14px"><a class="btn primary" href="/plus">Get Plus to host servers</a></p>'}</div>`;
   main().querySelectorAll('[data-copy]').forEach(b => b.onclick = () => { navigator.clipboard.writeText(b.dataset.copy); toast('Address copied'); });
   main().querySelectorAll('[data-del]').forEach(b => b.onclick = async () => {
     if (!confirm('Delete this server and free up its name?')) return;
@@ -713,12 +713,12 @@ PAGES.plus = async () => {
       <div id="giftBox"></div></div>` : ''}</div>`;
   if ($('plusBuy')) $('plusBuy').onclick = async () => {
     if (!me) return go('signin');
-    const { data, error } = await sb.functions.invoke('stripe-checkout', { body: { action: 'checkout', return_url: location.origin + location.pathname + '#/plus' } });
+    const { data, error } = await sb.functions.invoke('stripe-checkout', { body: { action: 'checkout', return_url: location.origin + '/plus' } });
     if (error || !data || !data.url) return toast('Checkout isn\'t live yet - check back soon.');
     location.href = data.url;
   };
   if ($('plusManage')) $('plusManage').onclick = async () => {
-    const { data, error } = await sb.functions.invoke('stripe-checkout', { body: { action: 'portal', return_url: location.origin + location.pathname + '#/plus' } });
+    const { data, error } = await sb.functions.invoke('stripe-checkout', { body: { action: 'portal', return_url: location.origin + '/plus' } });
     if (error || !data || !data.url) return toast('Subscription management isn\'t live yet.');
     location.href = data.url;
   };
@@ -731,7 +731,7 @@ PAGES.plus = async () => {
       <button class="btn primary" id="giftBtn">Send gift</button></div>` : '<div class="empty">Add a friend first to gift them Plus.</div>';
     if ($('giftBtn')) $('giftBtn').onclick = async () => {
       const recipient_id = $('giftWho').value, months = $('giftLen').value;
-      const { data, error } = await sb.functions.invoke('stripe-checkout', { body: { action: 'gift', recipient_id, months, return_url: location.origin + location.pathname + '#/plus' } });
+      const { data, error } = await sb.functions.invoke('stripe-checkout', { body: { action: 'gift', recipient_id, months, return_url: location.origin + '/plus' } });
       if (error || !data || !data.url) return toast('Gifting isn\'t live yet - check back soon.');
       location.href = data.url;
     };
@@ -811,7 +811,17 @@ sb.auth.onAuthStateChange(ev => {
   if (ev !== 'SIGNED_OUT') return;
   me = myProfile = null; renderHeader(); go('');
 });
-window.addEventListener('hashchange', route);
+window.addEventListener('popstate', route);
+// Intercept same-origin path links (href="/...") so they route client-side instead of hitting GitHub Pages'
+// server (which has no real file at e.g. /servers - only index.html exists). Plain "#..." in-page anchors like
+// the Download button's href="#dl", and external/absolute links, are left alone to behave natively.
+document.addEventListener('click', e => {
+  if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+  const a = e.target.closest('a[href^="/"]');
+  if (!a || a.target === '_blank') return;
+  e.preventDefault();
+  go(a.getAttribute('href').replace(/^\/+/, ''));
+});
 (async () => {
   renderHeader();
   try {

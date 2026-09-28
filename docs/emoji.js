@@ -1,0 +1,31 @@
+// :shortcode: -> emoji. Shared by every chat surface on the site.
+const EMOJI = {
+  smile: '😄', grin: '😁', joy: '😂', rofl: '🤣', sweat_smile: '😅', laughing: '😆', wink: '😉', blush: '😊', innocent: '😇',
+  slight_smile: '🙂', upside_down: '🙃', relieved: '😌', heart_eyes: '😍', star_struck: '🤩', kissing_heart: '😘', yum: '😋',
+  stuck_out_tongue: '😛', zany: '🤪', nerd: '🤓', sunglasses: '😎', smirk: '😏', unamused: '😒', pensive: '😔', worried: '😟',
+  confused: '😕', frowning: '☹️', persevere: '😣', weary: '😩', pleading: '🥺', cry: '😢', sob: '😭', rage: '😡', angry: '😠',
+  exploding_head: '🤯', flushed: '😳', hot: '🥵', cold: '🥶', scream: '😱', thinking: '🤔', shush: '🤫', hand_over_mouth: '🤭',
+  neutral: '😐', expressionless: '😑', no_mouth: '😶', eye_roll: '🙄', grimace: '😬', lying: '🤥', sleeping: '😴', drool: '🤤',
+  sick: '🤢', vomit: '🤮', sneeze: '🤧', mask: '😷', dizzy_face: '😵', cowboy: '🤠', party_face: '🥳', disguise: '🥸', clown: '🤡',
+  skull: '💀', ghost: '👻', alien: '👽', robot: '🤖', poop: '💩', devil: '😈', imp: '👿', ogre: '👹', see_no_evil: '🙈',
+  thumbsup: '👍', thumbsdown: '👎', ok_hand: '👌', pinch: '🤏', v: '✌️', crossed_fingers: '🤞', love_you: '🤟', metal: '🤘',
+  call_me: '🤙', point_left: '👈', point_right: '👉', point_up: '👆', point_down: '👇', wave: '👋', clap: '👏', raised_hands: '🙌',
+  pray: '🙏', handshake: '🤝', muscle: '💪', fist: '✊', punch: '👊', writing: '✍️', eyes: '👀', brain: '🧠', tongue: '👅',
+  heart: '❤️', orange_heart: '🧡', yellow_heart: '💛', green_heart: '💚', blue_heart: '💙', purple_heart: '💜', black_heart: '🖤',
+  white_heart: '🤍', broken_heart: '💔', sparkling_heart: '💖', two_hearts: '💕', fire: '🔥', sparkles: '✨', star: '⭐', dizzy: '💫',
+  boom: '💥', zap: '⚡', sun: '☀️', moon: '🌙', cloud: '☁️', rainbow: '🌈', snowflake: '❄️', droplet: '💧', ocean: '🌊',
+  hundred: '💯', check: '✅', x: '❌', warning: '⚠️', question: '❓', exclamation: '❗', bell: '🔔', lock: '🔒', key: '🔑',
+  trophy: '🏆', medal: '🏅', crown: '👑', gem: '💎', moneybag: '💰', dollar: '💵', gift: '🎁', tada: '🎉', confetti: '🎊',
+  balloon: '🎈', cake: '🎂', pizza: '🍕', burger: '🍔', fries: '🍟', taco: '🌮', sushi: '🍣', ramen: '🍜', cookie: '🍪',
+  coffee: '☕', tea: '🍵', beer: '🍺', cheers: '🥂', apple: '🍎', banana: '🍌', avocado: '🥑', popcorn: '🍿', icecream: '🍦',
+  cat: '🐱', dog: '🐶', fox: '🦊', panda: '🐼', monkey: '🐒', frog: '🐸', unicorn: '🦄', dragon: '🐉', snake: '🐍', shark: '🦈',
+  butterfly: '🦋', bee: '🐝', turtle: '🐢', penguin: '🐧', owl: '🦉', goat: '🐐', rocket: '🚀', car: '🚗', plane: '✈️',
+  video_game: '🎮', joystick: '🕹️', dart: '🎯', dice: '🎲', chess: '♟️', soccer: '⚽', basketball: '🏀', football: '🏈',
+  guitar: '🎸', headphones: '🎧', mic: '🎤', musical_note: '🎵', movie: '🎬', camera: '📷', computer: '💻', keyboard: '⌨️',
+  phone: '📱', bulb: '💡', wrench: '🔧', hammer: '🔨', shield: '🛡️', sword: '🗡️', bow: '🏹', pickaxe: '⛏️', bomb: '💣',
+  pill: '💊', earth: '🌍', mountain: '⛰️', tree: '🌳', cactus: '🌵', rose: '🌹', sunflower: '🌻', mushroom: '🍄', clock: '🕐',
+  hourglass: '⌛', calendar: '📅', memo: '📝', book: '📖', link: '🔗', pin: '📌', mag: '🔍', speech: '💬', zzz: '💤', wave_dash: '〰️',
+  goat_emoji: '🐐', l: '🇱', w: '🇼', cap: '🧢', salute: '🫡', melting: '🫠', skull_bones: '☠️', moai: '🗿', nail_care: '💅',
+};
+const EMOJI_RE = /:([a-z0-9_]{1,24}):/g;
+const emojify = html => html.replace(EMOJI_RE, (m, k) => EMOJI[k] || m);  // expects already-escaped text

@@ -27,5 +27,9 @@ const EMOJI = {
   hourglass: '⌛', calendar: '📅', memo: '📝', book: '📖', link: '🔗', pin: '📌', mag: '🔍', speech: '💬', zzz: '💤', wave_dash: '〰️',
   goat_emoji: '🐐', l: '🇱', w: '🇼', cap: '🧢', salute: '🫡', melting: '🫠', skull_bones: '☠️', moai: '🗿', nail_care: '💅',
 };
-const EMOJI_RE = /:([a-z0-9_]{1,24}):/g;
-const emojify = html => html.replace(EMOJI_RE, (m, k) => EMOJI[k] || m);  // expects already-escaped text
+const EMOJI_RE = /:([a-z0-9_]{1,32}):/g;
+// `custom` (optional) is a Map of a server's emoji name -> image URL; it is only ever passed for that server's own channels.
+const emojify = (html, custom) => html.replace(EMOJI_RE, (m, k) => {  // expects already-escaped text
+  const u = custom && custom.get(k);
+  return u ? `<img class="cemoji" src="${String(u).replace(/"/g, '&quot;')}" alt=":${k}:" title=":${k}:">` : (EMOJI[k] || m);
+});

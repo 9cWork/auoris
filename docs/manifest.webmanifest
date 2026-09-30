@@ -1,0 +1,16 @@
+{
+  "name": "Auoris",
+  "short_name": "Auoris",
+  "description": "Servers, DMs, group chats, AI projects, hosting and Plus - install Auoris to your home screen.",
+  "start_url": "/?pwa=1",
+  "scope": "/",
+  "id": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0e1119",
+  "theme_color": "#0e1119",
+  "icons": [
+    { "src": "logo.png", "sizes": "256x256", "type": "image/png", "purpose": "any" },
+    { "src": "logo.png", "sizes": "256x256", "type": "image/png", "purpose": "maskable" }
+  ]
+}

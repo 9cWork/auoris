@@ -2,10 +2,16 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
 <title>Auoris</title>
 <meta name="description" content="Auoris - a desktop AI agent with servers, DMs, group chats, rich presence and AI projects.">
 <link rel="icon" href="logo.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0e1119">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Auoris">
+<link rel="apple-touch-icon" href="logo.png">
 <link rel="stylesheet" href="app.css">
 <!-- Undoes 404.html's redirect: GitHub Pages has no real file for a path like /plus, so 404.html sends the
      browser to /?/plus instead; this restores the real /plus URL via the History API before app.js's router
@@ -29,5 +35,10 @@
 <script src="vendor/supabase.js"></script>
 <script src="emoji.js"></script>
 <script src="app.js"></script>
+<script>
+  // Registered last, after app.js has defined the page - installability (manifest + a fetch handler) is what
+  // lets iOS/Android offer "Add to Home Screen", and it also gives the app shell a moment's offline resilience.
+  if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+</script>
 </body>
 </html>

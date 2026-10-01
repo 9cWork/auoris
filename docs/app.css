@@ -409,3 +409,6 @@ body.legacy .btn.primary { background: var(--acc) !important; box-shadow: none !
 body.legacy .dc-rail b.on { background: var(--acc) !important; }
 body.legacy .dc-msg.me p, body.legacy .dc-pb.me { background: var(--acc) !important; }
 body.legacy .dc-win { background: var(--panel) !important; } body.legacy .dc-bar, body.legacy .dc-rail { background: var(--side) !important; } body.legacy .dc-side { background: var(--panel2) !important; } body.legacy .dc-main { background: var(--bg) !important; }
+#badgeTip { position: fixed; z-index: 99999; display: none; pointer-events: none; max-width: 250px; padding: 9px 12px; border-radius: 10px; background: var(--panel2, #1d2331); border: 1px solid var(--border2, #33405a); box-shadow: 0 10px 30px #000a; font-size: 12px; line-height: 1.45; color: var(--text, #e9edf5); animation: tipIn .08s ease-out; }
+#badgeTip b { display: block; font-size: 13px; margin-bottom: 2px; } #badgeTip span { display: block; color: var(--muted, #8b93a7); }
+@keyframes tipIn { from { opacity: 0; transform: translateY(2px); } to { opacity: 1; transform: none; } }

@@ -151,7 +151,7 @@ function plusTier(p) {
 }
 function crownBadge(title, px) {   // Owner: a red crown
   const s = px || 16, t = String(title).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-  return `<svg class="lbadge" viewBox="0 0 24 24" width="${s}" height="${s}" role="img"><title>${t}</title><path fill="#ef3b3b" d="M2.5 7.5l4.8 4.3L12 4l4.7 7.8 4.8-4.3-1.9 11H4.4z"/><rect x="4.4" y="20" width="15.2" height="2.2" rx="1.1" fill="#c42626"/></svg>`;
+  return `<svg class="lbadge" viewBox="0 0 24 24" width="${s}" height="${s}" role="img" data-tip="${t}"><path fill="#ef3b3b" d="M2.5 7.5l4.8 4.3L12 4l4.7 7.8 4.8-4.3-1.9 11H4.4z"/><rect x="4.4" y="20" width="15.2" height="2.2" rx="1.1" fill="#c42626"/></svg>`;
 }
 function logoBadge(color, title, px) {   // the Auoris logo, recoloured: a picture badge instead of a text pill
   const m = /^#([0-9a-f]{6})$/i.exec(color || ''); let f = '';
@@ -162,7 +162,7 @@ function logoBadge(color, title, px) {   // the Auoris logo, recoloured: a pictu
     f = d / (mx || 1) < .15 ? `grayscale(1) brightness(${(0.6 + mx * 0.9).toFixed(2)})` : `hue-rotate(${Math.round(h - 218)}deg) brightness(1.1)`;
   }
   const s = px || 16;
-  return `<img class="lbadge" src="/img/badge.png" alt="" title="${String(title).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]))}" style="width:${s}px;height:${s}px;filter:${f}">`;
+  return `<img class="lbadge" src="/img/badge.png" alt="" data-tip="${String(title).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]))}" style="width:${s}px;height:${s}px;filter:${f}">`;
 }
 function badges(p, serverRole) {
   if (!p) return '';
@@ -178,8 +178,25 @@ function badges(p, serverRole) {
   if (t) { const tt = L('Auoris Plus · ' + t.name, t.months ? t.months + ' month' + (t.months === 1 ? '' : 's') + ' of Plus' : 'New to Plus', p.plus_since && 'Awarded ' + day(p.plus_since)); b.push([tt, logoBadge(t.color, tt, 16)]); }
   const merged = new Map();  // same icon twice (e.g. site Owner + server owner) shows once with both titles
   for (const [title, svg] of b) merged.set(svg, merged.has(svg) ? merged.get(svg) + ' · ' + title : title);
-  return merged.size ? `<span class="badges">${[...merged].map(([svg, title]) => `<span class="bdg" title="${esc(title)}">${svg}</span>`).join('')}</span>` : '';
+  return merged.size ? `<span class="badges">${[...merged].map(([svg, title]) => `<span class="bdg" data-tip="${esc(title)}">${svg}</span>`).join('')}</span>` : '';
 }
+// Instant custom hover card for badges (the browser's own title tooltip is slow and plain): anything with data-tip.
+(function () {
+  let tip = null;
+  const hide = () => { if (tip) tip.style.display = 'none'; };
+  function show(el) {
+    const t = el.getAttribute('data-tip'); if (!t) return;
+    if (!tip) { tip = document.createElement('div'); tip.id = 'badgeTip'; document.body.appendChild(tip); }
+    const lines = t.split('\n');
+    tip.innerHTML = '<b>' + esc(lines[0]) + '</b>' + lines.slice(1).map(l => '<span>' + esc(l) + '</span>').join('');
+    tip.style.display = 'block';
+    const r = el.getBoundingClientRect(), w = tip.offsetWidth, h = tip.offsetHeight;
+    tip.style.left = Math.max(8, Math.min(window.innerWidth - w - 8, r.left + r.width / 2 - w / 2)) + 'px';
+    tip.style.top = (r.bottom + h + 12 > window.innerHeight ? r.top - h - 8 : r.bottom + 8) + 'px';
+  }
+  document.addEventListener('mouseover', e => { const el = e.target.closest && e.target.closest('[data-tip]'); if (el) show(el); else hide(); });
+  document.addEventListener('scroll', hide, true); window.addEventListener('blur', hide);
+})();
 const dname = p => p ? (p.display_name || p.username) : 'Unknown';
 // Names and avatars stay plain everywhere; badges only appear on the profile card that opens when you click one.
 const who = (p, role) => p ? ` data-uid="${esc(p.id)}"${role ? ` data-role="${esc(role)}"` : ''}` : '';
@@ -2907,7 +2924,7 @@ function tyIsMember(k, u) {
 }
 function tyJoin(k) {
   Object.assign(TYS, { key: k, ready: false, sent: false, last: 0, members: null }); TYS.who.clear();
-  const ch = sb.channel('typing:' + k, { config: { broadcast: { self: false } } });
+  const ch = sb.channel('typing:' + k, { config: { broadcast: { self: false }, private: true } });
   ch.on('broadcast', { event: 'typing' }, ({ payload }) => tyRecv(k, payload, true));
   ch.on('broadcast', { event: 'typing-stop' }, ({ payload }) => tyRecv(k, payload, false));
   ch.subscribe(st => { if (TYS.ch === ch && st === 'SUBSCRIBED') TYS.ready = true; });

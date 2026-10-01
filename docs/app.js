@@ -571,7 +571,7 @@ function chatPane(pane, o) {
       wireReactPills(el, m.id);
       el.querySelector('.act-reply').onclick = () => setReplyTo(m);
       el.querySelector('.act-react').onclick = e => showReactPicker(e, id => toggleReaction(m.id, id));
-      el.querySelector('.act-fwd').onclick = e => showForwardPicker(e, m, bot ? { display_name: m.webhook_name } : p);
+      el.querySelector('.act-fwd').onclick = e => showForwardPicker(e, Object.assign(m, { __tbl: o.table }), bot ? { display_name: m.webhook_name } : p);
     }
     if (canReport) el.querySelector('.act-report').onclick = () => openReport(reportTable, m);
     { const eb = el.querySelector('.act-edit'); if (eb) eb.onclick = () => startEdit(el, m); const db = el.querySelector('.act-del'); if (db) db.onclick = () => deleteMsg(el, m); }
@@ -1208,7 +1208,7 @@ function mgSettings() {
   $('stIcon').onclick = async () => { const n = prompt('New icon (emoji or letters)', s.icon || ''); if (n === null) return; const r = await sb.from('servers').update({ icon: n.slice(0, 8) || null }).eq('id', s.id); if (r.error) fail(r.error); else { svCache = null; route(); } };
   if ($('stDelete')) $('stDelete').onclick = async () => {
     if (!confirm(`Delete ${s.name} for everyone? This can't be undone.`)) return;
-    const r = await sb.from('servers').delete().eq('id', s.id); if (r.error) return fail(r.error); svCache = null; go('messages');
+    const r = await sb.from('servers').delete().eq('id', s.id); if (r.error) return fail(r.error); sb.functions.invoke('purge-server-media', { body: { server_id: s.id } }).catch(() => {}); svCache = null; go('messages');
   };
   // ---- emoji
   let file = null;
@@ -1302,7 +1302,7 @@ async function getForwardTargets() {
 }
 async function forwardMessage(target, m, senderProfile) {
   const fromName = m.sender ? dname(senderProfile) : 'AI', body = m.body || (m.attachments ? '📎 Attachment' : '');
-  const extra = { forwarded_from_name: fromName, forwarded_from_body: body };
+  const extra = { forwarded_from_name: fromName, forwarded_from_body: body, ...(m.__tbl && m.id ? { forwarded_from_ref: m.__tbl + ':' + m.id } : {}) };
   const table = target.type === 'dm' ? 'messages' : target.type === 'group' ? 'group_messages' : 'channel_messages';
   const row = target.type === 'dm' ? { sender: me.id, recipient: target.id, body, ...extra }
     : target.type === 'group' ? { group_id: target.id, sender: me.id, body, ...extra }

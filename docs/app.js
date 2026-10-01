@@ -73,21 +73,39 @@ function openReport(table, m) {
 const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition || null;
 // attachMic(btn, getEl): getEl is a function returning the current <input> to dictate into, since chatPane()
 // composers can be torn down and rebuilt (e.g. switching DM/channel), so the element instance can change.
+// Microphone blocked: say exactly where to switch it on instead of just "blocked".
+function micBlockedMsg() {
+  const ua = navigator.userAgent;
+  const where = /Firefox/.test(ua) ? 'Click the permissions icon left of the address bar, then clear the blocked Microphone entry.'
+    : /Safari/.test(ua) && !/Chrome|Chromium/.test(ua) ? 'Open Safari → Settings → Websites → Microphone and set auoris.org to Allow.'
+    : 'Click the lock icon in the address bar → Microphone → Allow, then tap the mic again.';
+  toast('Microphone is turned off for this site. ' + where);
+}
 function attachMic(btn, getEl) {
   if (!btn) return;
   if (!SpeechRec) { btn.hidden = true; return; }
   btn.hidden = false;
   let rec = null, listening = false;
   const stop = () => { listening = false; btn.classList.remove('mic-rec'); };
-  btn.onclick = e => {
+  let starting = false;
+  btn.onclick = async e => {
     e.preventDefault(); e.stopPropagation();
     if (listening) { try { rec && rec.stop(); } catch (err) {} return; }
+    if (starting) return;
     const el = getEl(); if (!el) return;
+    starting = true;
+    try { (await navigator.mediaDevices.getUserMedia({ audio: true })).getTracks().forEach(t => t.stop()); }   // shows the browser's permission prompt
+    catch (err) {
+      starting = false;
+      return err && (err.name === 'NotAllowedError' || err.name === 'SecurityError') ? micBlockedMsg() : toast(err && err.name === 'NotFoundError' ? 'No microphone was found.' : "Couldn't use the microphone - another app may be using it.");
+    }
+    starting = false;
     const base = el.value;
     rec = new SpeechRec();
     rec.lang = navigator.language || 'en-US'; rec.interimResults = true; rec.continuous = true;
     listening = true; btn.classList.add('mic-rec');
     rec.onresult = ev => {
+      if (!btn.isConnected) { try { rec.stop(); } catch (x) {} return; }   // composer was swapped out (switched chat): stop listening
       let finalText = '', interim = '';
       for (let i = 0; i < ev.results.length; i++) {
         const r = ev.results[i];
@@ -100,7 +118,8 @@ function attachMic(btn, getEl) {
     rec.onerror = ev => {
       stop();
       if (ev.error === 'no-speech' || ev.error === 'aborted') return;
-      toast(ev.error === 'not-allowed' ? "Microphone access is blocked - check your browser's site settings." : "Voice input isn't available right now.");
+      if (ev.error === 'not-allowed' || ev.error === 'service-not-allowed') return micBlockedMsg();
+      toast("Voice input isn't available right now.");
     };
     rec.onend = stop;
     try { rec.start(); } catch (err) { stop(); toast("Voice input isn't available right now."); }
@@ -1298,7 +1317,7 @@ const DC_ICON = {
   spark: '<path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M19 15l.7 1.8 1.8.7-1.8.7L19 20l-.7-1.8-1.8-.7 1.8-.7z"/>',
 };
 const dcIcon = (k, hue) => `<span class="dc-ic" style="--h:${hue}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${DC_ICON[k]}</svg></span>`;
-const dcFeat = (k, hue, t, d) => `<div class="card feat dc-feat">${dcIcon(k, hue)}<h3>${t}</h3><p>${d}</p></div>`;
+const dcFeat = (k, hue, t, d) => `<div class="card feat dc-feat" style="--hh:${hue}">${dcIcon(k, hue)}<h3>${t}</h3><p>${d}</p></div>`;
 const MC_IMG = n => `<img src="/img/mc/${n}.png" alt="" loading="lazy">`;
 const dcAppMock = () => `<div class="dc-win dc-hero-win" aria-hidden="true">
   <div class="dc-bar"><i></i><i></i><i></i><span>Auoris</span></div>
@@ -1326,7 +1345,7 @@ PAGES[''] = async () => {
   main().innerHTML = `
   <section class="hero"><div class="stars"></div><div class="aur a1"></div><div class="aur a2"></div><div class="aur a3"></div>
     <div class="hero-in">
-    <div class="logowrap"><span class="ring r1"></span><span class="ring r2"></span><img src="logo.png" alt=""></div>
+    <div class="logowrap"><span class="ring r1"></span><span class="ring r2"></span><img src="/logo.png" alt=""></div>
     <h1>Meet <span class="grad">Auoris</span></h1>
     <p>A desktop AI agent for local Ollama models or your own cloud keys, with servers, DMs, group chats, rich presence and a phone companion.</p>
     <div class="row"><a class="btn primary" href="#dl" id="dlTop">⬇ Download for Windows</a>${me ? '<a class="btn" href="/messages">Open Messages</a>' : '<a class="btn" href="/signup">Create an account</a>'}</div>
@@ -1344,7 +1363,7 @@ PAGES[''] = async () => {
   <section class="band"><div class="wrap"><div class="dc-txt dc-center"><span class="dc-kick">Minecraft</span><h2>Make your Minecraft yours</h2>
     <p class="lead">Capes, hats, pets and tool skins, with a live preview of your real skin. Other Auoris players see them too, and your nametag gets the Auoris moon.</p></div>
     <div class="dc-mc">
-      <div class="dc-tag"><img src="/img/mc/logo.png" alt="" class="px"><span>Steve</span></div>
+      <div class="dc-tag"><img src="/img/mc/auoris-logo.png" alt="" class="px"><span>Steve</span></div>
       <div class="dc-row capes">${['auoris', 'aurora_wave', 'starlight', 'midnight', 'inferno', 'frostbite', 'royal', 'toxic'].map(n => MC_IMG('cape_' + n)).join('')}</div>
       <div class="dc-row pets">${['dog', 'cat', 'fox', 'parrot', 'dragon'].map(n => MC_IMG('pet_' + n)).join('')}</div>
       <div class="dc-row hats">${['wizard', 'crown', 'top_hat', 'viking', 'party', 'cat_ears'].map(n => MC_IMG('hat_' + n)).join('')}</div>
@@ -1365,13 +1384,19 @@ PAGES[''] = async () => {
 };
 
 // ---- sign in / sign up
-const AUTH = { mode: 'login', email: '', pendingPass: null, resume: null };
+const AUTH = { mode: 'login', email: '', pendingPass: null, resume: null, notice: null };
 PAGES.signin = async () => { if (me) return go('messages'); authPage(AUTH.resume || 'login'); AUTH.resume = null; };
 PAGES.signup = async () => { if (me) return go('messages'); authPage('signup'); };
 function authPage(mode) {
-  main().innerHTML = `<div class="authwrap"><div class="card authcard"><img src="logo.png" alt="" style="width:56px;border-radius:14px">
+  main().innerHTML = `<div class="authwrap"><div class="card authcard"><img src="/logo.png" alt="" style="width:56px;border-radius:14px">
     <h2 id="authTitle"></h2><p class="sub" id="authSub"></p><div id="authOauth"></div><form id="authForm" autocomplete="on" novalidate></form><div id="authErr"></div><div id="authLinks"></div></div></div>`;
   authShow(mode);
+  // A message to show: a suspended account that was bounced here, or the provider's reason when social sign-in failed
+  // (Supabase redirects back with #error_description=... or ?error_description=...).
+  const eh = new URLSearchParams((location.hash || '').replace(/^#/, '') + '&' + (location.search || '').replace(/^\?/, ''));
+  const msg = AUTH.notice || eh.get('error_description');
+  AUTH.notice = null;
+  if (msg) authErr(String(msg).slice(0, 200));
 }
 const OAUTH_PROVIDERS = [['google', 'Google', '<svg viewBox="0 0 48 48" width="18" height="18"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>'], ['azure', 'Microsoft', '<svg viewBox="0 0 23 23" width="18" height="18"><path fill="#f25022" d="M1 1h10v10H1z"/><path fill="#7fba00" d="M12 1h10v10H12z"/><path fill="#00a4ef" d="M1 12h10v10H1z"/><path fill="#ffb900" d="M12 12h10v10H12z"/></svg>'], ['github', 'GitHub', '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 .5C5.73.5.5 5.73.5 12c0 5.08 3.29 9.39 7.86 10.91.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.54-3.88-1.54-.52-1.33-1.28-1.69-1.28-1.69-1.05-.71.08-.7.08-.7 1.15.08 1.76 1.19 1.76 1.19 1.03 1.76 2.69 1.25 3.35.96.1-.75.4-1.25.73-1.54-2.55-.29-5.24-1.28-5.24-5.68 0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.78 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.83 1.19 3.09 0 4.41-2.69 5.39-5.25 5.67.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 23.5 12C23.5 5.73 18.27.5 12 .5z"/></svg>']];
 // Which providers are switched on in Supabase (public endpoint) - buttons only show for those.
@@ -1500,7 +1525,11 @@ async function afterSignIn(fromForm) {
   const { data: prof, error: profErr } = await sb.from('profiles').select(PCOLS + ',banned').eq('id', user.id).maybeSingle();
   if (profErr) throw profErr;  // a lookup failure isn't "no profile yet" - don't send an existing user to claim_username
   if (!prof) { if (!fromForm) { AUTH.resume = 'username'; return go('signin'); } return authShow('username'); }
-  if (prof.banned) { await sb.auth.signOut(); return authShow('login', 'This account has been suspended.'); }
+  if (prof.banned) {
+    await sb.auth.signOut();
+    if (!fromForm) { AUTH.notice = 'This account has been suspended.'; AUTH.resume = 'login'; return go('signin'); }   // the sign-in page isn't on screen yet
+    return authShow('login', 'This account has been suspended.');
+  }
   me = user; myProfile = prof; profiles.set(prof.id, prof);
   await loadBlocks();
   renderHeader();
@@ -2372,7 +2401,7 @@ const W2_THEMES = [
   { id: 'default', name: 'Default dark', vars: {} },
   { id: 'midnight', name: 'Midnight', vars: { '--bg': '#04060c', '--side': '#070a12', '--panel': '#0a0e19', '--panel2': '#10162a', '--border': '#171f36', '--border2': '#243052' } },
   { id: 'aurora', name: 'Aurora', vars: { '--bg': '#08130f', '--side': '#0b1914', '--panel': '#0f211b', '--panel2': '#152d25', '--border': '#1d3a30', '--border2': '#2a5646', '--acc': '#6ee7b7', '--acc2': '#34d399' } },
-  { id: 'light', name: 'Light', scheme: 'light', vars: { '--bg': '#f3f5fa', '--side': '#e9edf5', '--panel': '#ffffff', '--panel2': '#eef1f8', '--border': '#d5dbe8', '--border2': '#b7c1d6', '--text': '#1a2033', '--muted': '#55607a', '--dim': '#8791a8', '--acc': '#2f6fd6', '--acc2': '#2f6fd6' },
+  { id: 'light', name: 'Light', scheme: 'light', vars: { '--bg': '#f3f5fa', '--side': '#e9edf5', '--panel': '#ffffff', '--panel2': '#eef1f8', '--border': '#d5dbe8', '--border2': '#b7c1d6', '--text': '#1a2033', '--muted': '#55607a', '--dim': '#8791a8', '--acc': '#2f6fd6', '--acc2': '#2f6fd6', '--ok': '#1a8f55', '--warn': '#a86a00', '--err': '#c4343a' },
     extra: `header { background: #f3f5fad9 !important; }
     .hero { background: radial-gradient(900px 520px at 50% -10%, #d9e5ff, transparent 62%) !important; }
     .hero .aur { opacity: .2 !important; } .hero .stars { display: none; } .hero .ring { border-color: #2f6fd655; }
@@ -2386,7 +2415,8 @@ const W2_THEMES = [
     .dc-feat { background: linear-gradient(180deg, #fff, #f6f8fc) !important; }
     section.band.alt { background: linear-gradient(180deg, #e9eef8, #f3f5fa) !important; }
     .dc-notch { background: #c9d1e3 !important; } .dc-phone { border-color: #c9d1e3 !important; }
-    .dc-dl { background: radial-gradient(700px 260px at 50% 100%, #2f6fd620, transparent) !important; }` },
+    .dc-dl { background: radial-gradient(700px 260px at 50% 100%, #2f6fd620, transparent) !important; }
+    .rail { background: #e9edf5 !important; } .msg:hover { background: #0000000a !important; } .pluspill, .status { background: #0000000d !important; } .pill.actyou { color: #fff !important; }` },
   { id: 'contrast', name: 'High contrast', vars: { '--bg': '#000', '--side': '#000', '--panel': '#0a0a0a', '--panel2': '#161616', '--border': '#8c8c8c', '--border2': '#fff', '--text': '#fff', '--muted': '#e6e6e6', '--dim': '#c4c4c4', '--acc': '#ffe14d', '--acc2': '#ffd000' }, extra: 'header { background: #000d !important; }' },
   { id: 'rose', name: 'Rose', vars: { '--bg': '#170d13', '--side': '#1c1118', '--panel': '#24151d', '--panel2': '#2f1c27', '--border': '#44273a', '--border2': '#63384f', '--acc': '#ff8fc0', '--acc2': '#ff5fa5' } },
   { id: 'ocean', name: 'Ocean', vars: { '--bg': '#07141c', '--side': '#0a1a24', '--panel': '#0e2230', '--panel2': '#132c3d', '--border': '#1a3a50', '--border2': '#27577a', '--acc': '#5fd4ff', '--acc2': '#2bb8f0' } },
@@ -2602,7 +2632,7 @@ document.addEventListener('submit', e => { if (e.target.closest && e.target.clos
   const SEL = '.composer form input:not([type=file]):not([type=checkbox]), .composer form textarea';
   const hist = new Map();
   let quiet = false;
-  const keyOf = el => el.id || 'composer';
+  const keyOf = el => (el.id || 'composer') + '@' + location.pathname;
   const st = el => { const k = keyOf(el); let s = hist.get(k); if (!s) hist.set(k, s = { list: [], i: -1, draft: '' }); return s; };
   const note = el => {
     const text = el.value.trim(); if (!text) return;
@@ -2632,7 +2662,6 @@ document.addEventListener('submit', e => { if (e.target.closest && e.target.clos
     }
   });
   document.addEventListener('submit', e => { const el = e.target.querySelector && e.target.querySelector(SEL); if (el) note(el); }, true);
-  document.addEventListener('click', e => { if (e.target.closest && e.target.closest('#sendBtn')) { const el = document.querySelector('#input'); if (el) note(el); } }, true);
 })();
 
 (async () => {

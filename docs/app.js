@@ -1621,7 +1621,7 @@ function authShow(mode, sub) {
   const email = inp('aEmail', 'Email', 'email', 'autocomplete="email" required');
   $('authForm').innerHTML = {
     login: email + inp('aPass', 'Password', 'password', 'autocomplete="current-password" required') + '<button class="btn primary">Sign in</button>',
-    signup: email + inp('aPass', 'Password', 'password', 'autocomplete="new-password" required minlength="8"') + '<button class="btn primary">Create account</button>',
+    signup: email + inp('aPass', 'Password', 'password', 'autocomplete="new-password" required minlength="8"') + inp('aDob', 'Date of birth (to check you are 13 or older - not stored)', 'date', 'required') + '<button class="btn primary">Create account</button>',
     username: inp('aUser', 'Username', 'text', 'autocomplete="username" required maxlength="20" pattern="[A-Za-z0-9_]{3,20}" title="3-20 letters, numbers or _"') + '<button class="btn primary">Continue</button>',
     verify: code + '<button class="btn primary">Verify</button>', forgot: email + '<button class="btn primary">Send code</button>',
     reset: code + inp('aPass', 'New password', 'password', 'autocomplete="new-password" required minlength="8"') + '<button class="btn primary">Save password</button>',
@@ -1647,10 +1647,17 @@ function authShow(mode, sub) {
 function authErr(msg, ok) { $('authErr').textContent = msg; $('authErr').className = ok ? 'ok' : ''; }
 function authValidate(m, v) {
   if ($('aEmail') && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v('aEmail'))) return 'Enter a valid email address.';
+  if ($('aDob') && m === 'signup') { const e = authAgeOk($('aDob').value); if (e) return e; }
   if ($('aPass') && (m === 'signup' || m === 'reset') && $('aPass').value.length < 8) return 'Your password needs to be at least 8 characters.';
   if ($('aUser') && !/^[A-Za-z0-9_]{3,20}$/.test(v('aUser'))) return 'Usernames are 3-20 letters, numbers or _.';
   if ($('aCode') && v('aCode').length !== 6) return 'Enter the 6-digit code we emailed you.';
   return null;
+}
+function authAgeOk(dobStr) {   // sign-up age check: 13+. The date is only used here and is never stored or sent.
+  const d = new Date(dobStr); if (!dobStr || isNaN(d)) return 'Enter your date of birth.';
+  const now = new Date(); let age = now.getFullYear() - d.getFullYear(); const m = now.getMonth() - d.getMonth(); if (m < 0 || (m === 0 && now.getDate() < d.getDate())) age--;
+  if (age < 0 || age > 120) return 'Enter a valid date of birth.';
+  return age < 13 ? 'You must be at least 13 years old to use Auoris.' : null;
 }
 async function authSubmit(e) {
   e.preventDefault();
@@ -2345,13 +2352,13 @@ function openDeleteAccount() {
     <p class="small" style="margin:0 0 8px"><b>This is permanent and can't be undone.</b></p>
     <p class="small" style="margin:0 0 6px"><b>Deleted:</b> your profile, friends and friend requests, every direct message you sent or received (the other person loses them too), every message you sent in group chats and server channels, your reactions, your blocks and mutes, your uploaded files and profile pictures, and every server, group chat, AI project and hosted server you own (for everyone in them).</p>
     <p class="small" style="margin:0 0 6px"><b>Kept anonymously:</b> messages you wrote in AI projects owned by other people, and abuse reports you filed or that name you.</p>
-    <p class="small" style="margin:0 0 6px"><b>Auoris Plus:</b> cancel an active subscription first with Manage subscription on the Plus page. Deletion is blocked while Plus is active.</p>
-    ${owner ? '<p class="small" style="color:var(--err)">The Owner account can\'t be deleted.</p>' : plus ? '<p class="small" style="color:var(--err)">You have an active Plus subscription - cancel it first, then come back.</p>' : `<label class="lbl">Type your username (<b>${esc(myProfile.username)}</b>) to confirm</label><input class="in" id="dlName" autocomplete="off">`}
-    <div class="row" style="margin-top:14px;justify-content:flex-end"><button class="btn" id="dlCancel">Cancel</button>${owner || plus ? '' : '<button class="btn danger" id="dlGo" disabled>Delete forever</button>'}</div></div>`;
+    <p class="small" style="margin:0 0 6px"><b>Auoris Plus:</b> if you have an active subscription, deleting your account cancels it right away. There is no refund for the current period.</p>
+    ${owner ? '<p class="small" style="color:var(--err)">The Owner account can\'t be deleted.</p>' : `<label class="lbl">Type your username (<b>${esc(myProfile.username)}</b>) to confirm</label><input class="in" id="dlName" autocomplete="off">`}
+    <div class="row" style="margin-top:14px;justify-content:flex-end"><button class="btn" id="dlCancel">Cancel</button>${owner ? '' : '<button class="btn danger" id="dlGo" disabled>Delete forever</button>'}</div></div>`;
   document.body.appendChild(card);
   card.onclick = e => { if (e.target === card) card.remove(); };
   card.querySelector('#dlCancel').onclick = () => card.remove();
-  if (owner || plus) return;
+  if (owner) return;
   const name = card.querySelector('#dlName'), go2 = card.querySelector('#dlGo');
   name.oninput = () => { go2.disabled = name.value.trim().toLowerCase() !== myProfile.username.toLowerCase(); };
   go2.onclick = async () => {

@@ -1,5 +1,5 @@
 {
-  "version": "2026-10-01.2",
+  "version": "2026-10-01.3",
   "operator": "Auoris",
   "contact": "",
   "docs": [
@@ -31,6 +31,10 @@
   ],
   "changes": [
     {
+      "version": "2026-10-01.3",
+      "summary": "Deleting your account now cancels an active Plus subscription for you instead of blocking deletion; sign-up now checks your age (the date of birth is not stored)."
+    },
+    {
       "version": "2026-10-01.2",
       "summary": "Added server Sparks to the Subscription Terms; stated the age requirement more clearly (13, or 16 where the law says so); clarified what malware scanning does, what game presence reads, how long reports are kept, and added trademark notices."
     },
@@ -39,5 +43,5 @@
       "summary": "First version of the Terms of Service, Privacy Policy, Acceptable Use Policy, Subscription and Gift Terms, and Copyright policy."
     }
   ],
-  "hash": "1da8975a5de1bef55577556b9552fcf6ec125b6ae4fce6b29682163fee513b3b"
+  "hash": "489870e321e34933c9b9703b2050dddf5dd1cf7800b1c72a22a89cb1fc478bea"
 }

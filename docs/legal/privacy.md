@@ -15,6 +15,7 @@ Local AI chats, your project folders, settings, downloaded models, the Minecraft
 
 ## 3. What we collect when you have an account
 
+- **Age check:** when you sign up we ask for your date of birth only to check that you are old enough. We do not store it.
 - **Account details:** email address, username, display name, password (stored as a salted hash by our authentication provider, never in plain text), and, if you use Google, Microsoft or GitHub sign-in, the basic profile details they share with us (such as your email and name).
 - **Profile:** avatar, banner, bio, pronouns, colours, effects, badges and your Plus status.
 - **Social data:** friends, friend requests, blocks, mutes, group memberships, server memberships, server roles, banners and Sparks you give to servers.

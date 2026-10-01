@@ -4,7 +4,7 @@ These Terms of Service ("Terms") are an agreement between you and {{operator}} (
 
 ## 1. Who can use Auoris
 
-You must be at least 13 years old, or the minimum age at which you can consent to using online services where you live, whichever is higher. If you are under 18 you confirm that a parent or guardian is fine with you using the Service. You must give accurate information when you create an account and keep your sign-in details safe. You are responsible for what happens under your account.
+You must be at least 13 years old, or 16 where the law in your country sets the age for consenting to online services at 16 (or any other higher age), whichever is higher. When you accept these Terms you confirm that you meet this age. If we learn that someone is under the required age we will close the account and delete its data. If you are under 18 you confirm that a parent or guardian is fine with you using the Service. You must give accurate information when you create an account and keep your sign-in details safe. You are responsible for what happens under your account.
 
 ## 2. What Auoris is
 
@@ -30,11 +30,11 @@ You can block people, report messages and delete your account. Moderators and ad
 
 ## 6. Auoris Plus and payments
 
-Auoris Plus is an optional paid subscription and can also be bought as a gift. Payments are handled by Stripe; we never see your full card number. The price is shown before you pay. Subscriptions renew automatically each billing period until you cancel, and you can cancel at any time from Manage subscription. If you cancel, Plus stays active until the end of the period you already paid for. Our Subscription Terms explain renewals, refunds, gifts and what happens when Plus ends.
+Auoris Plus is an optional paid subscription and can also be bought as a gift. Plus members can also give "Sparks" to servers they are in; the Subscription Terms explain how Sparks work. Payments are handled by Stripe; we never see your full card number. The price is shown before you pay. Subscriptions renew automatically each billing period until you cancel, and you can cancel at any time from Manage subscription. If you cancel, Plus stays active until the end of the period you already paid for. Our Subscription Terms explain renewals, refunds, gifts and what happens when Plus ends.
 
 ## 7. The Minecraft client
 
-The Auoris Minecraft features are not made by, endorsed by or associated with Mojang Studios or Microsoft. Minecraft is a trademark of Mojang. You need your own legitimate copy of Minecraft to play. The launcher signs in with your Microsoft account through Microsoft's own sign-in. Mods you add yourself are not made or checked by us; use only mods you trust, and don't use any feature of the Service to cheat on servers that forbid it.
+**This is not an official Minecraft product or service.** The Auoris Minecraft features are not made by, endorsed by or associated with Mojang Studios or Microsoft. Minecraft is a trademark of Mojang Studios and Microsoft. You need your own legitimate copy of Minecraft to play. The launcher signs in with your Microsoft account through Microsoft's own sign-in. Mods you add yourself are not made or checked by us; use only mods you trust, and don't use any feature of the Service to cheat on servers that forbid it.
 
 ## 8. Acceptable use
 

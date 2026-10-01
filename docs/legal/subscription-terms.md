@@ -22,19 +22,23 @@ Subscriptions are billed in advance and are generally not refundable once the pe
 
 A gift is a one-time payment that gives the recipient a set number of months of Plus. Gifts do not renew and the giver is not billed again. Gifts are not refundable once redeemed or applied, except where the law requires. If the recipient already has Plus, the gifted months are added to the end of their current Plus. We may refuse or reverse a gift that looks fraudulent.
 
-## 6. Plus colours and time
+## 6. Sparks
+
+Each Plus member can give up to 2 Sparks to servers they are in, and can take a Spark back at any time to give it to another server. A Spark counts only while the person who gave it has an active Plus subscription. A server with 2 Sparks reaches Level 1 and can have a banner image and image role icons; further perks may be added later. Sparks have no cash value, cannot be bought separately, transferred or refunded, and a banner or icon already set stays until it is changed.
+
+## 7. Plus colours and time
 
 The colour of your Plus badge depends on how long you have continuously had Plus, counted from when your current Plus period began. If Plus lapses and ends, the count starts again from the next time you subscribe.
 
-## 7. If Plus ends
+## 8. If Plus ends
 
 You keep your account and everything free. Plus-only items, such as a banner image, stop being shown; you can choose a banner colour instead. They come back if you subscribe again.
 
-## 8. Fraud and chargebacks
+## 9. Fraud and chargebacks
 
 We may end Plus and close an account where a payment is disputed or reversed without contacting us first, or where Plus was obtained fraudulently.
 
-## 9. Contact
+## 10. Contact
 
 Billing questions: {{contact}}.
 

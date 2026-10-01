@@ -17,12 +17,12 @@ Local AI chats, your project folders, settings, downloaded models, the Minecraft
 
 - **Account details:** email address, username, display name, password (stored as a salted hash by our authentication provider, never in plain text), and, if you use Google, Microsoft or GitHub sign-in, the basic profile details they share with us (such as your email and name).
 - **Profile:** avatar, banner, bio, pronouns, colours, effects, badges and your Plus status.
-- **Social data:** friends, friend requests, blocks, mutes, group memberships, server memberships and roles.
-- **Messages and files:** direct messages, group and server messages, reactions, pins, polls, activities and the files, images and GIF links you send. Files are scanned automatically for malware and kept in private storage; links to them are signed and expire.
-- **Presence:** whether you are online, and, if you allow it, what game you are playing and, for some games, the server you are on, so friends can see it. You can turn this off in Settings.
+- **Social data:** friends, friend requests, blocks, mutes, group memberships, server memberships, server roles, banners and Sparks you give to servers.
+- **Messages and files:** direct messages, group and server messages, reactions, pins, polls, activities and the files, images and GIF links you send. Files are checked automatically for known malware signatures and disguised executables (this is not a full antivirus scan) and kept in private storage; links to them are signed and expire.
+- **Presence:** whether you are online, and, if you allow it, what game you are playing so friends can see it. For some games Auoris reads that game's own log files on your computer to find the server address (for Minecraft) or the game place and server id (for Roblox), and shares that with your friends so they can join you. You can turn this off in Settings, and Auoris reads only those logs for that purpose.
 - **Minecraft:** if you use the Auoris Minecraft features and share cosmetics, we store your Minecraft username, the cosmetics you picked and when you were last online so other Auoris players can show your logo and cosmetics. You can turn sharing off.
 - **Billing:** when you buy Plus, Stripe collects your payment details. We receive a customer id, subscription status and dates, not your card number.
-- **Safety and abuse:** reports you send, moderation actions and technical records (for example rate-limit counters) used to keep the Service safe.
+- **Safety and abuse:** reports you send, moderation actions and technical records (for example rate-limit counters) used to keep the Service safe. Reports about messages are kept after the reporter or the reported person deletes their account, for as long as needed to handle the report and protect people.
 - **Uploads quota data:** the size and time of your uploads, used to apply upload limits.
 - **Crash reports (optional):** if you switch this on, an error message, a trimmed technical trace with your user folder, file paths and e-mail addresses removed, the Auoris version and your Windows version.
 
@@ -45,7 +45,7 @@ Our providers may process data in the United States and other countries. Where t
 
 ## 7. How long we keep it
 
-We keep account data while your account exists. Messages and files stay until you or the other participants delete them or the account is deleted. When you delete your account we delete or anonymise your profile and content within a reasonable time, apart from what we must keep for legal, billing or abuse-prevention reasons. Crash reports are kept only as long as needed to fix the bug.
+We keep account data while your account exists. Messages and files stay until you or the other participants delete them or the account is deleted. When you delete your account we delete or anonymise your profile and content within a reasonable time, apart from what we must keep for legal, billing or abuse-prevention reasons. Crash reports are kept only as long as needed to fix the bug, and are deleted with your account.
 
 ## 8. Your choices and rights
 
@@ -61,7 +61,7 @@ Auoris is not for children under 13 (or the higher age required where you live).
 
 ## 11. Cookies and local storage
 
-The website uses your browser's local storage for things like your theme, last-seen markers and sign-in session. We don't use advertising or cross-site tracking cookies. The desktop app does not use cookies for tracking.
+The website uses your browser's local storage for things like your theme, last-seen markers and sign-in session, and a service worker that caches the site's own files so it loads faster. We don't use advertising or cross-site tracking cookies. The desktop app does not use cookies for tracking.
 
 ## 12. Changes to this policy
 

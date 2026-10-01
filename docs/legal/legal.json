@@ -1,5 +1,5 @@
 {
-  "version": "2026-10-01",
+  "version": "2026-10-01.2",
   "operator": "Auoris",
   "contact": "",
   "docs": [
@@ -31,9 +31,13 @@
   ],
   "changes": [
     {
+      "version": "2026-10-01.2",
+      "summary": "Added server Sparks to the Subscription Terms; stated the age requirement more clearly (13, or 16 where the law says so); clarified what malware scanning does, what game presence reads, how long reports are kept, and added trademark notices."
+    },
+    {
       "version": "2026-10-01",
       "summary": "First version of the Terms of Service, Privacy Policy, Acceptable Use Policy, Subscription and Gift Terms, and Copyright policy."
     }
   ],
-  "hash": "36ef3c1e07211599be238cf9e367fd20b94445abaebba50b1325ee14b39071e7"
+  "hash": "1da8975a5de1bef55577556b9552fcf6ec125b6ae4fce6b29682163fee513b3b"
 }

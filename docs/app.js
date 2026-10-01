@@ -2416,6 +2416,7 @@ const W2_THEMES = [
     section.band.alt { background: linear-gradient(180deg, #e9eef8, #f3f5fa) !important; }
     .dc-notch { background: #c9d1e3 !important; } .dc-phone { border-color: #c9d1e3 !important; }
     .dc-dl { background: radial-gradient(700px 260px at 50% 100%, #2f6fd620, transparent) !important; }
+    .plushero svg, .ladder svg { filter: drop-shadow(0 1px 2px #1a203388); }
     .rail { background: #e9edf5 !important; } .msg:hover { background: #0000000a !important; } .pluspill, .status { background: #0000000d !important; } .pill.actyou { color: #fff !important; }` },
   { id: 'contrast', name: 'High contrast', vars: { '--bg': '#000', '--side': '#000', '--panel': '#0a0a0a', '--panel2': '#161616', '--border': '#8c8c8c', '--border2': '#fff', '--text': '#fff', '--muted': '#e6e6e6', '--dim': '#c4c4c4', '--acc': '#ffe14d', '--acc2': '#ffd000' }, extra: 'header { background: #000d !important; }' },
   { id: 'rose', name: 'Rose', vars: { '--bg': '#170d13', '--side': '#1c1118', '--panel': '#24151d', '--panel2': '#2f1c27', '--border': '#44273a', '--border2': '#63384f', '--acc': '#ff8fc0', '--acc2': '#ff5fa5' } },

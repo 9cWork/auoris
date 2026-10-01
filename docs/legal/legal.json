@@ -1,0 +1,39 @@
+{
+  "version": "2026-10-01",
+  "operator": "Auoris",
+  "contact": "",
+  "docs": [
+    {
+      "id": "terms",
+      "title": "Terms of Service",
+      "file": "terms.md"
+    },
+    {
+      "id": "privacy",
+      "title": "Privacy Policy",
+      "file": "privacy.md"
+    },
+    {
+      "id": "acceptable-use",
+      "title": "Acceptable Use Policy",
+      "file": "acceptable-use.md"
+    },
+    {
+      "id": "subscription-terms",
+      "title": "Subscription and Gift Terms",
+      "file": "subscription-terms.md"
+    },
+    {
+      "id": "copyright",
+      "title": "Copyright and Content Removal",
+      "file": "copyright.md"
+    }
+  ],
+  "changes": [
+    {
+      "version": "2026-10-01",
+      "summary": "First version of the Terms of Service, Privacy Policy, Acceptable Use Policy, Subscription and Gift Terms, and Copyright policy."
+    }
+  ],
+  "hash": "36ef3c1e07211599be238cf9e367fd20b94445abaebba50b1325ee14b39071e7"
+}

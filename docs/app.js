@@ -1332,6 +1332,7 @@ async function route() {
   const [name = '', ...args] = location.pathname.replace(/^\/?/, '').split('/').map(decodeURIComponent);
   document.querySelectorAll('#topnav a').forEach(a => a.classList.toggle('on', a.dataset.r === name));
   if (NEEDS_AUTH.has(name) && !me) return go('signin');
+  legalFooter(); legalSiteCheck();
   const page = PAGES[name] || PAGES[''];
   window.scrollTo(0, 0);
   try { await page(...args); } catch (e) { main().innerHTML = `<div class="wrap page"><div class="card">Something went wrong: ${esc(e.message || e)}</div></div>`; }
@@ -1440,6 +1441,113 @@ PAGES[''] = async () => {
 
 // ---- sign in / sign up
 const AUTH = { mode: 'login', email: '', pendingPass: null, resume: null, notice: null };
+// ================================================================ legal documents: viewer + "please accept" gate (shared by the app and auoris.org)
+// Documents live in legal/*.md and are versioned by date in legal/legal.json (python tools/legal_bump.py). Whenever the version
+// changes, everyone is asked to read and accept it again before they carry on.
+const LEGAL = { data: null };
+function legalMd(src, L) {
+  const text = String(src).replace(/^# .*\n+/, '').replace(/\{\{operator\}\}/g, L.operator || 'Auoris').replace(/\{\{version\}\}/g, L.version)
+    .replace(/\{\{contact\}\}/g, L.contact || 'the contact details on auoris.org');
+  const inl = t => esc(t).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/(^|[^*])\*([^*]+)\*/g, '$1<i>$2</i>').replace(/`([^`]+)`/g, '<code>$1</code>');
+  const out = []; let list = null, para = [];
+  const flush = () => { if (para.length) { out.push('<p>' + inl(para.join(' ')) + '</p>'); para = []; } };
+  const close = () => { if (list) { out.push('</' + list + '>'); list = null; } };
+  for (const raw of text.split('\n')) {
+    const l = raw.trimEnd();
+    if (!l.trim()) { flush(); close(); continue; }
+    let m;
+    if ((m = /^(#{1,3}) (.*)$/.exec(l))) { flush(); close(); out.push(`<h${m[1].length + 1}>${inl(m[2])}</h${m[1].length + 1}>`); }
+    else if ((m = /^- (.*)$/.exec(l))) { flush(); if (list !== 'ul') { close(); out.push('<ul>'); list = 'ul'; } out.push('<li>' + inl(m[1]) + '</li>'); }
+    else if ((m = /^\d+\. (.*)$/.exec(l))) { flush(); if (list !== 'ol') { close(); out.push('<ol>'); list = 'ol'; } out.push('<li>' + inl(m[1]) + '</li>'); }
+    else { close(); para.push(l.trim()); }
+  }
+  flush(); close();
+  return out.join('');
+}
+async function legalGet() { if (!LEGAL.data) LEGAL.data = await LEGAL_ENV.load(); return LEGAL.data; }
+const LEGAL_CSS = `#legalGate, #legalView { position: fixed; inset: 0; z-index: 9600; background: #000b; display: flex; align-items: center; justify-content: center; padding: 18px; }
+  #legalView { z-index: 9700; }
+  .legalbox { width: min(720px, 100%); max-height: 92vh; display: flex; flex-direction: column; background: var(--panel); border: 1px solid var(--border2); border-radius: 18px; box-shadow: 0 24px 70px #000a; overflow: hidden; }
+  .legalbox header { padding: 18px 22px 8px; } .legalbox header h2 { margin: 0 0 4px; font-size: 20px; } .legalbox header p { margin: 0; color: var(--muted); font-size: 13.5px; }
+  .legalbox .lbody { padding: 6px 22px 12px; overflow-y: auto; flex: 1; font-size: 13.5px; line-height: 1.6; }
+  .legalbox .lbody h2, .legalbox .lbody h3, .legalbox .lbody h4 { margin: 18px 0 6px; } .legalbox .lbody p, .legalbox .lbody li { color: var(--muted); } .legalbox .lbody b { color: var(--text); }
+  .legalbox footer { padding: 12px 22px 18px; border-top: 1px solid var(--border); display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .legaldocs { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 4px; } .legaldocs button { font-size: 12.5px; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--border2); background: var(--panel2); color: var(--text); cursor: pointer; }
+  .legaltabs { display: flex; gap: 6px; flex-wrap: wrap; padding: 0 22px 8px; } .legaltabs button { font-size: 12.5px; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--border); background: none; color: var(--muted); cursor: pointer; } .legaltabs button.on { background: var(--panel2); color: var(--text); border-color: var(--border2); }
+  .legalnote { font-size: 12px; color: var(--dim); margin-top: 12px; text-align: center; } .legalnote a { color: var(--acc); cursor: pointer; text-decoration: underline; }`;
+function legalStyle() { if (!document.getElementById('legalCss')) { const s = document.createElement('style'); s.id = 'legalCss'; s.textContent = LEGAL_CSS; document.head.appendChild(s); } }
+async function showLegal(id) {
+  legalStyle();
+  const L = await legalGet(); if (!L) return;
+  let v = document.getElementById('legalView'); if (v) v.remove();
+  v = document.createElement('div'); v.id = 'legalView';
+  let cur = (L.docs.find(d => d.id === id) || L.docs[0]).id;
+  const draw = () => {
+    const d = L.docs.find(x => x.id === cur);
+    v.innerHTML = `<div class="legalbox"><header><h2>${esc(d.title)}</h2><p>Version ${esc(L.version)}</p></header>
+      <div class="legaltabs">${L.docs.map(x => `<button data-d="${esc(x.id)}" class="${x.id === cur ? 'on' : ''}">${esc(x.title)}</button>`).join('')}</div>
+      <div class="lbody">${legalMd(d.text, L)}${L.changes && L.changes.length ? `<h3>Recent changes</h3><ul>${L.changes.slice(0, 5).map(c => `<li><b>${esc(c.version)}</b> - ${esc(c.summary)}</li>`).join('')}</ul>` : ''}</div>
+      <footer><span style="flex:1"></span><button class="btn" id="legalClose">Close</button></footer></div>`;
+    v.querySelectorAll('.legaltabs button').forEach(b => b.onclick = () => { cur = b.dataset.d; draw(); });
+    v.querySelector('#legalClose').onclick = () => v.remove();
+  };
+  v.addEventListener('click', e => { if (e.target === v) v.remove(); });
+  document.body.appendChild(v); draw();
+}
+let legalGateOpen = false;
+async function legalGate(L, isUpdate) {
+  if (legalGateOpen) return; legalGateOpen = true; legalStyle();
+  const g = document.createElement('div'); g.id = 'legalGate';
+  const latest = L.changes && L.changes[0];
+  g.innerHTML = `<div class="legalbox"><header><h2>${isUpdate ? "We've updated our terms" : 'Before you start'}</h2>
+    <p>${isUpdate ? 'Our legal documents changed. Please read and accept the new version to keep using Auoris.' : 'Please read and accept our legal documents to use Auoris.'}</p></header>
+    <div class="lbody">${isUpdate && latest ? `<p><b>What changed:</b> ${esc(latest.summary)}</p>` : ''}
+      <div class="legaldocs">${L.docs.map(d => `<button data-d="${esc(d.id)}">${esc(d.title)}</button>`).join('')}</div>
+      <p style="margin-top:14px">In short: your local AI chats stay on your computer; messages and files you send online are stored on our servers so they can be delivered; messages are not end-to-end encrypted; we don't sell your data; you decide what the AI may do on your PC and you're responsible for approving it.</p></div>
+    <footer><label style="display:flex;gap:8px;align-items:center;flex:1;min-width:220px;cursor:pointer"><input type="checkbox" id="legalAgree"> <span>I have read and agree to the Terms of Service, Privacy Policy, Acceptable Use Policy and Subscription Terms (version ${esc(L.version)}).</span></label>
+      <button class="btn" id="legalNo">${esc(LEGAL_ENV.declineLabel)}</button><button class="btn primary" id="legalYes" disabled>Agree and continue</button></footer></div>`;
+  document.body.appendChild(g);
+  g.querySelectorAll('.legaldocs button').forEach(b => b.onclick = () => showLegal(b.dataset.d));
+  g.querySelector('#legalAgree').onchange = e => { g.querySelector('#legalYes').disabled = !e.target.checked; };
+  g.querySelector('#legalNo').onclick = () => LEGAL_ENV.decline();
+  g.querySelector('#legalYes').onclick = async () => {
+    g.querySelector('#legalYes').disabled = true;
+    try { await LEGAL_ENV.accept(L.version); g.remove(); legalGateOpen = false; } catch (e) { g.querySelector('#legalYes').disabled = false; alert('Could not save your choice: ' + (e.message || e)); }
+  };
+}
+
+const LEGAL_ENV = {
+  declineLabel: 'Sign out',
+  load: async () => {
+    const meta = await (await fetch('/legal/legal.json', { cache: 'no-cache' })).json();
+    meta.docs = await Promise.all(meta.docs.map(async d => ({ id: d.id, title: d.title, text: await (await fetch('/legal/' + encodeURIComponent(d.file), { cache: 'no-cache' })).text() })));
+    return meta;
+  },
+  decline: async () => { await sb.auth.signOut(); me = myProfile = null; legalGateOpen = false; const g = document.getElementById('legalGate'); if (g) g.remove(); renderHeader(); go(''); },
+  accept: async v => { const { error } = await sb.rpc('accept_legal', { v, src: 'web' }); if (error) throw error; myProfile.legal_version = v; },
+};
+async function legalSiteCheck() {   // signed-in visitors who haven't accepted the current version
+  if (!me || !myProfile) return;
+  let L = null; try { L = await legalGet(); } catch (e) {}
+  if (L && L.version && myProfile.legal_version !== L.version) legalGate(L, !!myProfile.legal_version);
+}
+async function legalPage(id) {
+  legalStyle();
+  main().innerHTML = '<div class="wrap page" style="max-width:780px"><div class="card">Loading…</div></div>';
+  const L = await legalGet(), d = L.docs.find(x => x.id === id) || L.docs[0];
+  main().innerHTML = `<div class="wrap page" style="max-width:780px"><div class="card"><h1 style="margin-top:0">${esc(d.title)}</h1><p class="muted small">Version ${esc(L.version)}</p>
+    <div class="legaldocs">${L.docs.map(x => `<a href="/${esc(x.id)}"><button class="${x.id === d.id ? 'on' : ''}" type="button">${esc(x.title)}</button></a>`).join('')}</div>
+    <div class="lbody" style="font-size:14.5px;line-height:1.65">${legalMd(d.text, L)}${L.changes && L.changes.length ? `<h3>Recent changes</h3><ul>${L.changes.slice(0, 5).map(c => `<li><b>${esc(c.version)}</b> - ${esc(c.summary)}</li>`).join('')}</ul>` : ''}</div></div></div>`;
+}
+function legalFooter() {
+  legalStyle();
+  if (document.getElementById('siteFoot')) return;
+  const f = document.createElement('footer'); f.id = 'siteFoot'; f.style.cssText = 'text-align:center;padding:22px 16px 28px;font-size:12.5px;color:var(--dim)';
+  f.innerHTML = ['terms|Terms', 'privacy|Privacy', 'acceptable-use|Acceptable use', 'subscription-terms|Subscriptions', 'copyright|Copyright'].map(x => { const [i, t] = x.split('|'); return `<a href="/${i}" style="color:inherit;margin:0 8px">${t}</a>`; }).join('') + '<div style="margin-top:6px">© Auoris</div>';
+  const m = document.getElementById('view'); if (m && m.parentNode) m.parentNode.insertBefore(f, m.nextSibling); else document.body.appendChild(f);
+}
+['terms', 'privacy', 'acceptable-use', 'subscription-terms', 'copyright'].forEach(id => { PAGES[id] = () => legalPage(id); });
+
 PAGES.invite = async code => {
   main().innerHTML = '<div class="wrap page" style="max-width:420px"><div class="card" id="invBox">Loading invite…</div></div>';
   const pv = /^[A-Za-z0-9]{4,16}$/.test(code || '') ? await invPreview(code) : null;
@@ -1462,7 +1570,7 @@ PAGES.signin = async () => { if (me) { let back = null; try { back = sessionStor
 PAGES.signup = async () => { if (me) return go('messages'); authPage('signup'); };
 function authPage(mode) {
   main().innerHTML = `<div class="authwrap"><div class="card authcard"><img src="/logo.png" alt="" style="width:56px;border-radius:14px">
-    <h2 id="authTitle"></h2><p class="sub" id="authSub"></p><div id="authOauth"></div><form id="authForm" autocomplete="on" novalidate></form><div id="authErr"></div><div id="authLinks"></div></div></div>`;
+    <h2 id="authTitle"></h2><p class="sub" id="authSub"></p><div id="authOauth"></div><form id="authForm" autocomplete="on" novalidate></form><div id="authErr"></div><div id="authLinks"></div><div class="legalnote">By continuing you agree to our <a href="/terms">Terms</a>, <a href="/privacy">Privacy Policy</a> and <a href="/acceptable-use">Acceptable Use Policy</a>.</div></div></div>`;
   authShow(mode);
   // A message to show: a suspended account that was bounced here, or the provider's reason when social sign-in failed
   // (Supabase redirects back with #error_description=... or ?error_description=...).
@@ -1595,7 +1703,7 @@ async function afterSignIn(fromForm) {
   if (AUTH.pendingPass) { const { error } = await sb.auth.updateUser({ password: AUTH.pendingPass }); AUTH.pendingPass = null; if (error) throw error; }
   const { data: { user }, error } = await sb.auth.getUser();
   if (error) throw error;
-  const { data: prof, error: profErr } = await sb.from('profiles').select(PCOLS + ',banned').eq('id', user.id).maybeSingle();
+  const { data: prof, error: profErr } = await sb.from('profiles').select(PCOLS + ',banned,legal_version').eq('id', user.id).maybeSingle();
   if (profErr) throw profErr;  // a lookup failure isn't "no profile yet" - don't send an existing user to claim_username
   if (!prof) { if (!fromForm) { AUTH.resume = 'username'; return go('signin'); } return authShow('username'); }
   if (prof.banned) {

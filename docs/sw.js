@@ -1,7 +1,7 @@
 // Minimal app-shell service worker so Auoris can be installed to a phone's home screen and reopen instantly
 // (even briefly offline) while it boots. It never caches Supabase API calls - those always go to the network,
 // same as if there were no service worker at all. Bump CACHE_NAME to force clients onto a fresh shell.
-const CACHE_NAME = 'auoris-shell-v4';
+const CACHE_NAME = 'auoris-shell-v5';
 const SHELL = ['/', '/index.html', '/app.css', '/app.js', '/emoji.js', '/vendor/supabase.js', '/logo.png', '/manifest.webmanifest'];
 
 self.addEventListener('install', event => {

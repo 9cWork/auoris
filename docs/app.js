@@ -1288,23 +1288,73 @@ document.addEventListener('click', () => { if ($('meMenu')) $('meMenu').hidden =
 // ---------------------------------------------------------------- pages
 const PAGES = {};
 
+// ---- home page decoration (all inline SVG / CSS / generated pixel art, no external images)
+const DC_ICON = {
+  cpu: '<rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 14h3M1 9h3M1 14h3"/>',
+  wrench: '<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94z"/>',
+  chat: '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
+  pad: '<path d="M6 12h4M8 10v4"/><circle cx="15" cy="13" r="1"/><circle cx="18" cy="11" r="1"/><path d="M17.32 5H6.68a4 4 0 0 0-3.98 3.59C2.6 9.4 2 14.46 2 16a3 3 0 0 0 3 3c1 0 1.5-.5 2-1l1.41-1.41A2 2 0 0 1 9.83 16h4.34a2 2 0 0 1 1.41.59L17 18c.5.5 1 1 2 1a3 3 0 0 0 3-3c0-1.55-.6-6.58-.68-7.26A4 4 0 0 0 17.32 5z"/>',
+  users: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>',
+  spark: '<path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M19 15l.7 1.8 1.8.7-1.8.7L19 20l-.7-1.8-1.8-.7 1.8-.7z"/>',
+};
+const dcIcon = (k, hue) => `<span class="dc-ic" style="--h:${hue}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${DC_ICON[k]}</svg></span>`;
+const dcFeat = (k, hue, t, d) => `<div class="card feat dc-feat">${dcIcon(k, hue)}<h3>${t}</h3><p>${d}</p></div>`;
+const MC_IMG = n => `<img src="/img/mc/${n}.png" alt="" loading="lazy">`;
+const dcAppMock = () => `<div class="dc-win dc-hero-win" aria-hidden="true">
+  <div class="dc-bar"><i></i><i></i><i></i><span>Auoris</span></div>
+  <div class="dc-body">
+    <div class="dc-rail"><b class="on"></b><b></b><b></b><b></b><b></b></div>
+    <div class="dc-side"><div class="dc-sh">Chats</div><div class="dc-li on"><u></u><s>Project helper</s></div><div class="dc-li"><u></u><s>Weekly planning</s></div><div class="dc-li"><u></u><s>Daily summary</s></div><div class="dc-li"><u></u><s>Tax questions</s></div></div>
+    <div class="dc-main">
+      <div class="dc-msg me"><p>Find why the build fails and fix it.</p></div>
+      <div class="dc-msg ai"><div class="dc-tool">⚙ read_file  build.ps1</div><div class="dc-tool">⚙ run_command  python -m pytest</div><p>Found it: a missing import on line 42. Fixed, and the tests pass now.</p></div>
+      <div class="dc-msg me"><p>Nice. Commit it.</p></div>
+      <div class="dc-input"><span>Message Auoris…</span><b>↑</b></div>
+    </div></div></div>`;
+const dcMsgMock = () => `<div class="dc-win dc-msg-win" aria-hidden="true"><div class="dc-body">
+  <div class="dc-rail"><b class="on"></b><em style="--c:#8b5cf6">G</em><em style="--c:#34e6a8">M</em><em style="--c:#ff7a1f">R</em></div>
+  <div class="dc-side"><div class="dc-sh">Direct messages</div><div class="dc-li on"><u style="--c:#5b9dff"></u><s>Alex</s></div><div class="dc-li"><u style="--c:#ff7a8a"></u><s>Weekend group</s></div><div class="dc-li"><u style="--c:#34e6a8"></u><s>Sam</s></div></div>
+  <div class="dc-main">
+    <div class="dc-chat"><u style="--c:#5b9dff"></u><div><b>Alex</b><p>want to hop on the server later?</p></div></div>
+    <div class="dc-chat"><u style="--c:#34e6a8"></u><div><b>You</b><p>yep, 8pm. sending the pack 👇</p><div class="dc-file">📎 cool-pack.zip · 12 MB <i>scanned ✓</i></div></div></div>
+    <div class="dc-chat"><u style="--c:#5b9dff"></u><div><b>Alex</b><p>🔥</p><div class="dc-react">🔥 2 &nbsp; 👍 1</div></div></div>
+  </div></div></div>`;
+const dcPhone = () => `<div class="dc-phone" aria-hidden="true"><div class="dc-notch"></div>
+  <div class="dc-pchat"><div class="dc-pb them">Is the model on your PC done?</div><div class="dc-pb me">Yep, ask it anything</div><div class="dc-pb them">📱 on the couch, nice</div></div><div class="dc-pin">Message…</div></div>`;
+
 PAGES[''] = async () => {
   main().innerHTML = `
-  <section class="hero"><img src="logo.png" alt=""><h1>Meet Auoris</h1>
+  <section class="hero"><div class="stars"></div><div class="aur a1"></div><div class="aur a2"></div><div class="aur a3"></div>
+    <div class="hero-in">
+    <div class="logowrap"><span class="ring r1"></span><span class="ring r2"></span><img src="logo.png" alt=""></div>
+    <h1>Meet <span class="grad">Auoris</span></h1>
     <p>A desktop AI agent for local Ollama models or your own cloud keys, with servers, DMs, group chats, rich presence and a phone companion.</p>
-    <div class="row"><a class="btn primary" href="#dl" id="dlTop">⬇ Download for Windows</a>${me ? '<a class="btn" href="/messages">Open Messages</a>' : '<a class="btn" href="/signup">Create an account</a>'}</div></section>
-  <section class="band"><div class="wrap"><h2>What's inside</h2><p class="lead">Your chats, files and models stay on your own PC.</p><div class="grid">
-    <div class="card feat"><div class="ic">🧠</div><h3>Local + cloud AI</h3><p>Local Ollama models, or your own Anthropic / OpenAI-style keys.</p></div>
-    <div class="card feat"><div class="ic">🛠</div><h3>Real tool access</h3><p>Reads and edits files, runs commands and browses the web when you let it.</p></div>
-    <div class="card feat"><div class="ic">💬</div><h3>Servers, DMs & groups</h3><p>Discord-style servers with channels and roles, DMs and group chats, with :emoji:.</p></div>
-    <div class="card feat"><div class="ic">🎮</div><h3>Rich presence</h3><p>See what friends are playing - and their Minecraft server or Roblox game - with a link to join.</p></div>
-    <div class="card feat"><div class="ic">🤝</div><h3>AI projects</h3><p>Shared AI projects with friends, without ever exposing anyone's API key.</p></div>
-    <div class="card feat"><div class="ic">✨</div><h3>Auoris Plus</h3><p>Banners, profile effects, AI Providers, hosting and a gaming boost.</p></div></div></div></section>
-  <section class="band" id="mobile"><div class="wrap"><h2>Auoris on your phone</h2><p class="lead">No App Store needed. Install this site as an app - Servers, DMs, group chats, AI projects, Hosting and Plus all work from anywhere, cellular data included.</p><ol class="steps">
+    <div class="row"><a class="btn primary" href="#dl" id="dlTop">⬇ Download for Windows</a>${me ? '<a class="btn" href="/messages">Open Messages</a>' : '<a class="btn" href="/signup">Create an account</a>'}</div>
+    ${dcAppMock()}</div></section>
+  <section class="band"><div class="wrap"><h2>What's inside</h2><p class="lead">Your chats, files and models stay on your own PC.</p><div class="grid dc-grid3">
+    ${dcFeat('cpu', 215, 'Local + cloud AI', 'Local Ollama models, or your own Anthropic / OpenAI-style keys.')}
+    ${dcFeat('wrench', 160, 'Real tool access', 'Reads and edits files, runs commands and browses the web when you let it.')}
+    ${dcFeat('chat', 265, "Servers, DMs & groups", 'Discord-style servers with channels and roles, DMs and group chats, with :emoji:.')}
+    ${dcFeat('pad', 25, 'Rich presence', 'See what friends are playing - and their Minecraft server or Roblox game - with a link to join.')}
+    ${dcFeat('users', 190, 'AI projects', "Shared AI projects with friends, without ever exposing anyone's API key.")}
+    ${dcFeat('spark', 320, 'Auoris Plus', 'Banners, profile effects, AI Providers, hosting and a gaming boost.')}</div></div></section>
+  <section class="band alt"><div class="wrap dc-split"><div class="dc-txt"><span class="dc-kick">Messages</span><h2>Every chat in one place</h2>
+    <p class="lead">Servers, DMs and group chats live side by side. Reply, react, pin, forward, edit and send files up to 50 MB - everything is scanned before it reaches anyone.</p>
+    <ul class="dc-list"><li>Voice-style rail with all your servers</li><li>GIFs, reactions, replies and scheduled messages</li><li>Block, mute and privacy controls you actually own</li></ul></div>${dcMsgMock()}</div></section>
+  <section class="band"><div class="wrap"><div class="dc-txt dc-center"><span class="dc-kick">Minecraft</span><h2>Make your Minecraft yours</h2>
+    <p class="lead">Capes, hats, pets and tool skins, with a live preview of your real skin. Other Auoris players see them too, and your nametag gets the Auoris moon.</p></div>
+    <div class="dc-mc">
+      <div class="dc-tag"><img src="/img/mc/logo.png" alt="" class="px"><span>Steve</span></div>
+      <div class="dc-row capes">${['auoris', 'aurora_wave', 'starlight', 'midnight', 'inferno', 'frostbite', 'royal', 'toxic'].map(n => MC_IMG('cape_' + n)).join('')}</div>
+      <div class="dc-row pets">${['dog', 'cat', 'fox', 'parrot', 'dragon'].map(n => MC_IMG('pet_' + n)).join('')}</div>
+      <div class="dc-row hats">${['wizard', 'crown', 'top_hat', 'viking', 'party', 'cat_ears'].map(n => MC_IMG('hat_' + n)).join('')}</div>
+      <div class="dc-row tools">${['frostbite', 'molten', 'void', 'aurora', 'golden', 'emerald'].map(n => MC_IMG('tool_' + n)).join('')}</div>
+    </div><p class="muted small" style="text-align:center;margin-top:18px">Works with the Auoris mod on Minecraft 1.8.9 (Forge). Auoris installs it for you.</p></div></section>
+  <section class="band alt" id="mobile"><div class="wrap dc-split rev">${dcPhone()}<div class="dc-txt"><span class="dc-kick">On your phone</span><h2>Auoris on your phone</h2><p class="lead" style="text-align:left">No App Store needed. Install this site as an app - Servers, DMs, group chats, AI projects, Hosting and Plus all work from anywhere, cellular data included.</p><ol class="steps" style="margin:0">
     <li>Tap Share (iPhone) or the browser menu (Android) → <b>Add to Home Screen</b> / <b>Install app</b>. It now opens full-screen, like an installed app.</li>
     <li>Sign in once - friends, servers and DMs sync the same as the desktop app and website.</li>
-    <li>Want to chat with your PC's own local AI model too? Open <a href="/localai">Local AI</a> and pair with your PC - that one feature needs to be on the same Wi-Fi, since the model runs on your PC.</li></ol></div></section>
-  <section class="band" id="dl"><div class="wrap" style="text-align:center"><h2>Download</h2><p class="lead">Windows 10/11. The installer sets up Ollama for you.</p>
+    <li>Want to chat with your PC's own local AI model too? Open <a href="/localai">Local AI</a> and pair with your PC - that one feature needs to be on the same Wi-Fi, since the model runs on your PC.</li></ol></div></div></section>
+  <section class="band dc-dl" id="dl"><div class="wrap" style="text-align:center"><h2>Download</h2><p class="lead">Windows 10/11. The installer sets up Ollama for you.</p>
     <a class="btn primary" id="dlBtn" href="https://github.com/9cWork/auoris/releases/latest">⬇ Download Auoris-Setup.exe</a><p class="muted small" id="dlVer">Checking latest version…</p></div></section>`;
   $('dlTop').onclick = e => { e.preventDefault(); $('dl').scrollIntoView(); };
   fetch('https://api.github.com/repos/9cWork/auoris/releases/latest').then(r => r.json()).then(d => {
@@ -1330,8 +1380,9 @@ async function oauthLoad() {
   if (oauthEnabled) return oauthEnabled;
   try {
     const r = await fetch({ url: SUPABASE_URL, key: SUPABASE_KEY }.url + '/auth/v1/settings', { headers: { apikey: { url: SUPABASE_URL, key: SUPABASE_KEY }.key } });
-    oauthEnabled = (await r.json()).external || {};
-  } catch (e) { oauthEnabled = {}; }
+    const j = await r.json();
+    oauthEnabled = r.ok && j.external ? j.external : { __all: true };
+  } catch (e) { oauthEnabled = { __all: true }; }  // can't tell which are on: show them all, a disabled one just says so when clicked
   return oauthEnabled;
 }
 async function oauthRender(mode) {
@@ -1339,7 +1390,7 @@ async function oauthRender(mode) {
   if (mode !== 'login' && mode !== 'signup') { box.innerHTML = ''; return; }
   const on = await oauthLoad();
   if (AUTH.mode !== mode) return;
-  const list = OAUTH_PROVIDERS.filter(p => on[p[0]]);
+  const list = OAUTH_PROVIDERS.filter(p => on.__all || on[p[0]]);
   box.innerHTML = list.length ? '<div class="oauthrow">' + list.map(p => `<button type="button" class="oauthbtn" data-p="${p[0]}">${p[2]}<span>${p[1]}</span></button>`).join('') + '</div><div class="oauthor"><span>or</span></div>' : '';
   box.querySelectorAll('.oauthbtn').forEach(b => b.onclick = () => oauthStart(b.dataset.p));
 }

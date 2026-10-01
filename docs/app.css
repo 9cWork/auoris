@@ -262,7 +262,8 @@ button.item { border: none; background: none; font: inherit; }
 #w2PalList .none { padding: 14px; color: var(--muted); text-align: center; }
 #w2PalFoot { padding: 6px 12px 8px; font-size: 11px; color: var(--dim); border-top: 1px solid var(--border); }
 @media (max-width: 760px) { #w2PalFoot { display: none; } #palBtn { display: none; } }
-#palBtn { margin-left: auto; margin-right: 8px; } #palBtn + #me { margin-left: 0; }
+#palBtn { margin-left: auto; margin-right: 8px; }
+@media (min-width: 761px) { #palBtn + #me { margin-left: 0; } }
 #w2Typing { height: 0; overflow: hidden; font-size: 12px; color: var(--muted); padding: 0 20px; font-style: italic; pointer-events: none; }
 #w2Typing.on { height: 20px; line-height: 20px; }
 /* ---- edit / delete own messages, BOT posts, webhook embeds, scheduled send */

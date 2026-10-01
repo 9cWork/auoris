@@ -71,7 +71,7 @@ label.lbl { display: block; font-size: 12px; color: var(--muted); margin: 12px 0
 .av.img { color: transparent; background-size: cover; background-position: center; }
 .name { font-weight: 600; } .badges { display: inline-flex; gap: 3px; vertical-align: -2px; margin-left: 5px; }
 .bdg { width: 16px; height: 16px; display: inline-block; }
-.bdg svg { width: 100%; height: 100%; display: block; }
+.bdg svg, .bdg img { width: 100%; height: 100%; display: block; margin: 0; }
 
 /* ---- home */
 .hero { text-align: center; padding: 90px 24px 60px; background: radial-gradient(900px 500px at 50% -10%, #1c2a52, transparent 60%); }

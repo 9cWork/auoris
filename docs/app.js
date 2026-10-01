@@ -4,7 +4,7 @@ const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': 
 const SUPABASE_URL = 'https://utqswadleapgszwbkvzo.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_GatsXVrXWFclOrTpAjg3Xw_Jdyra6Hf';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-const PCOLS = 'id,username,display_name,color,is_admin,is_mod,plus_since,plus_until,banner_color,banner_url,avatar_url,effect,discord_name,bio';
+const PCOLS = 'id,username,display_name,color,is_admin,is_mod,staff_since,created_at,pronouns,plus_since,plus_until,banner_color,banner_url,avatar_url,effect,discord_name,bio';
 
 let me = null, myProfile = null, pageSubs = [];
 const profiles = new Map();
@@ -165,14 +165,15 @@ function logoBadge(color, title, px) {   // the Auoris logo, recoloured: a pictu
 function badges(p, serverRole) {
   if (!p) return '';
   const b = [];
-  if ((p.username || '').toLowerCase() === 'auoris') b.push(['Owner', crownBadge('Owner', 16)]);
-  else if (p.is_admin) b.push(['Admin', logoBadge('#ff9f43', 'Admin', 16)]);
-  else if (p.is_mod) b.push(['Moderator', logoBadge('#4caf50', 'Moderator', 16)]);
-  if (serverRole === 'owner') b.push(['Server owner', crownBadge('Owner', 16)]);
-  else if (serverRole === 'admin') b.push(['Server admin', logoBadge('#ff9f43', 'Admin', 16)]);
-  else if (serverRole === 'moderator') b.push(['Server moderator', logoBadge('#4caf50', 'Moderator', 16)]);
+  const day = d => (d ? new Date(d).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) : ''), L = (...x) => x.filter(Boolean).join('\n');
+  if ((p.username || '').toLowerCase() === 'auoris') b.push([L('Owner', 'Founder of Auoris', p.created_at && 'Since ' + day(p.created_at)), crownBadge(L('Owner', 'Founder of Auoris', p.created_at && 'Since ' + day(p.created_at)), 16)]);
+  else if (p.is_admin) { const t = L('Admin', 'Helps run Auoris', 'Since ' + day(p.staff_since || p.created_at)); b.push([t, logoBadge('#ff9f43', t, 16)]); }
+  else if (p.is_mod) { const t = L('Moderator', 'Keeps Auoris safe', 'Since ' + day(p.staff_since || p.created_at)); b.push([t, logoBadge('#4caf50', t, 16)]); }
+  if (serverRole === 'owner') b.push(['Server owner', crownBadge('Server owner', 16)]);
+  else if (serverRole === 'admin') b.push(['Server admin', logoBadge('#ff9f43', 'Server admin', 16)]);
+  else if (serverRole === 'moderator') b.push(['Server moderator', logoBadge('#4caf50', 'Server moderator', 16)]);
   const t = plusTier(p);
-  if (t) b.push([`Auoris Plus · ${t.name}${t.months ? ` · ${t.months} mo` : ''}`, logoBadge(t.color, 'Auoris Plus', 16)]);
+  if (t) { const tt = L('Auoris Plus · ' + t.name, t.months ? t.months + ' month' + (t.months === 1 ? '' : 's') + ' of Plus' : 'New to Plus', p.plus_since && 'Awarded ' + day(p.plus_since)); b.push([tt, logoBadge(t.color, tt, 16)]); }
   const merged = new Map();  // same icon twice (e.g. site Owner + server owner) shows once with both titles
   for (const [title, svg] of b) merged.set(svg, merged.has(svg) ? merged.get(svg) + ' · ' + title : title);
   return merged.size ? `<span class="badges">${[...merged].map(([svg, title]) => `<span class="bdg" title="${esc(title)}">${svg}</span>`).join('')}</span>` : '';
@@ -1182,7 +1183,7 @@ function mgSettings() {
         <div style="margin-top:12px"><button class="btn primary" id="dirSave">Save</button></div>`
       : `<p class="muted small">${s.is_public ? 'This server is listed in Discover.' : 'This server isn\'t listed.'} Only the owner can change that.</p>`}</div>`;
   $('stBack').onclick = () => route();
-  svlMount($('svlBox'), { s, members: svCache.members, nameOf: uid => dname(profiles.get(uid)), reload: async () => { await loadServerList(); mgSettingsReload(s.id); } });
+  svlMount($('svlBox'), { s, level: (svCache.spark || {}).level, members: svCache.members, nameOf: uid => dname(profiles.get(uid)), reload: async () => { await loadServerList(); mgSettingsReload(s.id); } });
   mgWebhooksMount(s, $('mgPane').lastElementChild);
   $('stRename').onclick = async () => { const n = prompt('New name', s.name); if (!n) return; const r = await sb.from('servers').update({ name: n.trim().slice(0, 40) }).eq('id', s.id); if (r.error) fail(r.error); else { svCache = null; route(); } };
   $('stIcon').onclick = async () => { const n = prompt('New icon (emoji or letters)', s.icon || ''); if (n === null) return; const r = await sb.from('servers').update({ icon: n.slice(0, 8) || null }).eq('id', s.id); if (r.error) fail(r.error); else { svCache = null; route(); } };
@@ -1409,7 +1410,7 @@ PAGES[''] = async () => {
   <section class="band"><div class="wrap"><h2>What's inside</h2><p class="lead">Your chats, files and models stay on your own PC.</p><div class="grid dc-grid3">
     ${dcFeat('cpu', 215, 'Local + cloud AI', 'Local Ollama models, or your own Anthropic / OpenAI-style keys.')}
     ${dcFeat('wrench', 160, 'Real tool access', 'Reads and edits files, runs commands and browses the web when you let it.')}
-    ${dcFeat('chat', 265, "Servers, DMs & groups", 'Discord-style servers with channels and roles, DMs and group chats, with :emoji:.')}
+    ${dcFeat('chat', 265, "Servers, DMs & groups", 'Servers with channels, roles and banners, DMs and group chats, with :emoji:.')}
     ${dcFeat('pad', 25, 'Rich presence', 'See what friends are playing - and their Minecraft server or Roblox game - with a link to join.')}
     ${dcFeat('users', 190, 'AI projects', "Shared AI projects with friends, without ever exposing anyone's API key.")}
     ${dcFeat('spark', 320, 'Auoris Plus', 'Banners, profile effects, AI Providers, hosting and a gaming boost.')}</div></div></section>
@@ -1504,7 +1505,7 @@ async function legalGate(L, isUpdate) {
     <div class="lbody">${isUpdate && latest ? `<p><b>What changed:</b> ${esc(latest.summary)}</p>` : ''}
       <div class="legaldocs">${L.docs.map(d => `<button data-d="${esc(d.id)}">${esc(d.title)}</button>`).join('')}</div>
       <p style="margin-top:14px">In short: your local AI chats stay on your computer; messages and files you send online are stored on our servers so they can be delivered; messages are not end-to-end encrypted; we don't sell your data; you decide what the AI may do on your PC and you're responsible for approving it.</p></div>
-    <footer><label style="display:flex;gap:8px;align-items:center;flex:1;min-width:220px;cursor:pointer"><input type="checkbox" id="legalAgree"> <span>I have read and agree to the Terms of Service, Privacy Policy, Acceptable Use Policy and Subscription Terms (version ${esc(L.version)}).</span></label>
+    <footer><label style="display:flex;gap:8px;align-items:center;flex:1;min-width:220px;cursor:pointer"><input type="checkbox" id="legalAgree"> <span>I am at least 13 years old (16 where the law in my country requires it), and I have read and agree to the Terms of Service, Privacy Policy, Acceptable Use Policy and Subscription Terms (version ${esc(L.version)}).</span></label>
       <button class="btn" id="legalNo">${esc(LEGAL_ENV.declineLabel)}</button><button class="btn primary" id="legalYes" disabled>Agree and continue</button></footer></div>`;
   document.body.appendChild(g);
   g.querySelectorAll('.legaldocs button').forEach(b => b.onclick = () => showLegal(b.dataset.d));
@@ -1528,8 +1529,9 @@ const LEGAL_ENV = {
 };
 async function legalSiteCheck() {   // signed-in visitors who haven't accepted the current version
   if (!me || !myProfile) return;
-  let L = null; try { L = await legalGet(); } catch (e) {}
-  if (L && L.version && myProfile.legal_version !== L.version) legalGate(L, !!myProfile.legal_version);
+  let L = null; try { L = await legalGet(); } catch (e) { LEGAL.data = null; }
+  if (!L || !L.version) { if (!legalSiteCheck.t) legalSiteCheck.t = setTimeout(() => { legalSiteCheck.t = 0; legalSiteCheck(); }, 4000); return; }   // couldn't load the documents: try again shortly
+  if (myProfile.legal_version !== L.version) legalGate(L, !!myProfile.legal_version);
 }
 async function legalPage(id) {
   legalStyle();
@@ -1751,6 +1753,18 @@ function svlMemberRoles(uid) { const m = svCache && svCache.cm; return (m && m.g
 function svlNameColor(uid) { const r = svlMemberRoles(uid)[0]; return r && /^#[0-9a-f]{6}$/i.test(r.color) ? r.color : ''; }
 function svlBadges(uid) { return svlMemberRoles(uid).slice(0, 4).map(r => svlRoleIcon(r, 14)).join(''); }
 function svlBannerCss(s) { const u = s && svlUrl(s.banner_path); return u ? `background:#1d2331 url(${esc(u)}) center/cover` : 'background:linear-gradient(135deg,#2b4680,#1d2331)'; }
+// Sparks: a Plus member can give up to 2; 2 Sparks = Level 1 (banner + image role icons)
+async function svlSparkLoad(sid) { try { const r = await sb.rpc('server_spark_info', { sid }); return r.data || { count: 0, level: 0, mine: false, used: 0, slots: 2, plus: false }; } catch (e) { return { count: 0, level: 0, mine: false, used: 0, slots: 2, plus: false }; } }
+function svlSparkHtml(sp, btnId) {
+  const left = Math.max(0, (sp.slots || 2) - (sp.used || 0));
+  return `<div style="margin-top:8px">✦ <b>${Number(sp.count) || 0}</b> Spark${sp.count === 1 ? '' : 's'} · Level ${Number(sp.level) || 0}<br><button type="button" class="btn sm" id="${btnId}" style="margin-top:6px" title="Auoris Plus members can give up to 2 Sparks. 2 Sparks unlock a server banner and image role icons.">${sp.mine ? 'Take back my Spark' : 'Give a Spark'}</button> <span class="muted small">${left} of ${sp.slots || 2} left</span></div>`;
+}
+async function svlSparkClick(sid, sp, after) {
+  if (!sp.mine && !sp.plus) return svlNote('Sparks come with Auoris Plus.');
+  const r = await sb.rpc(sp.mine ? 'take_spark' : 'give_spark', { sid });
+  if (r.error) return svlNote(r.error.message);
+  svlNote(sp.mine ? 'Spark taken back' : 'Thanks for the Spark!'); after();
+}
 async function svlLoad(sid) {   // custom roles + who wears them; empty when the feature isn't set up on the server yet
   const out = { cr: [], cm: new Map() };
   try {
@@ -1778,9 +1792,9 @@ function svlMount(box, ctx) {
   const s = ctx.s, sid = s.id, st = 'width:100%;box-sizing:border-box;padding:6px 8px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);font:inherit';
   const roles = (svCache && svCache.cr) || [];
   box.innerHTML = `<h4 style="margin:22px 0 4px">Banner</h4>
-    <p class="muted small" style="margin:0 0 8px">Shown at the top of the channel list and on invite cards. A wide image works best, up to 3 MB.</p>
+    <p class="muted small" style="margin:0 0 8px">Shown at the top of the channel list and on invite cards. A wide image works best, up to 3 MB.${(ctx.level || 0) < 1 ? ' <b>Needs 2 Sparks (Level 1).</b> Members with Auoris Plus can give Sparks from the channel list.' : ''}</p>
     <div id="svlBan" style="height:90px;border-radius:12px;${svlBannerCss(s)}"></div>
-    <div class="row" style="margin-top:8px"><input type="file" id="svlBanFile" accept="image/png,image/jpeg,image/webp,image/gif" hidden><button class="btn sm" id="svlBanPick">Upload banner…</button>${s.banner_path ? '<button class="btn sm danger" id="svlBanRm">Remove</button>' : ''}</div>
+    <div class="row" style="margin-top:8px"><input type="file" id="svlBanFile" accept="image/png,image/jpeg,image/webp,image/gif" hidden><button class="btn sm" id="svlBanPick"${(ctx.level || 0) < 1 ? ' disabled' : ''}>Upload banner…</button>${s.banner_path ? '<button class="btn sm danger" id="svlBanRm">Remove</button>' : ''}</div>
     <h4 style="margin:22px 0 4px">Roles <span class="muted small">${roles.length} / 20</span></h4>
     <p class="muted small" style="margin:0 0 8px">Name, colour and an icon (an emoji or a small image). Members wear them in the member list. Roles are labels - they don't change what anyone can do.</p>
     <div id="svlRoles"></div>
@@ -1803,7 +1817,7 @@ function svlMount(box, ctx) {
     row.innerHTML = `<div class="row" style="align-items:center;gap:8px;flex-wrap:wrap"><span class="rprev">${svlRoleIcon(r, 20)}</span>
       <input class="rname" maxlength="24" value="${esc(r.name)}" style="${st};flex:1;min-width:110px;width:auto"><input class="rcol" type="color" value="${esc(r.color)}" style="width:38px;height:30px;padding:0;border:0;background:none">
       <input class="remo" maxlength="4" placeholder="emoji" value="${esc(r.icon || '')}" title="Emoji icon" style="${st};width:64px;text-align:center">
-      <input type="file" class="rfile" accept="image/png,image/jpeg,image/webp,image/gif" hidden><button class="btn sm rpick" title="Use a small image as the icon">Image</button>
+      <input type="file" class="rfile" accept="image/png,image/jpeg,image/webp,image/gif" hidden><button class="btn sm rpick" title="Use a small image as the icon (needs Spark Level 1)"${(ctx.level || 0) < 1 ? ' disabled' : ''}>Image</button>
       <button class="btn sm rsave primary">Save</button><button class="btn sm rwho">Members</button><button class="btn sm danger rdel">Delete</button></div><div class="rmem" hidden style="margin-top:8px;max-height:180px;overflow-y:auto"></div>`;
     list.appendChild(row);
     row.querySelector('.rpick').onclick = () => row.querySelector('.rfile').click();
@@ -1846,7 +1860,8 @@ function svlMount(box, ctx) {
 // Invite links pasted into a chat turn into a join card: https://auoris.org/invite/<code>
 const INV_RE = /https?:\/\/(?:www\.)?auoris\.org\/invite\/([A-Za-z0-9]{4,16})/g, invCache = new Map();
 function invPreview(code) {
-  if (!invCache.has(code)) invCache.set(code, sb.rpc('invite_preview', { code }).then(r => (r.data && r.data[0]) || null, () => null));
+  if (typeof sb === 'undefined' || !sb) return Promise.resolve(null);
+  if (!invCache.has(code)) invCache.set(code, sb.rpc('invite_preview', { code }).then(r => { const v = (r.data && r.data[0]) || null; if (!v) invCache.delete(code); return v; }, () => { invCache.delete(code); return null; }));
   return invCache.get(code);
 }
 async function invCard(code) {
@@ -1877,8 +1892,8 @@ function invAttach(el) {
 }
 new MutationObserver(ms => ms.forEach(m => m.addedNodes.forEach(n => {
   if (n.nodeType !== 1) return;
-  if (n.matches && n.matches('.svbody, .msg .body, .body')) invAttach(n);
-  if (n.querySelectorAll) n.querySelectorAll('.svbody, .body').forEach(invAttach);
+  if (n.matches && n.matches('.svbody, [data-mid] .body')) invAttach(n);
+  if (n.querySelectorAll) n.querySelectorAll('.svbody, [data-mid] .body').forEach(invAttach);
 }))).observe(document.body, { childList: true, subtree: true });
 const svlInviteLink = code => 'https://auoris.org/invite/' + code;
 
@@ -1897,8 +1912,8 @@ async function svLoadChannels(sid) {
     mine = rankRole(s.myRole);
     ({ list: emojis, map: emojiMap } = await svLoadEmojis(s.id));
   }
-  const fresh = s ? await svlLoad(s.id) : { cr: [], cm: new Map() };
-  svCache = { sid, s, chans, members, roles, mine, emojis, emojiMap, cr: fresh.cr, cm: fresh.cm };
+  const fresh = s ? await svlLoad(s.id) : { cr: [], cm: new Map() }, spark = s ? await svlSparkLoad(s.id) : null;
+  svCache = { sid, s, chans, members, roles, mine, emojis, emojiMap, cr: fresh.cr, cm: fresh.cm, spark };
 }
 // Local, per-viewer only - which DM/group each visitor has already seen, so the Home list can show unread dots
 // without any new server-side "last read" tracking (there isn't one anywhere else in this app either).
@@ -1941,7 +1956,7 @@ function mgRenderServerShell(sid) {
     <div class="list">${chans.map(x => `<button type="button" class="item" data-c="${x.id}"># ${esc(x.name)}</button>`).join('')}
     ${mine >= 2 ? '<button type="button" class="item" id="chNew">＋ Add channel</button>' : ''}</div>
     <div style="padding:10px;border-top:1px solid var(--border)" class="small muted">Invite code: <b style="color:var(--text)">${esc(s.invite_code)}</b>
-      <button class="btn sm" id="svCopy">Copy invite link</button>${s.myRole !== 'owner' ? ' <button class="btn sm danger" id="svLeave">Leave</button>' : ''}</div>`;
+      <button class="btn sm" id="svCopy">Copy invite link</button>${s.myRole !== 'owner' ? ' <button class="btn sm danger" id="svLeave">Leave</button>' : ''}${svlSparkHtml(svCache.spark || { count: 0, level: 0 }, 'svSparkBtn')}</div>`;
   $('mgSide').querySelectorAll('[data-c]').forEach(el => el.onclick = () => go(`messages/s/${s.id}/${el.dataset.c}`));
   $('svCopy').onclick = () => { navigator.clipboard.writeText(svlInviteLink(s.invite_code)); toast('Invite link copied - paste it in any chat to show a join card'); };
   if ($('svLeave')) $('svLeave').onclick = async () => {
@@ -1949,6 +1964,7 @@ function mgRenderServerShell(sid) {
     const { error } = await sb.from('server_members').delete().eq('server_id', s.id).eq('user_id', me.id);
     if (error) return fail(error); svCache = null; go('messages');
   };
+  if ($('svSparkBtn')) $('svSparkBtn').onclick = () => svlSparkClick(s.id, svCache.spark || {}, () => { svCache = null; route(); });
   if ($('chNew')) $('chNew').onclick = async () => {
     const name = (prompt('Channel name (lowercase letters, numbers, dashes)') || '').trim().toLowerCase().replace(/\s+/g, '-');
     if (!name) return;
@@ -2207,6 +2223,7 @@ PAGES.profile = async () => {
       <div style="padding:20px 22px">
         ${t ? `<span class="pluspill">${ICON.plus(t.color).replace('<svg', '<svg width="16" height="16"')} Auoris Plus${t.name !== 'Plus' ? ` · ${esc(t.name)}` : ''}${t.months ? ` · ${t.months} months` : ''}</span>` : '<a class="pluspill" href="/plus" style="text-decoration:none;color:var(--muted)">Get Auoris Plus for banners & effects →</a>'}
         <label class="lbl">Display name</label><input class="in" id="pfName" maxlength="40" value="${esc(p.display_name || '')}">
+        <label class="lbl">Pronouns</label><input class="in" id="pfPron" maxlength="24" placeholder="e.g. she/her, he/him, they/them" value="${esc(p.pronouns || '')}">
         <label class="lbl">Bio</label><textarea class="in" id="pfBio" maxlength="200" rows="2">${esc(p.bio || '')}</textarea>
         <label class="lbl">Avatar colour</label><div class="swatches" id="pfColor">${COLORS.map(c => `<i style="background:${c}" data-c="${c}" class="${c === p.color ? 'on' : ''}"></i>`).join('')}</div>
         <label class="lbl">Banner colour</label><div class="swatches" id="pfBanner">${BANNERS.map(c => `<i style="background:${c}" data-c="${c}" class="${c === p.banner_color ? 'on' : ''}"></i>`).join('')}</div>
@@ -2214,12 +2231,11 @@ PAGES.profile = async () => {
           <label class="lbl">Profile effect ${plus ? '' : '(Plus)'}</label><select class="in" id="pfEffect">${['none', 'aurora', 'sparkle', 'flame', 'glitch'].map(e => `<option ${e === (p.effect || 'none') ? 'selected' : ''}>${e}</option>`).join('')}</select></div>
         <div class="row" style="margin-top:16px"><button class="btn primary" id="pfSave">Save profile</button></div>
       </div></div>
-    <div class="card" style="margin-top:16px"><h3 style="margin-top:0">Connections</h3><p class="muted small">Link your Discord account. It shows on your profile and appears under Connections on Discord.</p>
-      <div class="row">${p.discord_name ? `<span>Connected as <b>${esc(p.discord_name)}</b></span>` : ''}<button class="btn" id="pfDiscord">${p.discord_name ? 'Reconnect Discord' : 'Connect Discord'}</button></div></div></div>`;
+</div>`;
   const pick = (id, key) => $(id).querySelectorAll('i').forEach(i => i.onclick = () => { $(id).querySelectorAll('i').forEach(x => x.classList.remove('on')); i.classList.add('on'); pick[key] = i.dataset.c; });
   pick('pfColor', 'color'); pick('pfBanner', 'banner_color');
   $('pfSave').onclick = async () => {
-    const patch = { display_name: $('pfName').value.trim() || null, bio: $('pfBio').value.trim() || null };
+    const patch = { display_name: $('pfName').value.trim() || null, bio: $('pfBio').value.trim() || null, pronouns: $('pfPron').value.trim() || null };
     if (pick.color) patch.color = pick.color;
     if (pick.banner_color) patch.banner_color = pick.banner_color;
     if (plus) {
@@ -2230,11 +2246,6 @@ PAGES.profile = async () => {
     const { error } = await sb.from('profiles').update(patch).eq('id', me.id);
     if (error) return fail(error);
     Object.assign(myProfile, patch); renderHeader(); toast('Profile saved'); route();
-  };
-  $('pfDiscord').onclick = async () => {
-    const { data, error } = await sb.functions.invoke('discord-connect', { body: { action: 'start', redirect: location.origin + location.pathname } });
-    if (error || !data || !data.url) return toast('Discord connections aren\'t switched on yet - check back soon.');
-    location.href = data.url;
   };
 };
 

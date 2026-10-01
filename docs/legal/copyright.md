@@ -25,6 +25,6 @@ We close the accounts of people who repeatedly infringe other people's rights.
 
 ## Trademarks
 
-"Auoris" and the Auoris logo belong to {{operator}}. Minecraft is a trademark of Mojang Studios, which is not affiliated with Auoris. Other names and logos belong to their owners.
+"Auoris" and the Auoris logo belong to {{operator}}. Minecraft is a trademark of Mojang Studios and Microsoft, which are not affiliated with Auoris; this is not an official Minecraft product. Forge, Fabric, Sodium, OptiFine, Roblox, Discord, Google, GitHub, Microsoft, Stripe, Giphy, Ollama and all other names and logos belong to their respective owners and are used only to describe what Auoris works with.
 
 *Version {{version}}.*

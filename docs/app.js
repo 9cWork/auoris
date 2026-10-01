@@ -147,6 +147,10 @@ function plusTier(p) {
   const m = plusMonths(p), t = TIERS.find(([n]) => m >= n);
   return t ? { name: t[1], color: t[2], months: m } : { name: 'Plus', color: '#ffffff', months: m };
 }
+function crownBadge(title, px) {   // Owner: a red crown
+  const s = px || 16, t = String(title).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  return `<svg class="lbadge" viewBox="0 0 24 24" width="${s}" height="${s}" role="img"><title>${t}</title><path fill="#ef3b3b" d="M2.5 7.5l4.8 4.3L12 4l4.7 7.8 4.8-4.3-1.9 11H4.4z"/><rect x="4.4" y="20" width="15.2" height="2.2" rx="1.1" fill="#c42626"/></svg>`;
+}
 function logoBadge(color, title, px) {   // the Auoris logo, recoloured: a picture badge instead of a text pill
   const m = /^#([0-9a-f]{6})$/i.exec(color || ''); let f = '';
   if (m) {
@@ -161,11 +165,11 @@ function logoBadge(color, title, px) {   // the Auoris logo, recoloured: a pictu
 function badges(p, serverRole) {
   if (!p) return '';
   const b = [];
-  if ((p.username || '').toLowerCase() === 'auoris') b.push(['Owner', logoBadge('#ff5c9e', 'Owner', 16)]);
-  else if (p.is_admin) b.push(['Admin', logoBadge('#ff6b6b', 'Admin', 16)]);
+  if ((p.username || '').toLowerCase() === 'auoris') b.push(['Owner', crownBadge('Owner', 16)]);
+  else if (p.is_admin) b.push(['Admin', logoBadge('#ff9f43', 'Admin', 16)]);
   else if (p.is_mod) b.push(['Moderator', logoBadge('#4caf50', 'Moderator', 16)]);
-  if (serverRole === 'owner') b.push(['Server owner', logoBadge('#ff5c9e', 'Owner', 16)]);
-  else if (serverRole === 'admin') b.push(['Server admin', logoBadge('#ff6b6b', 'Admin', 16)]);
+  if (serverRole === 'owner') b.push(['Server owner', crownBadge('Owner', 16)]);
+  else if (serverRole === 'admin') b.push(['Server admin', logoBadge('#ff9f43', 'Admin', 16)]);
   else if (serverRole === 'moderator') b.push(['Server moderator', logoBadge('#4caf50', 'Moderator', 16)]);
   const t = plusTier(p);
   if (t) b.push([`Auoris Plus · ${t.name}${t.months ? ` · ${t.months} mo` : ''}`, logoBadge(t.color, 'Auoris Plus', 16)]);

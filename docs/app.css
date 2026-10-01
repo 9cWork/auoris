@@ -383,3 +383,7 @@ section.band .dc-txt h2, section.band .dc-txt .lead { text-align: left; }
 section.band .dc-center h2, section.band .dc-center .lead { text-align: center; }
 .dc-grid3 { grid-template-columns: repeat(3, 1fr) !important; }
 @media (max-width: 800px) { .dc-grid3 { grid-template-columns: 1fr !important; } }
+.hero .logowrap img { border-radius: 0; box-shadow: none; filter: drop-shadow(0 10px 28px #5b9dff66); }
+.palbtn { display: inline-flex; align-items: center; gap: 7px; }
+.palbtn svg { opacity: .8; } .palbtn kbd { font: 600 11px ui-monospace, Consolas, monospace; color: var(--muted); background: var(--panel2); border: 1px solid var(--border2); border-radius: 5px; padding: 1px 6px; }
+@media (max-width: 700px) { .palbtn span, .palbtn kbd { display: none; } }

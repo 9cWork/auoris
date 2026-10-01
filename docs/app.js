@@ -2373,7 +2373,20 @@ const W2_THEMES = [
   { id: 'midnight', name: 'Midnight', vars: { '--bg': '#04060c', '--side': '#070a12', '--panel': '#0a0e19', '--panel2': '#10162a', '--border': '#171f36', '--border2': '#243052' } },
   { id: 'aurora', name: 'Aurora', vars: { '--bg': '#08130f', '--side': '#0b1914', '--panel': '#0f211b', '--panel2': '#152d25', '--border': '#1d3a30', '--border2': '#2a5646', '--acc': '#6ee7b7', '--acc2': '#34d399' } },
   { id: 'light', name: 'Light', scheme: 'light', vars: { '--bg': '#f3f5fa', '--side': '#e9edf5', '--panel': '#ffffff', '--panel2': '#eef1f8', '--border': '#d5dbe8', '--border2': '#b7c1d6', '--text': '#1a2033', '--muted': '#55607a', '--dim': '#8791a8', '--acc': '#2f6fd6', '--acc2': '#2f6fd6' },
-    extra: 'header { background: #f3f5fad9 !important; }' },
+    extra: `header { background: #f3f5fad9 !important; }
+    .hero { background: radial-gradient(900px 520px at 50% -10%, #d9e5ff, transparent 62%) !important; }
+    .hero .aur { opacity: .2 !important; } .hero .stars { display: none; } .hero .ring { border-color: #2f6fd655; }
+    .hero .logowrap img { filter: drop-shadow(0 10px 22px #2f6fd655); }
+    .grad { background: linear-gradient(120deg, #2f6fd6, #7a4fe0 55%, #12a58a); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .dc-win, .dc-phone { background: #fff !important; border-color: #d5dbe8 !important; box-shadow: 0 30px 70px -28px #1a203366 !important; }
+    .dc-bar, .dc-rail { background: #e9edf5 !important; } .dc-side { background: #f3f5fa !important; } .dc-main { background: #fff !important; }
+    .dc-rail b { background: #d5dbe8 !important; } .dc-rail b.on { background: linear-gradient(135deg, #5b9dff, #8b6bff) !important; }
+    .dc-li.on, .dc-msg.ai p, .dc-pb.them { background: #e9edf5 !important; color: #1a2033 !important; }
+    .dc-input, .dc-file { background: #f3f5fa !important; border-color: #d5dbe8 !important; } .dc-tool { background: #2f6fd612 !important; border-color: #2f6fd633 !important; }
+    .dc-feat { background: linear-gradient(180deg, #fff, #f6f8fc) !important; }
+    section.band.alt { background: linear-gradient(180deg, #e9eef8, #f3f5fa) !important; }
+    .dc-notch { background: #c9d1e3 !important; } .dc-phone { border-color: #c9d1e3 !important; }
+    .dc-dl { background: radial-gradient(700px 260px at 50% 100%, #2f6fd620, transparent) !important; }` },
   { id: 'contrast', name: 'High contrast', vars: { '--bg': '#000', '--side': '#000', '--panel': '#0a0a0a', '--panel2': '#161616', '--border': '#8c8c8c', '--border2': '#fff', '--text': '#fff', '--muted': '#e6e6e6', '--dim': '#c4c4c4', '--acc': '#ffe14d', '--acc2': '#ffd000' }, extra: 'header { background: #000d !important; }' },
   { id: 'rose', name: 'Rose', vars: { '--bg': '#170d13', '--side': '#1c1118', '--panel': '#24151d', '--panel2': '#2f1c27', '--border': '#44273a', '--border2': '#63384f', '--acc': '#ff8fc0', '--acc2': '#ff5fa5' } },
   { id: 'ocean', name: 'Ocean', vars: { '--bg': '#07141c', '--side': '#0a1a24', '--panel': '#0e2230', '--panel2': '#132c3d', '--border': '#1a3a50', '--border2': '#27577a', '--acc': '#5fd4ff', '--acc2': '#2bb8f0' } },
@@ -2480,7 +2493,7 @@ window.addEventListener('keydown', e => {
   orig.apply(this, arguments);
   const bar = document.querySelector('header .bar'), meEl = document.getElementById('me');
   if (bar && meEl && !document.getElementById('palBtn')) {
-    const b = document.createElement('button'); b.id = 'palBtn'; b.type = 'button'; b.className = 'btn sm'; b.title = 'Search and jump (Ctrl+K)'; b.textContent = '⌘K'; b.onclick = w2PalOpen;
+    const b = document.createElement('button'); b.id = 'palBtn'; b.type = 'button'; b.className = 'btn sm palbtn'; b.title = 'Search and jump (' + (/Mac|iPhone|iPad/.test(navigator.platform) ? '⌘K' : 'Ctrl+K') + ')'; b.innerHTML = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span>Search</span><kbd>' + (/Mac|iPhone|iPad/.test(navigator.platform) ? '⌘K' : 'Ctrl K') + '</kbd>'; b.onclick = w2PalOpen;
     bar.insertBefore(b, meEl);
   }
 }; }
@@ -2581,6 +2594,45 @@ document.addEventListener('submit', e => { if (e.target.closest && e.target.clos
   };
   return r;
 }; }
+})();
+
+// ---- Up/Down arrow in a message box walks back through what you sent (like a terminal): Up on an empty box brings
+// back your last message, keep pressing for older ones, Down comes forward again and finally back to what you were typing.
+(() => {
+  const SEL = '.composer form input:not([type=file]):not([type=checkbox]), .composer form textarea';
+  const hist = new Map();
+  let quiet = false;
+  const keyOf = el => el.id || 'composer';
+  const st = el => { const k = keyOf(el); let s = hist.get(k); if (!s) hist.set(k, s = { list: [], i: -1, draft: '' }); return s; };
+  const note = el => {
+    const text = el.value.trim(); if (!text) return;
+    setTimeout(() => {  // only counts as sent once the box has been cleared (or the page replaced it)
+      if (el.isConnected && el.value.trim()) return;
+      const s = st(el); if (s.list[s.list.length - 1] !== text) s.list.push(text);
+      if (s.list.length > 100) s.list.shift();
+      s.i = -1;
+    }, 700);
+  };
+  const setVal = (el, v) => { quiet = true; el.value = v; el.setSelectionRange(v.length, v.length); el.dispatchEvent(new Event('input', { bubbles: true })); quiet = false; };
+  document.addEventListener('input', e => { if (!quiet && e.target.matches && e.target.matches(SEL)) st(e.target).i = -1; });
+  document.addEventListener('keydown', e => {
+    const el = e.target; if (!el || !el.matches || !el.matches(SEL)) return;
+    if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) note(el);
+    if (e.defaultPrevented || e.shiftKey || e.ctrlKey || e.altKey || e.metaKey || e.isComposing) return;
+    if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
+    const s = st(el), v = el.value, pos = el.selectionStart;
+    if (e.key === 'ArrowUp') {
+      if (v.slice(0, pos).includes('\n') || !s.list.length || (v !== '' && s.i === -1)) return;
+      if (s.i === -1) { s.draft = v; s.i = s.list.length - 1; } else if (s.i > 0) s.i--;
+      e.preventDefault(); setVal(el, s.list[s.i]);
+    } else {
+      if (s.i === -1 || v.slice(pos).includes('\n')) return;
+      if (s.i < s.list.length - 1) s.i++; else { s.i = -1; }
+      e.preventDefault(); setVal(el, s.i === -1 ? s.draft : s.list[s.i]);
+    }
+  });
+  document.addEventListener('submit', e => { const el = e.target.querySelector && e.target.querySelector(SEL); if (el) note(el); }, true);
+  document.addEventListener('click', e => { if (e.target.closest && e.target.closest('#sendBtn')) { const el = document.querySelector('#input'); if (el) note(el); } }, true);
 })();
 
 (async () => {

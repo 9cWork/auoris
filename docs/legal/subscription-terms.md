@@ -12,7 +12,7 @@ The price and billing period are shown before you pay and in your receipt. Price
 
 ## 3. Cancelling
 
-You can cancel at any time from the Plus page (Manage subscription), which opens Stripe's billing portal. Cancelling stops future renewals. Plus stays active until the end of the period you already paid for, then ends. Deleting your account does not by itself cancel a subscription: cancel first. An account with an active subscription cannot be deleted until the subscription is cancelled.
+You can cancel at any time from the Plus page (Manage subscription), which opens Stripe's billing portal. Cancelling stops future renewals. Plus stays active until the end of the period you already paid for, then ends. If you delete your account while you have an active subscription, the subscription is cancelled immediately and you are not charged again. There is no refund for the current period unless the law requires one.
 
 ## 4. Refunds
 

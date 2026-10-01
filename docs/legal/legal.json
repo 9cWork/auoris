@@ -1,7 +1,7 @@
 {
-  "version": "2026-10-01.3",
+  "version": "2026-10-01.4",
   "operator": "Auoris",
-  "contact": "",
+  "contact": "auoris-support@googlegroups.com",
   "docs": [
     {
       "id": "terms",
@@ -31,6 +31,10 @@
   ],
   "changes": [
     {
+      "version": "2026-10-01.4",
+      "summary": "Added our support contact address (auoris-support@googlegroups.com) to the legal documents."
+    },
+    {
       "version": "2026-10-01.3",
       "summary": "Deleting your account now cancels an active Plus subscription for you instead of blocking deletion; sign-up now checks your age (the date of birth is not stored)."
     },
@@ -43,5 +47,5 @@
       "summary": "First version of the Terms of Service, Privacy Policy, Acceptable Use Policy, Subscription and Gift Terms, and Copyright policy."
     }
   ],
-  "hash": "489870e321e34933c9b9703b2050dddf5dd1cf7800b1c72a22a89cb1fc478bea"
+  "hash": "2bf8dd37d007682fb80c0b7fd8465e86bf6ccba79d00f42c3e4cca03b9c2fe38"
 }

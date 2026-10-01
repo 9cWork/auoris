@@ -750,22 +750,55 @@ function attStorageError(x) {
   if (x.status === 413 || /exceed|too large|maximum allowed/i.test(msg)) return "Storage rejected the file as too large - the server's upload limit is lower than the message limit.";
   return msg || ('Upload failed (' + x.status + ')');
 }
+// ---- upload quotas + de-duplication. Per user: 60 MB / 24 h, 700 MB / 30 days, 5 GB stored (numbers live in the database,
+// chat_media_quota_limits()). A file is stored under the SHA-256 of its contents, so sending the same file again reuses the
+// stored copy: nothing is uploaded and no quota is used.
+const attFresh = new Set();                 // paths this session uploaded for a send that hasn't completed yet (only these may be discarded)
+let attQuotaCache = null;
+async function attQuota(force) {
+  if (!force && attQuotaCache && Date.now() - attQuotaCache.at < 15000) return attQuotaCache.q;
+  try { const { data } = await sb.rpc('upload_quota'); attQuotaCache = { at: Date.now(), q: data || null }; return data || null; } catch (e) { return null; }
+}
+const attMB = b => (Number(b) >= 1073741824 ? (Number(b) / 1073741824).toFixed(1) + ' GB' : Math.max(0, Math.round(Number(b) / 1048576)) + ' MB');
+function attQuotaProblem(q, bytes) {        // a sentence explaining why this upload can't go ahead, or null
+  if (!q || q.unlimited) return null;
+  const left = k => (q[k] ? q[k].limit - q[k].used : Infinity);
+  if (bytes > left('total')) return `Storage full: you've used ${attMB(q.total.used)} of your ${attMB(q.total.limit)}. Delete some of your files to upload more.`;
+  if (bytes > left('month')) return `That would go over your monthly upload limit (${attMB(q.month.limit)} per 30 days, ${attMB(Math.max(0, left('month')))} left).`;
+  if (bytes > left('day')) return `That would go over your daily upload limit (${attMB(q.day.limit)} per 24 hours, ${attMB(Math.max(0, left('day')))} left).`;
+  return null;
+}
+async function attHash(file) {
+  const h = await crypto.subtle.digest('SHA-256', await file.arrayBuffer());
+  return Array.from(new Uint8Array(h), b => b.toString(16).padStart(2, '0')).join('');
+}
 async function attUploadOne(item, onProgress) {
   const { data: { session } } = await sb.auth.getSession();
   if (!session) throw new Error('Signed out');
-  const path = `${me.id}/${crypto.randomUUID()}-${attPathName(item.file.name)}`;
+  const hash = await attHash(item.file);
+  const ext = ((/\.[A-Za-z0-9]{1,8}$/.exec(item.file.name) || [''])[0]).toLowerCase();
+  const path = `${me.id}/${hash}${ext}`;
+  const meta = { path, name: attDisplayName(item.file.name), type: item.file.type || 'application/octet-stream', size: item.file.size };
+  // Already stored from an earlier send? Then there's nothing to upload (and nothing to count against the quota).
+  const { data: have } = await sb.storage.from('chat-media').list(me.id, { search: hash, limit: 5 });
+  if ((have || []).some(o => o.name === hash + ext)) { onProgress(1); return meta; }
+  const bad = attQuotaProblem(await attQuota(true), item.file.size);
+  if (bad) throw new Error(bad);
+  let fresh = false;
   await new Promise((res, rej) => {
     const x = new XMLHttpRequest(); item.xhr = x;
     x.open('POST', `${SUPABASE_URL}/storage/v1/object/chat-media/${path.split('/').map(encodeURIComponent).join('/')}`);
     x.setRequestHeader('Authorization', 'Bearer ' + session.access_token); x.setRequestHeader('apikey', SUPABASE_KEY);
     x.setRequestHeader('x-upsert', 'false'); x.setRequestHeader('Content-Type', item.file.type || 'application/octet-stream');
     x.upload.onprogress = e => { if (e.lengthComputable) onProgress(e.loaded / e.total); };
-    x.onload = () => (x.status >= 200 && x.status < 300 ? res() : rej(new Error(attStorageError(x))));
+    x.onload = () => (x.status >= 200 && x.status < 300 ? (fresh = true, res()) : x.status === 409 ? res() : rej(new Error(attStorageError(x))));   // 409: an identical file appeared meanwhile - same thing
     x.onerror = () => rej(new Error('Network error while uploading'));
     x.onabort = () => rej(Object.assign(new Error('Upload cancelled'), { cancelled: true }));
     x.send(item.file);
   });
-  return { path, name: attDisplayName(item.file.name), type: item.file.type || 'application/octet-stream', size: item.file.size };
+  if (fresh) attFresh.add(path);
+  attQuotaCache = null;
+  return meta;
 }
 function attComposer(form, input, opts) {
   const ctl = { items: [], busy: false, done: [] };
@@ -836,7 +869,11 @@ function attComposer(form, input, opts) {
   return ctl;
 }
 // Best-effort removal of uploaded objects (failed send / cancelled upload).
-function attDiscard(atts) { const paths = (atts || []).filter(a => a && a.path).map(a => a.path); if (paths.length) sb.storage.from('chat-media').remove(paths).catch(() => {}); }
+function attDiscard(atts) {
+  const paths = (atts || []).filter(a => a && a.path && attFresh.has(a.path)).map(a => a.path);
+  paths.forEach(x => attFresh.delete(x));
+  if (paths.length) sb.storage.from('chat-media').remove(paths).catch(() => {});
+}
 const attExtra = atts => (atts && atts.length ? { attachments: atts } : {});
 // Upload pending files, then run insert(atts) -> { error }. Cleans up orphaned objects if the insert fails.
 async function attSend(ctl, insert) {
@@ -847,12 +884,13 @@ async function attSend(ctl, insert) {
       for (const a of atts) {
         const r = await attScanRun(a.path);
         if (r.status === 'quarantined') throw Object.assign(new Error(`"${a.name}" was blocked by the scanner: ${r.reason || 'flagged as unsafe'}`), { blocked: true });
+        if (r.status === 'over_limit') throw new Error(r.reason || 'Upload limit reached');
         if (r.status !== 'clean') throw new Error(`"${a.name}" could not be scanned - try again`);
       }
     } catch (e) { attDiscard(atts); ctl.items.forEach(i => { i.progress = 0; i.xhr = null; }); return { error: e }; }
   }
   const r = await insert(atts);
-  if (r.error) attDiscard(atts); else ctl.clear();
+  if (r.error) attDiscard(atts); else { (atts || []).forEach(a => attFresh.delete(a.path)); ctl.clear(); }
   return r;
 }
 
@@ -2425,9 +2463,16 @@ const W2_THEMES = [
   { id: 'violet', name: 'Violet', vars: { '--bg': '#100b1c', '--side': '#140f23', '--panel': '#1b142e', '--panel2': '#241b3b', '--border': '#33264f', '--border2': '#4c3a78', '--acc': '#c4a8ff', '--acc2': '#a17bff' } },
 ];
 const w2Theme = () => W2_THEMES.find(t => t.id === ls.get('auoris_theme')) || W2_THEMES[0];
+// Design: 'modern' (glow, starfield, illustrations) or 'legacy' (plain, flat, warm neutral). Saved in this browser.
+const w2Design = () => (ls.get('auoris_design') === 'legacy' ? 'legacy' : 'modern');
+const LEGACY_PALETTE = ':root { --bg: #262624; --side: #1f1e1d; --panel: #30302e; --panel2: #3a3936; --border: #3d3c39; --border2: #54524d; --text: #f0eee6; --muted: #b0aea5; --dim: #8a887f; --acc: #d97757 !important; --acc2: #c6613f !important; } header { background: #1f1e1dd9 !important; }';
+function w2SetDesign(d) { ls.set('auoris_design', d === 'legacy' ? 'legacy' : 'modern'); w2ApplyTheme(); }
 function w2ApplyTheme() {
   let st = document.getElementById('themeCss'); if (!st) { st = document.createElement('style'); st.id = 'themeCss'; document.head.appendChild(st); }
   const t = w2Theme(), v = Object.entries(t.vars).map(([k, x]) => `${k}: ${x};`).join(' ');
+  const legacy = w2Design() === 'legacy';
+  document.body.classList.toggle('legacy', legacy);
+  if (legacy && t.id !== 'light' && t.id !== 'contrast') { st.textContent = LEGACY_PALETTE; return; }   // Light and High contrast keep their own colours
   st.textContent = (v || t.scheme ? `:root { ${v}${t.scheme ? ` color-scheme: ${t.scheme};` : ''} }` : '') + (t.extra ? ' ' + t.extra : '');
 }
 function w2SetTheme(id) { ls.set('auoris_theme', id); w2ApplyTheme(); }
@@ -2468,6 +2513,7 @@ function w2PalItems() {
     if (w2Home && w2Home.groups) w2Home.groups.forEach(g => add('Group', g.name, 'group chat', () => go('messages/g/' + g.id), 'groups'));
     add('Action', 'Sign out', '', () => sb.auth.signOut());
   } else { add('Go to', 'Sign in', 'page', () => go('signin')); }
+  add('Action', 'Switch design (modern / legacy)', w2Design(), () => w2SetDesign(w2Design() === 'legacy' ? 'modern' : 'legacy'), 'appearance legacy modern simple');
   add('Action', 'Toggle theme (light / dark)', w2Theme().name, () => w2SetTheme(w2Theme().scheme === 'light' ? 'default' : 'light'), 'appearance dark light');
   W2_THEMES.forEach(t => add('Theme', t.name, 'apply theme', () => w2SetTheme(t.id), 'appearance color'));
   return out;
@@ -2610,13 +2656,17 @@ document.addEventListener('submit', e => { if (e.target.closest && e.target.clos
   if (!grid || !anchor || document.getElementById('w2Appearance')) return r;
   const before = anchor.closest('.card');
   const a = document.createElement('div'); a.className = 'card'; a.id = 'w2Appearance';
-  a.innerHTML = `<h3 style="margin-top:0">Appearance</h3><p class="muted">Pick a colour theme. Saved in this browser only. (Custom CSS is a desktop-app feature.)</p>
+  a.innerHTML = `<h3 style="margin-top:0">Appearance</h3><p class="muted">Pick a design and a colour theme. Saved in this browser only. (Custom CSS is a desktop-app feature.)</p>
+    <label class="lbl">Design</label>
+    <select class="in" id="w2DesignSel" style="margin-bottom:12px"><option value="modern"${w2Design() === 'modern' ? ' selected' : ''}>Modern - glow, starfield and illustrations</option><option value="legacy"${w2Design() === 'legacy' ? ' selected' : ''}>Legacy - plain and simple</option></select>
+    <label class="lbl">Colour theme</label>
     <select class="in" id="w2ThemeSel">${W2_THEMES.map(t => `<option value="${esc(t.id)}"${t.id === w2Theme().id ? ' selected' : ''}>${esc(t.name)}</option>`).join('')}</select>
     <p class="muted small" style="margin:14px 0 0"><label style="display:flex;gap:8px;align-items:flex-start"><input type="checkbox" id="w2TypingChk"${tyShare() ? ' checked' : ''}> <span><b>Share typing status</b><br>Let people in a DM, group or channel see when you're typing. Saved in this browser only.</span></label></p>`;
   const s = document.createElement('div'); s.className = 'card'; s.id = 'w2SignOthers';
   s.innerHTML = `<h3 style="margin-top:0">Sign out everywhere else</h3><p class="muted">Ends your sign-in on every other browser and device, and keeps this one signed in. Use it if you lost a device or used a shared computer. (A list of individual devices isn't available.)</p><button class="btn danger" id="w2SoBtn">Sign out other devices…</button>`;
   grid.insertBefore(a, before); grid.insertBefore(s, before);
   document.getElementById('w2ThemeSel').onchange = e => w2SetTheme(e.target.value);
+  document.getElementById('w2DesignSel').onchange = e => w2SetDesign(e.target.value);
   document.getElementById('w2TypingChk').onchange = e => { ls.set('auoris_typing_share', e.target.checked ? '1' : '0'); if (!e.target.checked) tyStop(); };
   document.getElementById('w2SoBtn').onclick = async () => {
     if (!confirm('Sign out every other browser and device? This one stays signed in.')) return;

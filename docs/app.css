@@ -390,3 +390,22 @@ section.band .dc-center h2, section.band .dc-center .lead { text-align: center; 
 @media (max-width: 700px) { .palbtn span, .palbtn kbd { display: none; } }
 
 .dc-row.hats img { filter: drop-shadow(0 0 1px #ffffffaa) drop-shadow(0 0 5px #8b5cf655); }
+
+/* ---- Legacy design (Settings > Appearance > Design): plain, flat, calm. The Modern look is untouched when .legacy is off. */
+body.legacy .hero .stars, body.legacy .hero .aur, body.legacy .hero .ring, body.legacy .band.alt::before, body.legacy .dc-win .dc-bar i { display: none !important; }
+body.legacy .hero { background: none !important; padding: 70px 24px 50px; }
+body.legacy .hero .logowrap img { filter: none !important; animation: none !important; }
+body.legacy .grad { background: none !important; -webkit-text-fill-color: currentColor !important; color: var(--text) !important; }
+body.legacy .hero h1, body.legacy section.band h2 { font-family: Georgia, "Times New Roman", serif; font-weight: 500; letter-spacing: 0; }
+body.legacy .dc-win, body.legacy .dc-phone { box-shadow: 0 2px 10px #0004 !important; }
+body.legacy .dc-ic { background: var(--panel2) !important; border-color: var(--border) !important; box-shadow: none !important; color: var(--acc) !important; }
+body.legacy .dc-feat, body.legacy section.band.alt { background: var(--panel) !important; background-image: none !important; box-shadow: none !important; }
+body.legacy section.band.alt { background: var(--bg) !important; }
+body.legacy .dc-feat:hover { transform: none !important; box-shadow: none !important; }
+body.legacy .dc-mc { background: var(--panel) !important; background-image: none !important; }
+body.legacy .dc-kick { background: var(--panel2) !important; border-color: var(--border) !important; color: var(--muted) !important; }
+body.legacy .authwrap { background: none !important; }
+body.legacy .btn.primary { background: var(--acc) !important; box-shadow: none !important; color: #fff !important; }
+body.legacy .dc-rail b.on { background: var(--acc) !important; }
+body.legacy .dc-msg.me p, body.legacy .dc-pb.me { background: var(--acc) !important; }
+body.legacy .dc-win { background: var(--panel) !important; } body.legacy .dc-bar, body.legacy .dc-rail { background: var(--side) !important; } body.legacy .dc-side { background: var(--panel2) !important; } body.legacy .dc-main { background: var(--bg) !important; }

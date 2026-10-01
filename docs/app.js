@@ -1,3 +1,5 @@
+// Anti-clickjacking (GitHub Pages can't send X-Frame-Options): never run inside someone else's frame.
+try { if (window.top !== window.self) { document.documentElement.style.display = 'none'; window.top.location = window.self.location; } } catch (e) { document.documentElement.style.display = 'none'; }
 // auoris.org - one small single-page app with hash routes (#/servers, #/dms/...). Same Supabase accounts as the desktop app.
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -1763,8 +1765,8 @@ function svlBannerCss(s) { const u = s && svlUrl(s.banner_path); return u ? `bac
 // Sparks: a Plus member can give up to 2; 2 Sparks = Level 1 (banner + image role icons)
 async function svlSparkLoad(sid) { try { const r = await sb.rpc('server_spark_info', { sid }); return r.data || { count: 0, level: 0, mine: false, used: 0, slots: 2, plus: false }; } catch (e) { return { count: 0, level: 0, mine: false, used: 0, slots: 2, plus: false }; } }
 function svlSparkHtml(sp, btnId) {
-  const left = Math.max(0, (sp.slots || 2) - (sp.used || 0));
-  return `<div style="margin-top:8px">✦ <b>${Number(sp.count) || 0}</b> Spark${sp.count === 1 ? '' : 's'} · Level ${Number(sp.level) || 0}<br><button type="button" class="btn sm" id="${btnId}" style="margin-top:6px" title="Auoris Plus members can give up to 2 Sparks. 2 Sparks unlock a server banner and image role icons.">${sp.mine ? 'Take back my Spark' : 'Give a Spark'}</button> <span class="muted small">${left} of ${sp.slots || 2} left</span></div>`;
+  const slots = Number(sp.slots) || 2, used = Number(sp.used) || 0, count = Number(sp.count) || 0, left = Math.max(0, slots - used);
+  return `<div style="margin-top:8px">✦ <b>${count}</b> Spark${count === 1 ? '' : 's'} · Level ${Number(sp.level) || 0}<br><button type="button" class="btn sm" id="${btnId}" style="margin-top:6px" title="Auoris Plus members can give up to 2 Sparks. 2 Sparks unlock a server banner and image role icons.">${sp.mine ? 'Take back my Spark' : 'Give a Spark'}</button> <span class="muted small">${left} of ${slots} left</span></div>`;
 }
 async function svlSparkClick(sid, sp, after) {
   if (!sp.mine && !sp.plus) return svlNote('Sparks come with Auoris Plus.');
@@ -2322,7 +2324,7 @@ async function exportMyData(btn) {
   try {
     const mine = (table, col) => pageAll(() => sb.from(table).select('*').eq(col, me.id).order('id'));
     const [profileRes, friendships, dms, groupMsgs, channelMsgs, projectMsgs, reactions, reports, blockRows] = await Promise.all([
-      sb.from('profiles').select('*').eq('id', me.id).single(),
+      sb.from('profiles').select('avatar_url,banned,banner_color,banner_url,best_day,bio,color,created_at,discord_name,display_name,dm_policy,effect,friend_request_policy,group_invite_policy,id,is_admin,is_mod,kills,legal_accepted_at,legal_version,plus_since,plus_until,pronouns,staff_since,username').eq('id', me.id).single(),
       pageAll(() => sb.from('friendships').select('*').order('created_at').order('requester')),
       mine('messages', 'sender'), mine('group_messages', 'sender'), mine('channel_messages', 'sender'), mine('ai_project_messages', 'sender'),
       mine('message_reactions', 'user_id'), mine('message_reports', 'reporter'),

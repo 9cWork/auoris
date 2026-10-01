@@ -288,3 +288,4 @@ button.item { border: none; background: none; font: inherit; }
   .oauthbtn:hover { border-color: var(--acc, #8b5cf6); }
   .oauthor { display: flex; align-items: center; gap: 10px; color: var(--muted, #9aa3b8); font-size: 12px; margin: 12px 0 4px; }
   .oauthor::before, .oauthor::after { content: ''; flex: 1; height: 1px; background: var(--border, rgba(255,255,255,.14)); }
+.oauthbtn:last-child:nth-child(odd) { grid-column: 1 / -1; }

@@ -147,17 +147,28 @@ function plusTier(p) {
   const m = plusMonths(p), t = TIERS.find(([n]) => m >= n);
   return t ? { name: t[1], color: t[2], months: m } : { name: 'Plus', color: '#ffffff', months: m };
 }
+function logoBadge(color, title, px) {   // the Auoris logo, recoloured: a picture badge instead of a text pill
+  const m = /^#([0-9a-f]{6})$/i.exec(color || ''); let f = '';
+  if (m) {
+    const n = parseInt(m[1], 16), r = (n >> 16) / 255, g = ((n >> 8) & 255) / 255, b = (n & 255) / 255, mx = Math.max(r, g, b), d = mx - Math.min(r, g, b); let h = 0;
+    if (d) h = mx === r ? ((g - b) / d) % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4;
+    h = (h * 60 + 360) % 360;
+    f = d / (mx || 1) < .15 ? `grayscale(1) brightness(${(0.6 + mx * 0.9).toFixed(2)})` : `hue-rotate(${Math.round(h - 218)}deg) brightness(1.1)`;
+  }
+  const s = px || 16;
+  return `<img class="lbadge" src="/img/badge.png" alt="" title="${String(title).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]))}" style="width:${s}px;height:${s}px;filter:${f}">`;
+}
 function badges(p, serverRole) {
   if (!p) return '';
   const b = [];
-  if ((p.username || '').toLowerCase() === 'auoris') b.push(['Owner', ICON.crown('var(--owner)')]);
-  else if (p.is_admin) b.push(['Admin', ICON.shield('var(--admin)')]);
-  else if (p.is_mod) b.push(['Moderator', ICON.shield('var(--mod)')]);
-  if (serverRole === 'owner') b.push(['Server owner', ICON.crown('var(--owner)')]);
-  else if (serverRole === 'admin') b.push(['Server admin', ICON.shield('var(--admin)')]);
-  else if (serverRole === 'moderator') b.push(['Server moderator', ICON.shield('var(--mod)')]);
+  if ((p.username || '').toLowerCase() === 'auoris') b.push(['Owner', logoBadge('#ff5c9e', 'Owner', 16)]);
+  else if (p.is_admin) b.push(['Admin', logoBadge('#ff6b6b', 'Admin', 16)]);
+  else if (p.is_mod) b.push(['Moderator', logoBadge('#4caf50', 'Moderator', 16)]);
+  if (serverRole === 'owner') b.push(['Server owner', logoBadge('#ff5c9e', 'Owner', 16)]);
+  else if (serverRole === 'admin') b.push(['Server admin', logoBadge('#ff6b6b', 'Admin', 16)]);
+  else if (serverRole === 'moderator') b.push(['Server moderator', logoBadge('#4caf50', 'Moderator', 16)]);
   const t = plusTier(p);
-  if (t) b.push([`Auoris Plus · ${t.name}${t.months ? ` · ${t.months} mo` : ''}`, ICON.plus(t.color)]);
+  if (t) b.push([`Auoris Plus · ${t.name}${t.months ? ` · ${t.months} mo` : ''}`, logoBadge(t.color, 'Auoris Plus', 16)]);
   const merged = new Map();  // same icon twice (e.g. site Owner + server owner) shows once with both titles
   for (const [title, svg] of b) merged.set(svg, merged.has(svg) ? merged.get(svg) + ' · ' + title : title);
   return merged.size ? `<span class="badges">${[...merged].map(([svg, title]) => `<span class="bdg" title="${esc(title)}">${svg}</span>`).join('')}</span>` : '';
@@ -1151,6 +1162,7 @@ function mgSettings() {
     <div style="padding:18px;overflow-y:auto;flex:1;max-width:640px">
       <h4 style="margin:0 0 8px">General</h4>
       <div class="row"><button class="btn sm" id="stRename">Rename</button><button class="btn sm" id="stIcon">Change icon</button>${owner ? '<button class="btn sm danger" id="stDelete">Delete server</button>' : ''}</div>
+      <div id="svlBox"></div>
       <h4 style="margin:22px 0 4px">Custom emoji <span class="muted small" id="emCount"></span></h4>
       <p class="muted small" style="margin:0 0 8px">PNG, GIF or WebP, up to 256 KB. Members type <code>:name:</code> in this server's channels.</p>
       <div id="emList" class="emlist"><div class="empty">Loading…</div></div>
@@ -1166,6 +1178,7 @@ function mgSettings() {
         <div style="margin-top:12px"><button class="btn primary" id="dirSave">Save</button></div>`
       : `<p class="muted small">${s.is_public ? 'This server is listed in Discover.' : 'This server isn\'t listed.'} Only the owner can change that.</p>`}</div>`;
   $('stBack').onclick = () => route();
+  svlMount($('svlBox'), { s, members: svCache.members, nameOf: uid => dname(profiles.get(uid)), reload: async () => { await loadServerList(); mgSettingsReload(s.id); } });
   mgWebhooksMount(s, $('mgPane').lastElementChild);
   $('stRename').onclick = async () => { const n = prompt('New name', s.name); if (!n) return; const r = await sb.from('servers').update({ name: n.trim().slice(0, 40) }).eq('id', s.id); if (r.error) fail(r.error); else { svCache = null; route(); } };
   $('stIcon').onclick = async () => { const n = prompt('New icon (emoji or letters)', s.icon || ''); if (n === null) return; const r = await sb.from('servers').update({ icon: n.slice(0, 8) || null }).eq('id', s.id); if (r.error) fail(r.error); else { svCache = null; route(); } };
@@ -1423,7 +1436,25 @@ PAGES[''] = async () => {
 
 // ---- sign in / sign up
 const AUTH = { mode: 'login', email: '', pendingPass: null, resume: null, notice: null };
-PAGES.signin = async () => { if (me) return go('messages'); authPage(AUTH.resume || 'login'); AUTH.resume = null; };
+PAGES.invite = async code => {
+  main().innerHTML = '<div class="wrap page" style="max-width:420px"><div class="card" id="invBox">Loading invite…</div></div>';
+  const pv = /^[A-Za-z0-9]{4,16}$/.test(code || '') ? await invPreview(code) : null;
+  const box = $('invBox'); if (!box) return;
+  if (!pv) { box.innerHTML = '<h3 style="margin-top:0">Invite not found</h3><p class="muted">This invite link is invalid or has been reset.</p><a class="btn" href="/">Home</a>'; return; }
+  box.style.padding = '0'; box.style.overflow = 'hidden';
+  box.innerHTML = `<div style="height:120px;${svlBannerCss(pv)}"></div><div style="padding:18px"><div class="row" style="align-items:center;gap:12px"><span style="width:52px;height:52px;border-radius:14px;background:var(--panel2);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700">${esc(pv.icon || (pv.name || '?')[0].toUpperCase())}</span>
+    <div><h3 style="margin:0">${esc(pv.name)}</h3><div class="muted small">${Number(pv.member_count) || 0} member${Number(pv.member_count) === 1 ? '' : 's'}</div></div></div>
+    ${pv.description ? `<p class="muted" style="margin:12px 0 0">${esc(pv.description)}</p>` : ''}
+    <div style="margin-top:16px"><button class="btn primary" id="invJoin">${me ? 'Join server' : 'Sign in to join'}</button></div></div>`;
+  $('invJoin').onclick = async () => {
+    if (!me) { try { sessionStorage.setItem('auoris_after_signin', '/invite/' + code); } catch (e) {} return go('signin'); }
+    $('invJoin').disabled = true;
+    const { data, error } = await sb.rpc('join_server', { code });
+    if (error) { $('invJoin').disabled = false; return fail(error); }
+    svCache = null; go('messages/s/' + data);
+  };
+};
+PAGES.signin = async () => { if (me) { let back = null; try { back = sessionStorage.getItem('auoris_after_signin'); sessionStorage.removeItem('auoris_after_signin'); } catch (e) {} return go(back && /^\/invite\/[A-Za-z0-9]{4,16}$/.test(back) ? back.slice(1) : 'messages'); } authPage(AUTH.resume || 'login'); AUTH.resume = null; };
 PAGES.signup = async () => { if (me) return go('messages'); authPage('signup'); };
 function authPage(mode) {
   main().innerHTML = `<div class="authwrap"><div class="card authcard"><img src="/logo.png" alt="" style="width:56px;border-radius:14px">
@@ -1586,13 +1617,159 @@ const rankRole = r => ({ owner: 3, admin: 2, moderator: 1, member: 0 })[r] ?? -1
 // the rail is right even when we're looking at Home (DMs/groups), not a particular server.
 let serverList = [];
 async function loadServerList() {
-  const { data: mem, error } = await sb.from('server_members').select('server_id, role, servers(id,name,icon,invite_code,owner_id,is_public,description,category)').eq('user_id', me.id);
+  const { data: mem, error } = await sb.from('server_members').select('server_id, role, servers(id,name,icon,invite_code,owner_id,is_public,description,category,banner_path)').eq('user_id', me.id);
   if (error) throw error;
   serverList = mem.filter(m => m.servers).map(m => ({ ...m.servers, myRole: m.role }));
 }
 // svCache holds the channels/members for whichever server is currently open, so switching channels within the
 // same server (the common case) doesn't re-query all of that again - only a server switch, or an edit that
 // changes it (new channel, rename, kick, role change), refetches. Set svCache = null to force a refetch.
+// ================================================================ server look: banner, custom roles (name + colour + icon), invite embeds
+// Shared verbatim by the desktop app and auoris.org. Roles are labels only - what a member may do is still the built-in rank.
+function svlBase() { try { return attCfg.url; } catch (e) {} try { return SUPABASE_URL; } catch (e) {} return ''; }
+function svlNote(m) { try { if (window.pywebview) toast('Servers', m); else toast(m); } catch (e) {} }
+function svlUrl(path) { return /^[0-9a-f-]{36}\/[A-Za-z0-9._-]{1,100}$/.test(path || '') ? `${svlBase()}/storage/v1/object/public/server-media/${path}` : null; }
+function svlRoleIcon(r, px) {
+  px = px || 14; const u = svlUrl(r.icon_path), c = /^#[0-9a-f]{6}$/i.test(r.color || '') ? r.color : '#99aab5';
+  if (u) return `<img src="${esc(u)}" alt="" title="${esc(r.name)}" style="width:${px}px;height:${px}px;border-radius:3px;object-fit:cover;vertical-align:-2px;margin-left:4px">`;
+  if (r.icon) return `<span title="${esc(r.name)}" style="font-size:${px}px;line-height:1;margin-left:4px">${esc(r.icon)}</span>`;
+  return `<i title="${esc(r.name)}" style="display:inline-block;width:${Math.round(px * .6)}px;height:${Math.round(px * .6)}px;border-radius:50%;background:${c};margin-left:5px"></i>`;
+}
+function svlMemberRoles(uid) { const m = svCache && svCache.cm; return (m && m.get(uid)) || []; }
+function svlNameColor(uid) { const r = svlMemberRoles(uid)[0]; return r && /^#[0-9a-f]{6}$/i.test(r.color) ? r.color : ''; }
+function svlBadges(uid) { return svlMemberRoles(uid).slice(0, 4).map(r => svlRoleIcon(r, 14)).join(''); }
+function svlBannerCss(s) { const u = s && svlUrl(s.banner_path); return u ? `background:#1d2331 url(${esc(u)}) center/cover` : 'background:linear-gradient(135deg,#2b4680,#1d2331)'; }
+async function svlLoad(sid) {   // custom roles + who wears them; empty when the feature isn't set up on the server yet
+  const out = { cr: [], cm: new Map() };
+  try {
+    const [a, b] = await Promise.all([sb.from('server_roles').select('*').eq('server_id', sid).order('position').order('created_at'),
+      sb.from('server_member_roles').select('user_id,role_id').eq('server_id', sid)]);
+    out.cr = a.data || [];
+    const byId = new Map(out.cr.map(r => [r.id, r]));
+    (b.data || []).forEach(x => { const r = byId.get(x.role_id); if (!r) return; if (!out.cm.has(x.user_id)) out.cm.set(x.user_id, []); out.cm.get(x.user_id).push(r); });
+    out.cm.forEach(l => l.sort((p, q) => p.position - q.position));
+  } catch (e) {}
+  return out;
+}
+const svlExt = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/webp': 'webp', 'image/gif': 'gif' };
+async function svlUpload(sid, kind, file) {
+  if (!svlExt[file.type]) throw new Error('Use a PNG, JPEG, WebP or GIF image.');
+  if (file.size > (kind === 'banner' ? 3145728 : 262144)) throw new Error(kind === 'banner' ? 'Banners can be up to 3 MB.' : 'Role icons can be up to 256 KB.');
+  const path = `${sid}/${kind}-${Math.random().toString(36).slice(2, 10)}.${svlExt[file.type]}`;
+  const { error } = await sb.storage.from('server-media').upload(path, file, { upsert: false, contentType: file.type, cacheControl: '31536000' });
+  if (error) throw error;
+  return path;
+}
+const svlDrop = path => { if (path) sb.storage.from('server-media').remove([path]).catch(() => {}); };
+// The settings section. ctx: { s, members: [{user_id, role}], nameOf(uid), reload() }
+function svlMount(box, ctx) {
+  const s = ctx.s, sid = s.id, st = 'width:100%;box-sizing:border-box;padding:6px 8px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);font:inherit';
+  const roles = (svCache && svCache.cr) || [];
+  box.innerHTML = `<h4 style="margin:22px 0 4px">Banner</h4>
+    <p class="muted small" style="margin:0 0 8px">Shown at the top of the channel list and on invite cards. A wide image works best, up to 3 MB.</p>
+    <div id="svlBan" style="height:90px;border-radius:12px;${svlBannerCss(s)}"></div>
+    <div class="row" style="margin-top:8px"><input type="file" id="svlBanFile" accept="image/png,image/jpeg,image/webp,image/gif" hidden><button class="btn sm" id="svlBanPick">Upload banner…</button>${s.banner_path ? '<button class="btn sm danger" id="svlBanRm">Remove</button>' : ''}</div>
+    <h4 style="margin:22px 0 4px">Roles <span class="muted small">${roles.length} / 20</span></h4>
+    <p class="muted small" style="margin:0 0 8px">Name, colour and an icon (an emoji or a small image). Members wear them in the member list. Roles are labels - they don't change what anyone can do.</p>
+    <div id="svlRoles"></div>
+    <div class="row" style="margin-top:10px"><button class="btn sm" id="svlAddRole"${roles.length >= 20 ? ' disabled' : ''}>＋ New role</button></div>`;
+  box.querySelector('#svlBanPick').onclick = () => box.querySelector('#svlBanFile').click();
+  box.querySelector('#svlBanFile').onchange = async e => {
+    const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+    try { const p = await svlUpload(sid, 'banner', f); const old = s.banner_path;
+      const r = await sb.from('servers').update({ banner_path: p }).eq('id', sid); if (r.error) { svlDrop(p); throw r.error; }
+      svlDrop(old); s.banner_path = p; svlNote('Banner updated'); ctx.reload(); } catch (err) { svlNote(err.message || String(err)); }
+  };
+  if (box.querySelector('#svlBanRm')) box.querySelector('#svlBanRm').onclick = async () => {
+    const old = s.banner_path; const r = await sb.from('servers').update({ banner_path: null }).eq('id', sid);
+    if (r.error) return svlNote(r.error.message); svlDrop(old); s.banner_path = null; ctx.reload();
+  };
+  const list = box.querySelector('#svlRoles');
+  list.innerHTML = roles.length ? '' : '<div class="muted small">No roles yet.</div>';
+  roles.forEach(r => {
+    const row = document.createElement('div'); row.style.cssText = 'border:1px solid var(--border);border-radius:10px;padding:8px 10px;margin:6px 0';
+    row.innerHTML = `<div class="row" style="align-items:center;gap:8px;flex-wrap:wrap"><span class="rprev">${svlRoleIcon(r, 20)}</span>
+      <input class="rname" maxlength="24" value="${esc(r.name)}" style="${st};flex:1;min-width:110px;width:auto"><input class="rcol" type="color" value="${esc(r.color)}" style="width:38px;height:30px;padding:0;border:0;background:none">
+      <input class="remo" maxlength="4" placeholder="emoji" value="${esc(r.icon || '')}" title="Emoji icon" style="${st};width:64px;text-align:center">
+      <input type="file" class="rfile" accept="image/png,image/jpeg,image/webp,image/gif" hidden><button class="btn sm rpick" title="Use a small image as the icon">Image</button>
+      <button class="btn sm rsave primary">Save</button><button class="btn sm rwho">Members</button><button class="btn sm danger rdel">Delete</button></div><div class="rmem" hidden style="margin-top:8px;max-height:180px;overflow-y:auto"></div>`;
+    list.appendChild(row);
+    row.querySelector('.rpick').onclick = () => row.querySelector('.rfile').click();
+    row.querySelector('.rfile').onchange = async e => {
+      const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+      try { const p = await svlUpload(sid, 'role', f); const old = r.icon_path;
+        const x = await sb.from('server_roles').update({ icon_path: p, icon: null }).eq('id', r.id); if (x.error) { svlDrop(p); throw x.error; }
+        svlDrop(old); ctx.reload(); } catch (err) { svlNote(err.message || String(err)); }
+    };
+    row.querySelector('.rsave').onclick = async () => {
+      const name = row.querySelector('.rname').value.trim(); if (!name) return svlNote('A role needs a name.');
+      const icon = row.querySelector('.remo').value.trim() || null, upd = { name, color: row.querySelector('.rcol').value, icon };
+      if (icon) upd.icon_path = null;
+      const x = await sb.from('server_roles').update(upd).eq('id', r.id);
+      if (x.error) return svlNote(x.error.code === '23505' ? 'There is already a role with that name.' : x.error.message);
+      if (icon) svlDrop(r.icon_path); svlNote('Saved'); ctx.reload();
+    };
+    row.querySelector('.rdel').onclick = async () => {
+      if (!window.confirm('Delete the role "' + r.name + '"?')) return;
+      const x = await sb.from('server_roles').delete().eq('id', r.id); if (x.error) return svlNote(x.error.message); svlDrop(r.icon_path); ctx.reload();
+    };
+    row.querySelector('.rwho').onclick = () => {
+      const m = row.querySelector('.rmem'); m.hidden = !m.hidden; if (m.hidden) return;
+      m.innerHTML = ctx.members.map(x => { const has = svlMemberRoles(x.user_id).some(q => q.id === r.id);
+        return `<label style="display:flex;gap:8px;align-items:center;padding:3px 0;cursor:pointer"><input type="checkbox" data-u="${esc(x.user_id)}" ${has ? 'checked' : ''}> <span>${esc(ctx.nameOf(x.user_id))}</span></label>`; }).join('');
+      m.querySelectorAll('input').forEach(cb => cb.onchange = async () => {
+        const q = cb.checked ? await sb.from('server_member_roles').insert({ server_id: sid, user_id: cb.dataset.u, role_id: r.id })
+          : await sb.from('server_member_roles').delete().eq('role_id', r.id).eq('user_id', cb.dataset.u);
+        if (q.error) { cb.checked = !cb.checked; return svlNote(q.error.message); }
+        const fresh = await svlLoad(sid); svCache.cr = fresh.cr; svCache.cm = fresh.cm; if (ctx.refreshMembers) ctx.refreshMembers();
+      });
+    };
+  });
+  box.querySelector('#svlAddRole').onclick = async () => {
+    const name = (window.prompt('Role name') || '').trim().slice(0, 24); if (!name) return;
+    const x = await sb.from('server_roles').insert({ server_id: sid, name, color: '#5b9dff', position: roles.length });
+    if (x.error) return svlNote(x.error.code === '23505' ? 'There is already a role with that name.' : x.error.message); ctx.reload();
+  };
+}
+// Invite links pasted into a chat turn into a join card: https://auoris.org/invite/<code>
+const INV_RE = /https?:\/\/(?:www\.)?auoris\.org\/invite\/([A-Za-z0-9]{4,16})/g, invCache = new Map();
+function invPreview(code) {
+  if (!invCache.has(code)) invCache.set(code, sb.rpc('invite_preview', { code }).then(r => (r.data && r.data[0]) || null, () => null));
+  return invCache.get(code);
+}
+async function invCard(code) {
+  const pv = await invPreview(code); if (!pv) return null;
+  const card = document.createElement('div');
+  card.style.cssText = 'max-width:340px;margin:6px 0;border:1px solid var(--border);border-radius:12px;overflow:hidden;background:var(--panel)';
+  const mine = (typeof serverList !== 'undefined' && serverList.some(x => x.id === pv.id)) || (typeof svCache !== 'undefined' && svCache && svCache.servers && svCache.servers.some(x => x.id === pv.id));
+  card.innerHTML = `<div style="height:64px;${svlBannerCss(pv)}"></div><div style="padding:10px 12px;display:flex;gap:10px;align-items:center">
+    <span style="width:38px;height:38px;border-radius:10px;background:var(--accbg,#141d33);display:flex;align-items:center;justify-content:center;font-weight:700;flex:none">${esc(pv.icon || (pv.name || '?')[0].toUpperCase())}</span>
+    <div style="flex:1;min-width:0"><div style="font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(pv.name)}</div><div class="muted small">${Number(pv.member_count) || 0} member${Number(pv.member_count) === 1 ? '' : 's'}</div></div>
+    <button class="btn sm primary">${mine ? 'Open' : 'Join'}</button></div>${pv.description ? `<div class="muted small" style="padding:0 12px 10px">${esc(String(pv.description).slice(0, 140))}</div>` : ''}`;
+  const btn = card.querySelector('button');
+  btn.onclick = async () => {
+    btn.disabled = true;
+    const { data, error } = await sb.rpc('join_server', { code });
+    if (error) { btn.disabled = false; return svlNote(error.message); }
+    try {
+      if (typeof go === 'function') { svCache = null; go('messages/s/' + data); }
+      else { svCache.sid = data; svCache.cid = null; msgMode = 'server'; await loadMessages(); }
+    } catch (e) {}
+  };
+  return card;
+}
+function invAttach(el) {
+  if (el.dataset.inv) return; el.dataset.inv = '1';
+  const codes = [...new Set([...(el.textContent || '').matchAll(INV_RE)].map(m => m[1]))].slice(0, 2);
+  codes.forEach(c => invCard(c).then(card => { if (card && el.parentNode) el.parentNode.insertBefore(card, el.nextSibling); }));
+}
+new MutationObserver(ms => ms.forEach(m => m.addedNodes.forEach(n => {
+  if (n.nodeType !== 1) return;
+  if (n.matches && n.matches('.svbody, .msg .body, .body')) invAttach(n);
+  if (n.querySelectorAll) n.querySelectorAll('.svbody, .body').forEach(invAttach);
+}))).observe(document.body, { childList: true, subtree: true });
+const svlInviteLink = code => 'https://auoris.org/invite/' + code;
+
 let svCache = null; // { sid, s, chans, members, roles, mine }
 async function svLoadChannels(sid) {
   const s = serverList.find(x => x.id === sid) || null;
@@ -1608,7 +1785,8 @@ async function svLoadChannels(sid) {
     mine = rankRole(s.myRole);
     ({ list: emojis, map: emojiMap } = await svLoadEmojis(s.id));
   }
-  svCache = { sid, s, chans, members, roles, mine, emojis, emojiMap };
+  const fresh = s ? await svlLoad(s.id) : { cr: [], cm: new Map() };
+  svCache = { sid, s, chans, members, roles, mine, emojis, emojiMap, cr: fresh.cr, cm: fresh.cm };
 }
 // Local, per-viewer only - which DM/group each visitor has already seen, so the Home list can show unread dots
 // without any new server-side "last read" tracking (there isn't one anywhere else in this app either).
@@ -1647,13 +1825,13 @@ function mgRenderServerShell(sid) {
     if (serverList.length && !sid) go('messages/s/' + serverList[0].id);
     return;
   }
-  $('mgSide').innerHTML = `<div class="head"><span style="flex:1">${esc(s.name)}</span>${mine >= 2 ? '<button class="btn sm" id="svSettings" title="Server settings">⚙</button>' : ''}</div>
+  $('mgSide').innerHTML = `${s.banner_path ? `<div style="height:84px;${svlBannerCss(s)}"></div>` : ''}<div class="head"><span style="flex:1">${esc(s.name)}</span>${mine >= 2 ? '<button class="btn sm" id="svSettings" title="Server settings">⚙</button>' : ''}</div>
     <div class="list">${chans.map(x => `<button type="button" class="item" data-c="${x.id}"># ${esc(x.name)}</button>`).join('')}
     ${mine >= 2 ? '<button type="button" class="item" id="chNew">＋ Add channel</button>' : ''}</div>
     <div style="padding:10px;border-top:1px solid var(--border)" class="small muted">Invite code: <b style="color:var(--text)">${esc(s.invite_code)}</b>
-      <button class="btn sm" id="svCopy">Copy</button>${s.myRole !== 'owner' ? ' <button class="btn sm danger" id="svLeave">Leave</button>' : ''}</div>`;
+      <button class="btn sm" id="svCopy">Copy invite link</button>${s.myRole !== 'owner' ? ' <button class="btn sm danger" id="svLeave">Leave</button>' : ''}</div>`;
   $('mgSide').querySelectorAll('[data-c]').forEach(el => el.onclick = () => go(`messages/s/${s.id}/${el.dataset.c}`));
-  $('svCopy').onclick = () => { navigator.clipboard.writeText(s.invite_code); toast('Invite code copied'); };
+  $('svCopy').onclick = () => { navigator.clipboard.writeText(svlInviteLink(s.invite_code)); toast('Invite link copied - paste it in any chat to show a join card'); };
   if ($('svLeave')) $('svLeave').onclick = async () => {
     if (!confirm(`Leave ${s.name}?`)) return;
     const { error } = await sb.from('server_members').delete().eq('server_id', s.id).eq('user_id', me.id);
@@ -1670,7 +1848,7 @@ function mgRenderServerShell(sid) {
   $('mgMembers').innerHTML = order.map(r => {
     const ms = members.filter(m => m.role === r); if (!ms.length) return '';
     return `<h5>${label[r]} — ${ms.length}</h5>` + ms.map(m => { const p = profiles.get(m.user_id);
-      return `<div class="item"${who(p, m.role)}>${plainAv(p, 'sm')}<span class="name" style="min-width:0;overflow:hidden;text-overflow:ellipsis">${esc(dname(p))}</span></div>`; }).join('');
+      return `<div class="item"${who(p, m.role)}>${plainAv(p, 'sm')}<span class="name" style="min-width:0;overflow:hidden;text-overflow:ellipsis;${svlNameColor(m.user_id) ? 'color:' + svlNameColor(m.user_id) : ''}">${esc(dname(p))}${svlBadges(m.user_id)}</span></div>`; }).join('');
   }).join('');
   // role controls live on the profile card, and only for people ranked below you
   profileCardExtra = (uid, box, close) => {

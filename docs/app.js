@@ -2664,7 +2664,17 @@ document.addEventListener('submit', e => { if (e.target.closest && e.target.clos
     <p class="muted small" style="margin:14px 0 0"><label style="display:flex;gap:8px;align-items:flex-start"><input type="checkbox" id="w2TypingChk"${tyShare() ? ' checked' : ''}> <span><b>Share typing status</b><br>Let people in a DM, group or channel see when you're typing. Saved in this browser only.</span></label></p>`;
   const s = document.createElement('div'); s.className = 'card'; s.id = 'w2SignOthers';
   s.innerHTML = `<h3 style="margin-top:0">Sign out everywhere else</h3><p class="muted">Ends your sign-in on every other browser and device, and keeps this one signed in. Use it if you lost a device or used a shared computer. (A list of individual devices isn't available.)</p><button class="btn danger" id="w2SoBtn">Sign out other devices…</button>`;
-  grid.insertBefore(a, before); grid.insertBefore(s, before);
+  const qc = document.createElement('div'); qc.className = 'card'; qc.id = 'w2Quota';
+  qc.innerHTML = '<h3 style="margin-top:0">Upload storage</h3><p class="muted">Files you send in chats. Sending a file you have already sent does not use any more.</p><div id="w2QuotaRows" class="muted">Loading…</div>';
+  grid.insertBefore(a, before); grid.insertBefore(s, before); grid.insertBefore(qc, before);
+  attQuota(true).then(q => {
+    const box = document.getElementById('w2QuotaRows'); if (!box) return;
+    if (!q) { box.textContent = "Couldn't load your usage right now."; return; }
+    if (q.unlimited) { box.textContent = 'No upload limits on this account.'; return; }
+    const row = (label, k) => { const u = q[k].used, l = q[k].limit, pct = Math.min(100, Math.round(u / l * 100));
+      return `<div style="display:grid;grid-template-columns:96px 1fr 120px;gap:10px;align-items:center;margin:8px 0"><span>${label}</span><div style="height:8px;border-radius:99px;background:var(--panel2);overflow:hidden"><i style="display:block;height:100%;width:${pct}%;background:${pct >= 90 ? '#ff7b7b' : 'var(--acc)'}"></i></div><b style="text-align:right;color:var(--text)">${attMB(u)} / ${attMB(l)}</b></div>`; };
+    box.innerHTML = row('Last 24 hours', 'day') + row('Last 30 days', 'month') + row('In total', 'total');
+  });
   document.getElementById('w2ThemeSel').onchange = e => w2SetTheme(e.target.value);
   document.getElementById('w2DesignSel').onchange = e => w2SetDesign(e.target.value);
   document.getElementById('w2TypingChk').onchange = e => { ls.set('auoris_typing_share', e.target.checked ? '1' : '0'); if (!e.target.checked) tyStop(); };

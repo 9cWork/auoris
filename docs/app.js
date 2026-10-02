@@ -930,33 +930,75 @@ async function attSend(ctl, insert) {
 }
 
 // ---- GIF picker (GIPHY through the gif-search Edge Function, so no API key ships in the app)
+// Category chips are just curated searches; favourites live in public.gif_favorites so they follow the account everywhere.
+const GIF_CATS = [['Trending', ''], ['Reactions', 'reaction'], ['Funny', 'funny'], ['Love', 'love'], ['Happy', 'happy'], ['Sad', 'sad'], ['Angry', 'angry'], ['Celebrate', 'celebrate'], ['Gaming', 'gaming'], ['Anime', 'anime'], ['Memes', 'meme'], ['Animals', 'animals'], ['Sports', 'sports'], ['Movies', 'movie'], ['Food', 'food']];
+let gifFavs = null;
+async function gifFavLoad() {
+  if (gifFavs) return gifFavs;
+  const { data } = await sb.from('gif_favorites').select('url, preview_url, title').order('created_at', { ascending: false }).limit(200);
+  return (gifFavs = data || []);
+}
 function attGifPicker(anchor, onPick) {
   document.querySelectorAll('.gifpick').forEach(x => x.remove());
   const pk = document.createElement('div'); pk.className = 'gifpick';
   const q = document.createElement('input'); q.placeholder = 'Search GIPHY…'; q.maxLength = 50;
+  const cats = document.createElement('div'); cats.className = 'gifcats';
   const grid = document.createElement('div'); grid.className = 'gifgrid';
   const note = document.createElement('div'); note.className = 'gifnote'; note.textContent = 'Powered by GIPHY';
-  pk.append(q, grid, note); document.body.appendChild(pk);
-  const r = anchor.getBoundingClientRect();
-  pk.style.left = Math.max(8, Math.min(r.left, window.innerWidth - 336)) + 'px'; pk.style.bottom = (window.innerHeight - r.top + 6) + 'px';
-  let seq = 0, timer = null;
-  const load = async () => {
-    const my = ++seq; grid.textContent = 'Loading…';
-    const { data, error } = await sb.functions.invoke('gif-search', { body: { q: q.value.trim(), limit: 24 } });
-    if (my !== seq || !pk.isConnected) return;
-    grid.textContent = '';
-    if (error || !data || !Array.isArray(data.results)) { grid.textContent = 'GIF search is not available right now.'; return; }
-    if (!data.results.length) { grid.textContent = 'No GIFs found.'; return; }
-    data.results.forEach(g => {
-      if (!attGifOk(g.preview_url) || !attGifOk(g.gif_url)) return;
-      const b = document.createElement('button'); b.type = 'button'; b.title = String(g.title || '').slice(0, 100);
-      const im = document.createElement('img'); im.loading = 'lazy'; im.referrerPolicy = 'no-referrer'; im.alt = b.title; im.src = g.preview_url; b.appendChild(im);
-      b.onclick = () => { pk.remove(); onPick({ kind: 'gif', url: g.gif_url, title: b.title }); };
-      grid.appendChild(b);
-    });
+  pk.append(q, cats, grid, note); document.body.appendChild(pk);
+  const place = () => { const r = anchor.getBoundingClientRect(); pk.style.left = Math.max(8, Math.min(r.left, window.innerWidth - pk.offsetWidth - 8)) + 'px'; pk.style.bottom = Math.max(8, window.innerHeight - r.top + 6) + 'px'; };
+  place();
+  let seq = 0, timer = null, mode = 'cat', cat = 0, offset = 0, more = false, busy = false;
+  const chips = [['★ Favorites', null]].concat(GIF_CATS).map(([name, term], i) => {
+    const b = document.createElement('button'); b.type = 'button'; b.textContent = name;
+    b.onclick = () => { q.value = ''; if (term === null) { mode = 'fav'; } else { mode = 'cat'; cat = i - 1; } setActive(); load(true); };
+    cats.appendChild(b); return b;
+  });
+  const setActive = () => chips.forEach((b, i) => b.classList.toggle('on', mode === 'fav' ? i === 0 : mode === 'cat' && i - 1 === cat));
+  const tile = (g, isFav) => {
+    const t = document.createElement('div'); t.className = 'giftile';
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'gifpickbtn'; b.title = String(g.title || '').slice(0, 100);
+    const im = document.createElement('img'); im.loading = 'lazy'; im.referrerPolicy = 'no-referrer'; im.alt = b.title; im.src = g.preview_url; b.appendChild(im);
+    b.onclick = () => { pk.remove(); onPick({ kind: 'gif', url: g.gif_url || g.url, title: b.title }); };
+    const star = document.createElement('button'); star.type = 'button'; star.className = 'gifstar'; star.title = 'Favourite';
+    const url = g.gif_url || g.url;
+    const paint = () => { const on = (gifFavs || []).some(f => f.url === url); star.textContent = on ? '★' : '☆'; star.classList.toggle('on', on); };
+    star.onclick = async ev => {
+      ev.stopPropagation(); await gifFavLoad();
+      const on = gifFavs.some(f => f.url === url);
+      if (on) { await sb.from('gif_favorites').delete().eq('url', url); gifFavs = gifFavs.filter(f => f.url !== url); if (mode === 'fav') t.remove(); }
+      else {
+        const { error } = await sb.from('gif_favorites').insert({ url, preview_url: g.preview_url, title: b.title });
+        if (error) { star.title = /too many/i.test(error.message) ? 'You can keep up to 200 favourites' : 'Could not save'; return; }
+        gifFavs.unshift({ url, preview_url: g.preview_url, title: b.title });
+      }
+      paint();
+    };
+    gifFavLoad().then(paint); paint();
+    t.append(b, star); return t;
   };
-  q.oninput = () => { clearTimeout(timer); timer = setTimeout(load, 350); };
-  load(); q.focus();
+  const load = async reset => {
+    const my = ++seq; busy = true;
+    if (reset) { offset = 0; more = false; grid.textContent = 'Loading…'; grid.scrollTop = 0; }
+    if (mode === 'fav' && !q.value.trim()) {
+      const f = await gifFavLoad(); if (my !== seq || !pk.isConnected) return;
+      grid.textContent = ''; busy = false;
+      if (!f.length) { grid.textContent = 'No favourites yet - tap the ☆ on any GIF to save it here.'; return; }
+      f.forEach(g => { if (attGifOk(g.preview_url) && attGifOk(g.url)) grid.appendChild(tile(g, true)); });
+      return;
+    }
+    const term = q.value.trim() || (mode === 'cat' ? GIF_CATS[cat][1] : '');
+    const { data, error } = await sb.functions.invoke('gif-search', { body: { q: term, limit: 24, offset } });
+    if (my !== seq || !pk.isConnected) return;
+    busy = false; if (reset) grid.textContent = '';
+    if (error || !data || !Array.isArray(data.results)) { if (reset) grid.textContent = 'GIF search is not available right now.'; return; }
+    if (reset && !data.results.length) { grid.textContent = 'No GIFs found.'; return; }
+    data.results.forEach(g => { if (attGifOk(g.preview_url) && attGifOk(g.gif_url)) grid.appendChild(tile(g)); });
+    offset += data.results.length; more = data.results.length >= 24 && offset < 200;
+  };
+  grid.addEventListener('scroll', () => { if (more && !busy && grid.scrollTop + grid.clientHeight > grid.scrollHeight - 200) load(false); });
+  q.oninput = () => { clearTimeout(timer); timer = setTimeout(() => { mode = q.value.trim() ? 'search' : 'cat'; setActive(); load(true); }, 350); };
+  setActive(); load(true); q.focus();
   setTimeout(() => document.addEventListener('click', function off(ev) { if (!pk.contains(ev.target)) { pk.remove(); document.removeEventListener('click', off); } }));
 }
 

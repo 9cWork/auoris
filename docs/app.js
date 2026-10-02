@@ -1630,13 +1630,13 @@ function authShow(mode, sub) {
   AUTH.mode = mode;
   const T = {
     login: ['Welcome back', 'Sign in to Auoris'], signup: ['Create your account', 'You\'ll pick a username after verifying your email'],
-    username: ['Pick a username', 'This is how friends find you. It can\'t be changed later.'], verify: ['Check your email', `We sent a 6-digit code to ${AUTH.email}`],
-    forgot: ['Reset your password', 'We\'ll email you a 6-digit code'], reset: ['Choose a new password', `Enter the code sent to ${AUTH.email}`],
+    username: ['Pick a username', 'This is how friends find you. It can\'t be changed later.'], verify: ['Check your email', `We sent a code to ${AUTH.email}`],
+    forgot: ['Reset your password', 'We\'ll email you a code'], reset: ['Choose a new password', `Enter the code sent to ${AUTH.email}`],
     mfa: ['Two-factor code', 'Enter the code from your authenticator app'],
   }[mode];
   $('authTitle').textContent = T[0]; $('authSub').textContent = sub || T[1];
   const inp = (id, label, type, extra) => `<label class="lbl" for="${id}">${label}</label><input class="in" id="${id}" name="${id}" type="${type}" ${extra}>`;
-  const code = '<input class="in code" id="aCode" name="aCode" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="000000" required>';
+  const code = '<input class="in code" id="aCode" name="aCode" inputmode="numeric" maxlength="8" autocomplete="one-time-code" placeholder="00000000" required>';
   const email = inp('aEmail', 'Email', 'email', 'autocomplete="email" required');
   $('authForm').innerHTML = {
     login: email + inp('aPass', 'Password', 'password', 'autocomplete="current-password" required') + '<button class="btn primary">Sign in</button>',
@@ -1669,7 +1669,7 @@ function authValidate(m, v) {
   if ($('aDob') && m === 'signup') { const e = authAgeOk($('aDob').value); if (e) return e; }
   if ($('aPass') && (m === 'signup' || m === 'reset') && $('aPass').value.length < 8) return 'Your password needs to be at least 8 characters.';
   if ($('aUser') && !/^[A-Za-z0-9_]{3,20}$/.test(v('aUser'))) return 'Usernames are 3-20 letters, numbers or _.';
-  if ($('aCode') && v('aCode').length !== 6) return 'Enter the 6-digit code we emailed you.';
+  if ($('aCode') && !/^[0-9]{6,8}$/.test(v('aCode'))) return 'Enter the code we emailed you.';
   return null;
 }
 function authAgeOk(dobStr) {   // sign-up age check: 13+. The date is only used here and is never stored or sent.

@@ -3,20 +3,8 @@
 <head>
   <meta charset="utf-8">
   <title>Auoris</title>
-  <!-- GitHub Pages serves this for any path with no real file (e.g. /plus, /servers/123) since it's a static
-       host with no server-side router. This redirects to /?/<path> so index.html's own script can restore the
-       real URL client-side and let app.js route it normally. See https://github.com/rafgraph/spa-github-pages -->
-  <script>
-    var pathSegmentsToKeep = 0;
-    var l = window.location;
-    l.replace(
-      l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
-      l.pathname.split('/').slice(0, 1 + pathSegmentsToKeep).join('/') + '/?/' +
-      l.pathname.slice(1).split('/').slice(pathSegmentsToKeep).join('/').replace(/&/g, '~and~') +
-      (l.search ? '&' + l.search.slice(1).replace(/&/g, '~and~') : '') +
-      l.hash
-    );
-  </script>
+  <!-- Static host with no server-side router: redirect.js turns /signup into /?/signup for the client-side router. -->
+  <script src="/redirect.js"></script>
 </head>
 <body></body>
 </html>

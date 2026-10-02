@@ -159,12 +159,21 @@ button.item { border: none; background: none; font: inherit; }
 .atttray .attscan { font-size: 11.5px; color: var(--dim); margin-bottom: 4px; }
 .attlightbox { position: fixed; inset: 0; z-index: 100; background: #000c; display: flex; align-items: center; justify-content: center; cursor: zoom-out; }
 .attlightbox img { max-width: 92vw; max-height: 92vh; border-radius: 8px; }
-.gifpick { position: fixed; z-index: 60; width: min(320px, calc(100vw - 16px)); max-height: 380px; display: flex; flex-direction: column; background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 8px; gap: 6px; box-shadow: 0 20px 50px -12px #000c; }
-.gifpick input { background: var(--panel2); border: 1px solid var(--border); color: var(--text); border-radius: 8px; padding: 7px 10px; font: inherit; font-size: 16px; }
-.gifpick .gifgrid { overflow-y: auto; display: grid; grid-template-columns: 1fr 1fr; gap: 4px; min-height: 120px; }
-.gifpick .gifgrid button { padding: 0; border: 0; background: var(--panel2); border-radius: 6px; overflow: hidden; line-height: 0; cursor: pointer; }
-.gifpick .gifgrid img { width: 100%; height: 90px; object-fit: cover; }
-.gifpick .gifnote { font-size: 11px; color: var(--dim); text-align: center; }
+.gifpick { position: fixed; z-index: 60; width: min(520px, calc(100vw - 16px)); height: min(560px, calc(100vh - 120px)); display: flex; flex-direction: column; gap: 6px; background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 10px; box-shadow: 0 12px 40px #0009; }
+.gifpick input { background: var(--panel2); border: 1px solid var(--border); color: var(--text); border-radius: 8px; padding: 8px 12px; font: inherit; }
+.gifpick .gifcats { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; flex: none; scrollbar-width: thin; }
+.gifpick .gifcats button { flex: none; background: var(--panel2); border: 1px solid var(--border); color: var(--text); border-radius: 999px; padding: 4px 11px; font-size: 12px; cursor: pointer; white-space: nowrap; }
+.gifpick .gifcats button.on { background: var(--accent, #5b9dff); border-color: transparent; color: #fff; }
+.gifpick .gifgrid { overflow-y: auto; flex: 1; display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); grid-auto-rows: 130px; gap: 6px; min-height: 120px; align-content: start; }
+.gifpick .gifgrid > :not(.giftile) { grid-column: 1 / -1; }
+.gifpick .giftile { position: relative; border-radius: 8px; overflow: hidden; background: var(--panel2); }
+.gifpick .gifpickbtn { padding: 0; border: 0; background: none; width: 100%; height: 100%; line-height: 0; cursor: pointer; display: block; }
+.gifpick .giftile img { width: 100%; height: 100%; object-fit: cover; }
+.gifpick .giftile:hover img { filter: brightness(1.08); }
+.gifpick .gifstar { position: absolute; top: 4px; right: 4px; width: 26px; height: 26px; border-radius: 50%; border: 0; background: #000a; color: #fff; font-size: 15px; line-height: 26px; padding: 0; cursor: pointer; opacity: 0; transition: opacity .1s; }
+.gifpick .giftile:hover .gifstar, .gifpick .gifstar.on { opacity: 1; }
+.gifpick .gifstar.on { color: #ffd34d; }
+.gifpick .gifnote { font-size: 11px; color: var(--dim); text-align: center; flex: none; }
 .composer .mic.mic-rec { color: var(--err); animation: micring 1.4s infinite; }
 @keyframes micring { 0% { box-shadow: 0 0 0 0 #ff7b7b44; } 70% { box-shadow: 0 0 0 6px #ff7b7b00; } 100% { box-shadow: 0 0 0 0 #ff7b7b00; } }
 .picker { position: absolute; bottom: 74px; right: 18px; width: 320px; max-height: 280px; overflow-y: auto; background: var(--panel); border: 1px solid var(--border);

@@ -1734,6 +1734,7 @@ async function authSubmit(e) {
       if (error) throw error;
       await afterSignIn(true);
     } else if (m === 'signup') {
+      if (/^[^@]*\+/.test(AUTH.email)) throw new Error('Email addresses with a + (like name+tag@mail.com) cannot be used. Please use your main address.');
       const { data, error } = await sb.auth.signUp({ email: AUTH.email, password: $('aPass').value });
       if (error) throw error;
       if (data.session) await afterSignIn(true); else authShow('verify');

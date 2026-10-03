@@ -932,11 +932,13 @@ async function attSend(ctl, insert) {
 // ---- GIF picker (GIPHY through the gif-search Edge Function, so no API key ships in the app)
 // Category chips are just curated searches; favourites live in public.gif_favorites so they follow the account everywhere.
 const GIF_CATS = [['Trending', ''], ['Reactions', 'reaction'], ['Funny', 'funny'], ['Love', 'love'], ['Happy', 'happy'], ['Sad', 'sad'], ['Angry', 'angry'], ['Celebrate', 'celebrate'], ['Gaming', 'gaming'], ['Anime', 'anime'], ['Memes', 'meme'], ['Animals', 'animals'], ['Sports', 'sports'], ['Movies', 'movie'], ['Food', 'food']];
-let gifFavs = null;
+let gifFavs = null, gifFavsUid = null;
 async function gifFavLoad() {
-  if (gifFavs) return gifFavs;
-  const { data } = await sb.from('gif_favorites').select('url, preview_url, title').order('created_at', { ascending: false }).limit(200);
-  return (gifFavs = data || []);
+  const uid = me && me.id;
+  if (gifFavs && gifFavsUid === uid) return gifFavs;   // a different account (or a signed-out page) never sees another account's list
+  const { data, error } = await sb.from('gif_favorites').select('url, preview_url, title').order('created_at', { ascending: false }).limit(200);
+  if (error) return [];   // don't remember a failed lookup as "no favourites"
+  gifFavsUid = uid; return (gifFavs = data || []);
 }
 function attGifPicker(anchor, onPick) {
   document.querySelectorAll('.gifpick').forEach(x => x.remove());
@@ -969,7 +971,7 @@ function attGifPicker(anchor, onPick) {
     star.onclick = async ev => {
       ev.stopPropagation(); await gifFavLoad();
       const on = gifFavs.some(f => f.url === url);
-      if (on) { await sb.from('gif_favorites').delete().eq('url', url); gifFavs = gifFavs.filter(f => f.url !== url); if (mode === 'fav') t.remove(); }
+      if (on) { const { error: de } = await sb.from('gif_favorites').delete().eq('url', url); if (de) { star.title = 'Could not remove'; return; } gifFavs = gifFavs.filter(f => f.url !== url); if (mode === 'fav') t.remove(); }
       else {
         const { error } = await sb.from('gif_favorites').insert({ url, preview_url: g.preview_url, title: b.title });
         if (error) { star.title = /too many/i.test(error.message) ? 'You can keep up to 200 favourites' : 'Could not save'; return; }
@@ -1394,7 +1396,8 @@ const NEEDS_AUTH = new Set(['messages', 'servers', 'dms', 'groups', 'profile', '
 function go(path) { history.pushState(null, '', '/' + path); route(); }
 async function route() {
   pageSubs.forEach(f => { try { f(); } catch (e) {} }); pageSubs = [];
-  const [name = '', ...args] = location.pathname.replace(/^\/?/, '').split('/').map(decodeURIComponent);
+  const safeDec = x => { try { return decodeURIComponent(x); } catch (e) { return x; } };
+  const [name = '', ...args] = location.pathname.replace(/^\/?/, '').split('/').map(safeDec);
   document.querySelectorAll('#topnav a').forEach(a => a.classList.toggle('on', a.dataset.r === name));
   if (NEEDS_AUTH.has(name) && !me) return go('signin');
   legalFooter(); legalSiteCheck();
@@ -1632,7 +1635,11 @@ PAGES.invite = async code => {
     svCache = null; go('messages/s/' + data);
   };
 };
-PAGES.signin = async () => { if (me) { let back = null; try { back = sessionStorage.getItem('auoris_after_signin'); sessionStorage.removeItem('auoris_after_signin'); } catch (e) {} return go(back && /^\/invite\/[A-Za-z0-9]{4,16}$/.test(back) ? back.slice(1) : 'messages'); } authPage(AUTH.resume || 'login'); AUTH.resume = null; };
+function afterAuthDest() {   // where to go once signed in: a pending invite link, else Messages
+  let back = null; try { back = sessionStorage.getItem('auoris_after_signin'); sessionStorage.removeItem('auoris_after_signin'); } catch (e) {}
+  return back && /^\/invite\/[A-Za-z0-9]{4,16}$/.test(back) ? back.slice(1) : 'messages';
+}
+PAGES.signin = async () => { if (me) return go(afterAuthDest()); authPage(AUTH.resume || 'login'); AUTH.resume = null; };
 PAGES.signup = async () => { if (me) return go('messages'); authPage('signup'); };
 function authPage(mode) {
   main().innerHTML = `<div class="authwrap"><div class="card authcard"><img src="/logo.png" alt="" style="width:56px;border-radius:14px">
@@ -1698,7 +1705,7 @@ function authShow(mode, sub) {
   }[mode];
   $('authLinks').querySelectorAll('a[data-m]').forEach(a => a.onclick = async () => {
     const m = a.dataset.m;
-    if (m === 'signout') { await sb.auth.signOut(); return authShow('login'); }
+    if (m === 'signout') { try { sessionStorage.removeItem('auoris_after_signin'); } catch (e) {} await sb.auth.signOut(); return authShow('login'); }
     if (m === 'resend') { const { error } = await sb.auth.resend({ type: 'signup', email: AUTH.email }); return authErr(error ? error.message : 'Sent a new code.', !error); }
     authShow(m);
   });
@@ -1740,6 +1747,7 @@ async function authSubmit(e) {
       if (/^[^@]*\+/.test(AUTH.email)) throw new Error('Email addresses with a + (like name+tag@mail.com) cannot be used. Please use your main address.');
       const { data, error } = await sb.auth.signUp({ email: AUTH.email, password: $('aPass').value });
       if (error) throw error;
+      if (data && data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) throw new Error('An account with this email already exists. Sign in instead.');
       if (data.session) await afterSignIn(true); else authShow('verify');
     } else if (m === 'username') {
       const { error } = await sb.rpc('claim_username', { name: v('aUser') });
@@ -1788,7 +1796,7 @@ async function afterSignIn(fromForm, quiet) {   // quiet: on a public page, reme
   me = user; myProfile = prof; profiles.set(prof.id, prof);
   await loadBlocks();
   renderHeader();
-  if (fromForm) go('messages');
+  if (fromForm) go(afterAuthDest());
 }
 
 // ---- Messages: Discord-style rail (Home -> merged DMs+groups, then one icon per server) -> list -> pane.
@@ -2778,7 +2786,8 @@ PAGES.projects = async pid => {
 // ---------------------------------------------------------------- boot
 sb.auth.onAuthStateChange(ev => {
   if (ev !== 'SIGNED_OUT') return;
-  me = myProfile = null; renderHeader(); go('');
+  me = myProfile = null; gifFavs = null; renderHeader();
+  if (document.getElementById('authForm')) authShow('login'); else go('');   // on the sign-in page, stay on it
 });
 window.addEventListener('popstate', route);
 // Re-run the current page when the tab comes back (switching browser tabs/apps and back, or the page being

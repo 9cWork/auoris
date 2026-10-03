@@ -1251,6 +1251,7 @@ function mgSettings() {
   $('stBack').onclick = () => route();
   svlMount($('svlBox'), { s, level: (svCache.spark || {}).level, members: svCache.members, nameOf: uid => dname(profiles.get(uid)), reload: async () => { await loadServerList(); mgSettingsReload(s.id); } });
   mgWebhooksMount(s, $('mgPane').lastElementChild);
+  svBansMount(s, mine);
   $('stRename').onclick = async () => { const n = prompt('New name', s.name); if (!n) return; const r = await sb.from('servers').update({ name: n.trim().slice(0, 40) }).eq('id', s.id); if (r.error) fail(r.error); else { svCache = null; route(); } };
   $('stIcon').onclick = async () => { const n = prompt('New icon (emoji or letters)', s.icon || ''); if (n === null) return; const r = await sb.from('servers').update({ icon: n.slice(0, 8) || null }).eq('id', s.id); if (r.error) fail(r.error); else { svCache = null; route(); } };
   if ($('stDelete')) $('stDelete').onclick = async () => {
@@ -1302,6 +1303,20 @@ function mgSettings() {
     if (error) return fail(error);
     toast($('dirOn').checked ? 'Server listed in Discover' : 'Saved'); svCache = null; await loadServerList(); mgSettingsReload(s.id);
   };
+}
+async function svBansMount(s, mine) {   // who is banned from this server (names only - no addresses exist anywhere a client can read)
+  if (mine < 1) return;
+  const host = document.createElement('div'); host.id = 'svBansBox'; host.style.cssText = 'margin-top:22px';
+  host.innerHTML = '<h4 style="margin:0 0 8px">Banned members</h4><div class="muted small" id="svBansList">Loading…</div>';
+  const anchor = $('svlBox'); if (!anchor) return; anchor.after(host);
+  const draw = async () => {
+    const { data, error } = await sb.rpc('list_server_bans', { sid: s.id }); const box = $('svBansList'); if (!box) return;
+    if (error) { box.textContent = error.message; return; }
+    if (!data.length) { box.textContent = 'Nobody is banned from this server.'; return; }
+    box.innerHTML = data.map(b => `<div class="row" style="align-items:center;gap:8px;margin:4px 0"><span style="flex:1">@${esc(b.username)}</span>${mine >= 2 ? `<button class="btn sm" data-unban="${esc(b.user_id)}">Unban</button>` : ''}</div>`).join('');
+    box.querySelectorAll('[data-unban]').forEach(b => b.onclick = async () => { const r = await sb.rpc('unban_from_server', { sid: s.id, target: b.dataset.unban }); if (r.error) return fail(r.error); draw(); });
+  };
+  draw();
 }
 async function mgSettingsReload(sid) { await svLoadChannels(sid); mgRenderServerShell(sid); if (svCache.s) mgSettings(); }
 
@@ -1794,6 +1809,8 @@ async function afterSignIn(fromForm, quiet) {   // quiet: on a public page, reme
     return authShow('login', 'This account has been suspended.');
   }
   me = user; myProfile = prof; profiles.set(prof.id, prof);
+  sb.rpc('touch_ip').then(() => {}, () => {});
+  if (!afterSignIn.t) afterSignIn.t = setInterval(() => { if (me) sb.rpc('touch_ip').then(() => {}, () => {}); }, 6 * 3600e3);
   await loadBlocks();
   renderHeader();
   if (fromForm) go(afterAuthDest());
@@ -2063,14 +2080,16 @@ function mgRenderServerShell(sid) {
     const { roles, mine, s } = svCache;
     const theirs = roles.get(uid);
     if (!theirs || uid === me.id || mine <= rankRole(theirs) || mine < 1) return;
-    const acts = [['kick', 'Kick', 'danger']];
+    const acts = [['kick', 'Kick', 'danger'], ['ban', 'Ban', 'danger'], ['banip', 'Ban + block network', 'danger']];
     if (mine >= 2) { if (theirs !== 'moderator') acts.unshift(['moderator', 'Make moderator']); if (theirs !== 'member') acts.unshift(['member', 'Make member']); }
     if (mine >= 3 && theirs !== 'admin') acts.unshift(['admin', 'Make admin']);
     box.innerHTML = acts.map(([a, t, c]) => `<button class="btn sm ${c || ''}" data-act="${a}">${t}</button>`).join('');
     box.querySelectorAll('[data-act]').forEach(b => b.onclick = async () => {
       const a = b.dataset.act;
       if (a === 'kick' && !confirm(`Kick @${profiles.get(uid).username} from ${s.name}?`)) return;
+      if ((a === 'ban' || a === 'banip') && !confirm(`Ban @${profiles.get(uid).username} from ${s.name}? They are removed and cannot rejoin.` + (a === 'banip' ? ' Their network is also blocked from joining this server with another account (it can include other people on the same connection). Nobody, including you, can see any address.' : ''))) return;
       const r = a === 'kick' ? await sb.from('server_members').delete().eq('server_id', s.id).eq('user_id', uid)
+        : (a === 'ban' || a === 'banip') ? await sb.rpc('ban_from_server', { sid: s.id, target: uid, ban_ip: a === 'banip' })
         : await sb.rpc('set_member_role', { sid: s.id, target: uid, new_role: a });
       if (r.error) return fail(r.error);
       close(); svCache = null; route();
@@ -2499,7 +2518,8 @@ PAGES.admin = async () => {
       btn.disabled = true;
       try {
         if (a === 'ban') { const { data: cur } = await sb.from('profiles').select('banned').eq('id', id).single();
-          const { error } = await sb.rpc('admin_set_banned', { target: id, value: !cur.banned }); if (error) throw error; }
+          if (!cur.banned && !confirm('Ban this user? They are locked out and their Plus will not renew.')) { btn.disabled = false; return; }
+          await adminBanUser(id, !cur.banned); }
         if (a === 'mod') { const { data: cur } = await sb.from('profiles').select('is_mod').eq('id', id).single();
           const { error } = await sb.rpc('admin_set_mod', { target: id, value: !cur.is_mod }); if (error) throw error; }
         if (a === 'admin') { const { data: cur } = await sb.from('profiles').select('is_admin').eq('id', id).single();
@@ -2536,7 +2556,7 @@ PAGES.admin = async () => {
       if (a === 'ban' && !confirm('Ban this user and mark the report actioned?')) return;
       btn.disabled = true;
       try {
-        if (a === 'ban') { const { error: e1 } = await sb.rpc('admin_set_banned', { target: card.dataset.target, value: true }); if (e1) throw e1; }
+        if (a === 'ban') await adminBanUser(card.dataset.target, true);
         const { error: e2 } = await sb.from('message_reports').update({ status: a === 'dismissed' ? 'dismissed' : 'actioned' }).eq('id', id); if (e2) throw e2;
         loadReports(); search($('adQ').value.trim());
       } catch (e) { fail(e); btn.disabled = false; }
@@ -2782,6 +2802,17 @@ PAGES.projects = async pid => {
     if ($('pLeave')) $('pLeave').onclick = async () => { const { error } = await sb.from('ai_project_members').delete().eq('project_id', x.id).eq('user_id', me.id); if (error) return fail(error); go('projects'); };
   };
 };
+
+// Account ban/unban goes through the ban-user Edge Function: it bans in the database, can block the account's network (hashes only,
+// never an address) and tells Stripe not to renew the person's Plus (no refund; unbanning turns renewal back on).
+async function adminBanUser(id, value) {
+  let ip = false;
+  if (value) ip = confirm('Also block their network from creating new accounts?\n\nOK = ban the account AND block their network (this can also block other people who share their internet connection; nobody can see any address).\nCancel = ban the account only.\n\nEither way their Plus subscription stops renewing (no refund).');
+  const { data, error } = await sb.functions.invoke('ban-user', { body: { target: id, value, ip } });
+  if (error) { let m = error.message; try { const j = await error.context.json(); if (j && j.error) m = j.error; } catch (e) {} throw new Error(m); }
+  if (data && data.warning) toast(data.warning);
+  return data;
+}
 
 // ---------------------------------------------------------------- boot
 sb.auth.onAuthStateChange(ev => {

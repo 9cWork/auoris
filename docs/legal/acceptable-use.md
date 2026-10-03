@@ -29,6 +29,6 @@ You can report a message or a person from inside the app and on the website. To 
 
 ## What happens if the rules are broken
 
-Depending on how serious it is we may remove content, warn you, limit features such as uploading, suspend or close the account, remove a server, and report to the authorities where the law or safety requires it. You can ask us to review a decision by contacting {{contact}}.
+Depending on how serious it is we may remove content, warn you, limit features such as uploading, suspend or close the account (a suspension also stops any Plus subscription from renewing, with no refund for the period already paid), block the networks an account used from creating new accounts, remove a server, and report to the authorities where the law or safety requires it. You can ask us to review a decision by contacting {{contact}}.
 
 *Version {{version}}.*

@@ -1,5 +1,5 @@
 {
-  "version": "2026-10-01.4",
+  "version": "2026-10-03",
   "operator": "Auoris",
   "contact": "support@auoris.org",
   "docs": [
@@ -31,6 +31,10 @@
   ],
   "changes": [
     {
+      "version": "2026-10-03",
+      "summary": "We now remember a one-way hash of the last few networks you sign in from, only to enforce bans (administrators can block a banned account's networks from creating new accounts, and server owners can block a banned member's networks from rejoining that server; nobody can see any address). A suspension also stops a Plus subscription from renewing, with no refund for the period already paid."
+    },
+    {
       "version": "2026-10-01.4",
       "summary": "Added our support contact address (auoris-support@googlegroups.com) to the legal documents."
     },
@@ -47,5 +51,5 @@
       "summary": "First version of the Terms of Service, Privacy Policy, Acceptable Use Policy, Subscription and Gift Terms, and Copyright policy."
     }
   ],
-  "hash": "82e514c6ca8eefbeabf4f2686d8ce2c8bef0e8ac6578a8502518ef18797801a7"
+  "hash": "dc89e11d6d957d87b25f04c892bda845eefb21852fd9b30c75da855b32b27c73"
 }

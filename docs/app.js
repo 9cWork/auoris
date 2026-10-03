@@ -1502,7 +1502,7 @@ PAGES[''] = async () => {
 };
 
 // ---- sign in / sign up
-const AUTH = { mode: 'login', email: '', pendingPass: null, resume: null, notice: null };
+const AUTH = { mode: 'login', email: '', pendingPass: null, resume: null, notice: null, bounced: false, social: false };
 // ================================================================ legal documents: viewer + "please accept" gate (shared by the app and auoris.org)
 // Documents live in legal/*.md and are versioned by date in legal/legal.json (python tools/legal_bump.py). Whenever the version
 // changes, everyone is asked to read and accept it again before they carry on.
@@ -1683,7 +1683,7 @@ function authShow(mode, sub) {
   $('authForm').innerHTML = {
     login: email + inp('aPass', 'Password', 'password', 'autocomplete="current-password" required') + '<button class="btn primary">Sign in</button>',
     signup: email + inp('aPass', 'Password', 'password', 'autocomplete="new-password" required minlength="8"') + inp('aDob', 'Date of birth (to check you are 13 or older - not stored)', 'date', 'required') + '<button class="btn primary">Create account</button>',
-    username: inp('aUser', 'Username', 'text', 'autocomplete="username" required maxlength="20" pattern="[A-Za-z0-9_]{3,20}" title="3-20 letters, numbers or _"') + '<button class="btn primary">Continue</button>',
+    username: inp('aUser', 'Username', 'text', 'autocomplete="username" required maxlength="20" pattern="[A-Za-z0-9_]{3,20}" title="3-20 letters, numbers or _"') + (AUTH.social ? inp('aDob', 'Date of birth (to check you are 13 or older - not stored)', 'date', 'required') : '') + '<button class="btn primary">Continue</button>',
     verify: code + '<button class="btn primary">Verify</button>', forgot: email + '<button class="btn primary">Send code</button>',
     reset: code + inp('aPass', 'New password', 'password', 'autocomplete="new-password" required minlength="8"') + '<button class="btn primary">Save password</button>',
     mfa: code + '<button class="btn primary">Verify</button>',
@@ -1708,7 +1708,7 @@ function authShow(mode, sub) {
 function authErr(msg, ok) { $('authErr').textContent = msg; $('authErr').className = ok ? 'ok' : ''; }
 function authValidate(m, v) {
   if ($('aEmail') && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v('aEmail'))) return 'Enter a valid email address.';
-  if ($('aDob') && m === 'signup') { const e = authAgeOk($('aDob').value); if (e) return e; }
+  if ($('aDob') && (m === 'signup' || m === 'username')) { const e = authAgeOk($('aDob').value); if (e) return e; }
   if ($('aPass') && (m === 'signup' || m === 'reset') && $('aPass').value.length < 8) return 'Your password needs to be at least 8 characters.';
   if ($('aUser') && !/^[A-Za-z0-9_]{3,20}$/.test(v('aUser'))) return 'Usernames are 3-20 letters, numbers or _.';
   if ($('aCode') && !/^[0-9]{6,8}$/.test(v('aCode'))) return 'Enter the code we emailed you.';
@@ -1770,16 +1770,16 @@ async function authSubmit(e) {
 }
 async function afterSignIn(fromForm) {
   const { data: aal } = await sb.auth.mfa.getAuthenticatorAssuranceLevel();
-  if (aal && aal.nextLevel === 'aal2' && aal.currentLevel !== 'aal2') { if (!fromForm) { AUTH.resume = 'mfa'; return go('signin'); } return authShow('mfa'); }
+  if (aal && aal.nextLevel === 'aal2' && aal.currentLevel !== 'aal2') { if (!fromForm) { AUTH.resume = 'mfa'; AUTH.bounced = true; return go('signin'); } return authShow('mfa'); }
   if (AUTH.pendingPass) { const { error } = await sb.auth.updateUser({ password: AUTH.pendingPass }); AUTH.pendingPass = null; if (error) throw error; }
   const { data: { user }, error } = await sb.auth.getUser();
   if (error) throw error;
   const { data: prof, error: profErr } = await sb.from('profiles').select(PCOLS + ',banned,legal_version').eq('id', user.id).maybeSingle();
   if (profErr) throw profErr;  // a lookup failure isn't "no profile yet" - don't send an existing user to claim_username
-  if (!prof) { if (!fromForm) { AUTH.resume = 'username'; return go('signin'); } return authShow('username'); }
+  if (!prof) { AUTH.social = !!(user.app_metadata && user.app_metadata.provider && user.app_metadata.provider !== 'email'); if (!fromForm) { AUTH.resume = 'username'; AUTH.bounced = true; return go('signin'); } return authShow('username'); }
   if (prof.banned) {
     await sb.auth.signOut();
-    if (!fromForm) { AUTH.notice = 'This account has been suspended.'; AUTH.resume = 'login'; return go('signin'); }   // the sign-in page isn't on screen yet
+    if (!fromForm) { AUTH.notice = 'This account has been suspended.'; AUTH.resume = 'login'; AUTH.bounced = true; return go('signin'); }   // the sign-in page isn't on screen yet
     return authShow('login', 'This account has been suspended.');
   }
   me = user; myProfile = prof; profiles.set(prof.id, prof);
@@ -3101,5 +3101,5 @@ document.addEventListener('submit', e => { if (e.target.closest && e.target.clos
     const { data: { session } } = await sb.auth.getSession();
     if (session) await afterSignIn(false);
   } catch (e) { console.error(e); }
-  route();
+  if (!AUTH.bounced) route();   // afterSignIn already routed to the sign-in step it needs; routing again would reset it to the plain login form
 })();

@@ -742,7 +742,7 @@ function attRender(atts) {
     const name = attDisplayName(att.name);
     if (att.kind === 'gif') {
       if (!attGifOk(att.url)) return;
-      const img = document.createElement('img'); img.className = 'attimg'; img.loading = 'lazy'; img.referrerPolicy = 'no-referrer';
+      const img = document.createElement('img'); img.className = 'attimg gif'; img.loading = 'lazy'; img.referrerPolicy = 'no-referrer';
       img.alt = String(att.title || 'GIF').slice(0, 100); img.src = att.url; img.onclick = () => attLightbox(att); img.onerror = () => gone(img);
       list.appendChild(img); return;
     }

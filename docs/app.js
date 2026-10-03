@@ -1826,7 +1826,7 @@ function svlBannerCss(s) { const u = s && svlUrl(s.banner_path); return u ? `bac
 async function svlSparkLoad(sid) { try { const r = await sb.rpc('server_spark_info', { sid }); return r.data || { count: 0, level: 0, mine: false, used: 0, slots: 2, plus: false }; } catch (e) { return { count: 0, level: 0, mine: false, used: 0, slots: 2, plus: false }; } }
 function svlSparkHtml(sp, btnId) {
   const slots = Number(sp.slots) || 2, used = Number(sp.used) || 0, count = Number(sp.count) || 0, left = Math.max(0, slots - used);
-  return `<div style="margin-top:8px">✦ <b>${count}</b> Spark${count === 1 ? '' : 's'} · Level ${Number(sp.level) || 0}<br><button type="button" class="btn sm" id="${btnId}" style="margin-top:6px" title="Auoris Plus members can give up to 2 Sparks. 2 Sparks unlock a server banner and image role icons.">${sp.mine ? 'Take back my Spark' : 'Give a Spark'}</button> <span class="muted small">${left} of ${slots} left</span></div>`;
+  return `<div style="margin-top:8px">✦ <b>${count}</b> Spark${count === 1 ? '' : 's'} · Level ${Number(sp.level) || 0}<br><button type="button" class="btn sm" id="${btnId}" style="margin-top:6px" title="Auoris Plus members can give up to 2 Sparks. 2 Sparks unlock a server banner and image role icons.">${sp.mine ? 'Take back my Spark' : (sp.plus ? 'Give a Spark' : 'Give a Spark (Plus)')}</button> <span class="muted small">${sp.plus || sp.mine ? `${left} of ${slots} left` : 'Sparks come with Auoris Plus'}</span></div>`;
 }
 async function svlSparkClick(sid, sp, after) {
   if (!sp.mine && !sp.plus) return svlNote('Sparks come with Auoris Plus.');

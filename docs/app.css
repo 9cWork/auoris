@@ -423,3 +423,9 @@ body.legacy .dc-win { background: var(--panel) !important; } body.legacy .dc-bar
 @keyframes tipIn { from { opacity: 0; transform: translateY(2px); } to { opacity: 1; transform: none; } }
 
 .attlist img.attimg.gif { cursor: default; }
+
+/* message box: text field first, then the emoji / GIF / attach buttons on the right, then Send */
+.composer form > input:not([type=file]) { order: 1; }
+.composer form > .emo, .composer form > .mic, .composer form > .attbtn { order: 2; }
+.composer form > button.primary { order: 3; }
+.composer form { padding-left: 14px; }

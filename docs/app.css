@@ -429,3 +429,6 @@ body.legacy .dc-win { background: var(--panel) !important; } body.legacy .dc-bar
 .composer form > .emo, .composer form > .mic, .composer form > .attbtn { order: 2; }
 .composer form > button.primary { order: 3; }
 .composer form { padding-left: 14px; }
+
+@media (hover: none) { .gifpick .gifstar { opacity: .85; } }
+.gifpick .gifstar:focus-visible { opacity: 1; }

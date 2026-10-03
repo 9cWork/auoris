@@ -1,5 +1,5 @@
 {
-  "version": "2026-10-03.2",
+  "version": "2026-10-03.3",
   "operator": "Auoris",
   "contact": "support@auoris.org",
   "docs": [
@@ -31,6 +31,10 @@
   ],
   "changes": [
     {
+      "version": "2026-10-03.3",
+      "summary": "New optional feature: you can claim a public address like yourname.servers.auoris.org for a Minecraft server on your own computer. If you do, a public DNS record points that name at your computer's current IP address, so anyone can look it up. Address names must follow the Acceptable Use Policy."
+    },
+    {
       "version": "2026-10-03.2",
       "summary": "Clarified that a ban on a network stays in place even if the banned account is deleted (so deleting an account can't undo a ban), alongside the earlier note about the hashes we keep to enforce bans."
     },
@@ -55,5 +59,5 @@
       "summary": "First version of the Terms of Service, Privacy Policy, Acceptable Use Policy, Subscription and Gift Terms, and Copyright policy."
     }
   ],
-  "hash": "a5cf88f0656bf8497bf0f0d767c6d2fb562ad59223a2fe6d29801b528fb060ef"
+  "hash": "bcd6abb003ab0024e55894142fdfe57ee20d3ee97ce87cadf0b2787a508e7a0f"
 }

@@ -1405,7 +1405,7 @@ const acceptedFriends = () => friends.filter(f => f.status === 'accepted').map(f
 
 // ---------------------------------------------------------------- router
 const main = () => $('view');
-const NEEDS_AUTH = new Set(['messages', 'servers', 'dms', 'groups', 'profile', 'settings', 'hosting', 'projects', 'admin']);
+const NEEDS_AUTH = new Set(['messages', 'servers', 'dms', 'groups', 'profile', 'settings', 'projects', 'admin']);
 // 'localai' is deliberately NOT in this set - pairing with a PC needs no Auoris account at all (same as
 // mobile.html today), so it must stay reachable straight from a fresh install, signed in or not.
 function go(path) { history.pushState(null, '', '/' + path); route(); }
@@ -1427,7 +1427,7 @@ async function route() {
 }
 function renderHeader() {
   const links = me
-    ? [['', 'Home'], ['messages', 'Messages'], ['projects', 'Projects'], ['hosting', 'Hosting'], ['localai', 'Local AI'], ['plus', 'Plus'], ...(myProfile && myProfile.is_admin ? [['admin', 'Admin']] : [])]
+    ? [['', 'Home'], ['messages', 'Messages'], ['projects', 'Projects'], ['localai', 'Local AI'], ['plus', 'Plus'], ...(myProfile && myProfile.is_admin ? [['admin', 'Admin']] : [])]
     : [['', 'Home'], ['localai', 'Local AI'], ['plus', 'Plus']];
   $('topnav').innerHTML = links.map(([r, t]) => `<a href="/${r}" data-r="${r}">${t}</a>`).join('');
   $('me').innerHTML = me && myProfile
@@ -1495,7 +1495,7 @@ PAGES[''] = async () => {
     ${dcFeat('chat', 265, "Servers, DMs & groups", 'Servers with channels, roles and banners, DMs and group chats, with :emoji:.')}
     ${dcFeat('pad', 25, 'Rich presence', 'See what friends are playing - and their Minecraft server or Roblox game - with a link to join.')}
     ${dcFeat('users', 190, 'AI projects', "Shared AI projects with friends, without ever exposing anyone's API key.")}
-    ${dcFeat('spark', 320, 'Auoris Plus', 'Banners, profile effects, AI Providers, hosting and a gaming boost.')}</div></div></section>
+    ${dcFeat('spark', 320, 'Auoris Plus', 'Banners, profile effects, AI Providers, server addresses and a gaming boost.')}</div></div></section>
   <section class="band alt"><div class="wrap dc-split"><div class="dc-txt"><span class="dc-kick">Messages</span><h2>Every chat in one place</h2>
     <p class="lead">Servers, DMs and group chats live side by side. Reply, react, pin, forward, edit and send files up to 50 MB - everything is scanned before it reaches anyone.</p>
     <ul class="dc-list"><li>Voice-style rail with all your servers</li><li>GIFs, reactions, replies and scheduled messages</li><li>Block, mute and privacy controls you actually own</li></ul></div>${dcMsgMock()}</div></section>
@@ -1508,7 +1508,7 @@ PAGES[''] = async () => {
       <div class="dc-row hats">${['wizard', 'crown', 'top_hat', 'viking', 'party', 'cat_ears'].map(n => MC_IMG('hat_' + n)).join('')}</div>
       <div class="dc-row tools">${['frostbite', 'molten', 'void', 'aurora', 'golden', 'emerald'].map(n => MC_IMG('tool_' + n)).join('')}</div>
     </div><p class="muted small" style="text-align:center;margin-top:18px">Works with the Auoris mod on Minecraft 1.8.9 (Forge). Auoris installs it for you.</p></div></section>
-  <section class="band alt" id="mobile"><div class="wrap dc-split rev">${dcPhone()}<div class="dc-txt"><span class="dc-kick">On your phone</span><h2>Auoris on your phone</h2><p class="lead" style="text-align:left">No App Store needed. Install this site as an app - Servers, DMs, group chats, AI projects, Hosting and Plus all work from anywhere, cellular data included.</p><ol class="steps" style="margin:0">
+  <section class="band alt" id="mobile"><div class="wrap dc-split rev">${dcPhone()}<div class="dc-txt"><span class="dc-kick">On your phone</span><h2>Auoris on your phone</h2><p class="lead" style="text-align:left">No App Store needed. Install this site as an app - Servers, DMs, group chats, AI projects and Plus all work from anywhere, cellular data included.</p><ol class="steps" style="margin:0">
     <li>Tap Share (iPhone) or the browser menu (Android) → <b>Add to Home Screen</b> / <b>Install app</b>. It now opens full-screen, like an installed app.</li>
     <li>Sign in once - friends, servers and DMs sync the same as the desktop app and website.</li>
     <li>Want to chat with your PC's own local AI model too? Open <a href="/localai">Local AI</a> and pair with your PC - that one feature needs to be on the same Wi-Fi, since the model runs on your PC.</li></ol></div></div></section>
@@ -2576,38 +2576,6 @@ PAGES.ai = async () => {
     <div class="grid">${provs.map(([n, d]) => `<div class="card feat"><h3 style="margin-top:0">${n}</h3><p>${d}${n === 'Ollama' ? ' · free' : ' · Plus'}</p></div>`).join('')}</div></div>`;
 };
 
-// ---- hosting
-const GAMES = { minecraft: ['⛏️', 'Minecraft'], terraria: ['🌳', 'Terraria'], valheim: ['🪓', 'Valheim'], palworld: ['🐾', 'Palworld'],
-  rust: ['🛢️', 'Rust'], factorio: ['⚙️', 'Factorio'], '7dtd': ['🧟', '7 Days to Die'], ark: ['🦖', 'ARK'] };
-PAGES.hosting = async () => {
-  const plus = isPlus(myProfile);
-  const { data: rows, error } = await sb.from('hosted_servers').select('*').order('created_at');
-  if (error) throw error;
-  main().innerHTML = `<div class="wrap page"><h1>Hosting</h1><p class="lead">Game servers at <b>yourname.servers.auoris.org</b>, managed from Auoris. Plus includes up to 3.</p>
-    <div class="card" style="margin-bottom:16px;border-color:#fbbf5a55">🚧 Server provisioning isn't live yet. Creating a server now reserves its name, and it starts automatically when hosting launches.</div>
-    <div class="card" style="margin-bottom:16px"><h3 style="margin-top:0">Your servers (${rows.length}/3)</h3>
-      ${rows.length ? rows.map(h => `<div class="srv" style="padding:10px 0;border-top:1px solid var(--border)"><span class="gameic">${GAMES[h.game][0]}</span>
-        <div style="flex:1"><b>${esc(h.name)}.servers.auoris.org</b><div class="muted small">${GAMES[h.game][1]} · created ${new Date(h.created_at).toLocaleDateString()}</div></div>
-        <span class="status ${h.status}">${h.status}</span><button class="btn sm" data-copy="${esc(h.name)}.servers.auoris.org">Copy address</button><button class="btn sm danger" data-del="${h.id}">Delete</button></div>`).join('')
-        : '<div class="empty">No servers yet.</div>'}</div>
-    <div class="card ${plus ? '' : 'locked'}"><h3 style="margin-top:0">New server ${plus ? '' : '(Plus)'}</h3>
-      <label class="lbl">Game</label><select class="in" id="hGame">${Object.entries(GAMES).map(([k, [ic, n]]) => `<option value="${k}">${ic} ${n}</option>`).join('')}</select>
-      <label class="lbl">Address</label><div class="row"><input class="in" id="hName" maxlength="31" placeholder="myserver" style="flex:1;max-width:260px"><span class="muted">.servers.auoris.org</span></div>
-      <button class="btn primary" id="hCreate" style="margin-top:14px" ${rows.length >= 3 ? 'disabled' : ''}>Create server</button></div>
-    ${plus ? '' : '<p style="margin-top:14px"><a class="btn primary" href="/plus">Get Plus to host servers</a></p>'}</div>`;
-  main().querySelectorAll('[data-copy]').forEach(b => b.onclick = () => { navigator.clipboard.writeText(b.dataset.copy); toast('Address copied'); });
-  main().querySelectorAll('[data-del]').forEach(b => b.onclick = async () => {
-    if (!confirm('Delete this server and free up its name?')) return;
-    const { error } = await sb.from('hosted_servers').delete().eq('id', b.dataset.del); if (error) return fail(error); route();
-  });
-  $('hCreate').onclick = async () => {
-    const name = $('hName').value.trim().toLowerCase();
-    if (!/^[a-z0-9][a-z0-9-]{2,30}$/.test(name)) return toast('Use 3-31 lowercase letters, numbers or dashes.');
-    const { error } = await sb.rpc('create_hosted_server', { name, game: $('hGame').value });
-    if (error) return fail(error.code === '23505' ? 'That address is taken.' : error); route();
-  };
-};
-
 // ---- local AI (chat with the signed-in PC's own model - Ollama, or whatever cloud model it has picked - over
 // the LAN). This is the one Auoris feature that genuinely needs a nearby PC: everything else in this app talks
 // to Supabase directly, the same way the desktop app's account features and this site already do, so it works
@@ -2621,7 +2589,7 @@ const setPcUrl = u => { try { u ? localStorage.setItem(PC_KEY, u) : localStorage
 PAGES.localai = async () => {
   const saved = pcUrl();
   main().innerHTML = `<div class="wrap page" style="max-width:640px"><h1>Local AI</h1>
-    <p class="lead">Chat with your PC's own AI model. It's the one thing here that needs your PC turned on and on the same Wi-Fi - everything else in Auoris (Messages, Projects, Hosting, Plus${me && myProfile && myProfile.is_admin ? ', Admin' : ''}) works from anywhere, cellular data included.</p>
+    <p class="lead">Chat with your PC's own AI model. It's the one thing here that needs your PC turned on and on the same Wi-Fi - everything else in Auoris (Messages, Projects, Plus${me && myProfile && myProfile.is_admin ? ', Admin' : ''}) works from anywhere, cellular data included.</p>
     <div class="card">
       <h3 style="margin-top:0">${saved ? '✅ Paired with a PC' : 'Pair with your PC'}</h3>
       ${saved ? `<p class="muted small" style="word-break:break-all">${esc(saved.split('#')[0])}</p>
@@ -2677,7 +2645,7 @@ PAGES.plus = async () => {
   const p = myProfile, t = plusTier(p);
   const perks = [['🖼', 'Custom banners & profile images', 'Free accounts keep banner colours.'], ['✨', 'Profile effects', 'Aurora, sparkle, flame and more.'],
     ['🌐', 'Browser proxy', 'Route the built-in browser through a proxy.'], ['🧠', 'AI Providers', 'Use Claude, GPT, Gemini and more with your own keys.'],
-    ['🎮', 'Gaming boost', 'FPS, ping and background-load tuning in the app.'], ['🖥', 'Hosting', 'Up to 3 game servers on servers.auoris.org.']];
+    ['🎮', 'Gaming boost', 'FPS, ping and background-load tuning in the app.'], ['🖥', 'Server addresses', 'Up to 3 public addresses like yourname.servers.auoris.org for the Minecraft servers you host (free accounts get 1).']];
   main().innerHTML = `<div class="wrap page"><div class="plushero">${ICON.plus('#ffffff')}<h1 style="margin-top:14px">Auoris Plus</h1>
     <div class="price">$19.99<small> / month</small></div><p class="muted">Cancel anytime.</p>
     <div class="row" style="justify-content:center;margin-top:18px">${t ? `<span class="pluspill">${ICON.check('#2ecc71').replace('<svg', '<svg width="16" height="16"')} You have Plus${t.name !== 'Plus' ? ` · ${esc(t.name)}` : ''}${t.months ? ` · ${t.months} months` : ''}</span><button class="btn" id="plusManage">Manage subscription</button>`
@@ -2919,7 +2887,7 @@ function w2PalItems() {
   add('Go to', 'Local AI', 'page', () => go('localai'));
   add('Go to', 'Plus', 'page', () => go('plus'));
   if (me) {
-    [['messages', 'Messages'], ['projects', 'Projects'], ['hosting', 'Hosting'], ['profile', 'Profile'], ['settings', 'Settings'], ['ai', 'AI Providers']].forEach(([p, n]) => add('Go to', n, 'page', () => go(p)));
+    [['messages', 'Messages'], ['projects', 'Projects'], ['profile', 'Profile'], ['settings', 'Settings'], ['ai', 'AI Providers']].forEach(([p, n]) => add('Go to', n, 'page', () => go(p)));
     if (myProfile && myProfile.is_admin) add('Go to', 'Admin', 'page', () => go('admin'));
     (typeof serverList !== 'undefined' ? serverList : []).forEach(s => add('Server', s.name, 'server', () => go('messages/s/' + s.id), 'servers'));
     acceptedFriends().forEach(p => add('DM', dname(p), '@' + p.username, () => go('messages/dm/' + p.id), 'message friend dm'));

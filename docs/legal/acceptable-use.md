@@ -14,6 +14,7 @@ This policy applies to everything you do with Auoris: messages, files, profiles,
 - Upload malware, or content designed to break or take over other people's devices, accounts or the Service. Files are scanned and unsafe ones are removed.
 - Try to break, probe or overload the Service, bypass rate limits, upload limits or bans, or access accounts, data or systems that aren't yours.
 - Evade a ban or suspension by making new accounts.
+- Claim a server address (name.servers.auoris.org) that impersonates Auoris, another person or a brand, or that is offensive, or use an address for anything that breaks these rules. We may remove an address without notice.
 - Share content you don't have the right to share, including pirated software or copyrighted work you don't have permission for.
 - Use the Minecraft features to cheat on servers that forbid it, or to harm other players' games.
 - Use the AI features to produce content that breaks this policy, or to attack other people's systems.

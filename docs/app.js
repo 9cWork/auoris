@@ -946,7 +946,10 @@ function attGifPicker(anchor, onPick) {
   const grid = document.createElement('div'); grid.className = 'gifgrid';
   const note = document.createElement('div'); note.className = 'gifnote'; note.textContent = 'Powered by GIPHY';
   pk.append(q, cats, grid, note); document.body.appendChild(pk);
-  const place = () => { const r = anchor.getBoundingClientRect(); pk.style.left = Math.max(8, Math.min(r.left, window.innerWidth - pk.offsetWidth - 8)) + 'px'; pk.style.bottom = Math.max(8, window.innerHeight - r.top + 6) + 'px'; };
+  const place = () => {   // right-aligned with the message box, just above it
+    const r = anchor.getBoundingClientRect(), box = (anchor.closest('.composer') || anchor).getBoundingClientRect();
+    pk.style.left = Math.max(8, Math.min(box.right - pk.offsetWidth, window.innerWidth - pk.offsetWidth - 8)) + 'px'; pk.style.bottom = Math.max(8, window.innerHeight - r.top + 6) + 'px';
+  };
   place();
   let seq = 0, timer = null, mode = 'cat', cat = 0, offset = 0, more = false, busy = false;
   const chips = [['★ Favorites', null]].concat(GIF_CATS).map(([name, term], i) => {

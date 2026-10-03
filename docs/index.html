@@ -5,16 +5,16 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
 <title>Auoris</title>
 <meta name="description" content="Auoris - a desktop AI agent with servers, DMs, group chats, rich presence and AI projects.">
-<link rel="icon" href="logo.png">
-<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="/logo.png">
+<link rel="manifest" href="/manifest.webmanifest">
 <meta name="theme-color" content="#0e1119">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Auoris">
-<link rel="apple-touch-icon" href="logo.png">
+<link rel="apple-touch-icon" href="/logo.png">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-4Eyfn+o91WRwmSiJLVQWzJQdNZXlwGBzPSEjLX6p4/I=' 'sha256-gafanvDDHG1Ktnnfat3rUp7RCvmrEwtP26hahdee8n8=' 'sha256-u+NnRMokxsypOOFUxPiEnAgzG/JEA740qDnrQb3r6eg=' 'sha256-UQ061u+R3cZuLeVkQQsJimLZAjRMppKSrCp8+7fkVbQ='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; media-src 'self' blob: https:; connect-src 'self' https://utqswadleapgszwbkvzo.supabase.co wss://utqswadleapgszwbkvzo.supabase.co https://api.github.com; font-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-src 'none'; worker-src 'self'; manifest-src 'self'">
 <meta name="referrer" content="strict-origin-when-cross-origin">
-<link rel="stylesheet" href="app.css">
+<link rel="stylesheet" href="/app.css">
 <!-- Undoes 404.html's redirect: GitHub Pages has no real file for a path like /plus, so 404.html sends the
      browser to /?/plus instead; this restores the real /plus URL via the History API before app.js's router
      reads location.pathname. See https://github.com/rafgraph/spa-github-pages for the technique. -->
@@ -29,14 +29,14 @@
 </head>
 <body>
 <header><div class="bar">
-  <a class="brand" href="/"><img src="logo.png" alt=""><span>Auoris</span></a>
+  <a class="brand" href="/"><img src="/logo.png" alt=""><span>Auoris</span></a>
   <nav id="topnav"></nav>
   <div id="me"></div>
 </div></header>
 <main id="view"></main>
-<script src="vendor/supabase.js"></script>
-<script src="emoji.js"></script>
-<script src="app.js"></script>
+<script src="/vendor/supabase.js"></script>
+<script src="/emoji.js"></script>
+<script src="/app.js"></script>
 <script>
   // Registered last, after app.js has defined the page - installability (manifest + a fetch handler) is what
   // lets iOS/Android offer "Add to Home Screen", and it also gives the app shell a moment's offline resilience.

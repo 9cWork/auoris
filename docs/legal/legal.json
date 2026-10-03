@@ -1,7 +1,7 @@
 {
   "version": "2026-10-01.4",
   "operator": "Auoris",
-  "contact": "auoris-support@googlegroups.com",
+  "contact": "support@auoris.org",
   "docs": [
     {
       "id": "terms",
@@ -47,5 +47,5 @@
       "summary": "First version of the Terms of Service, Privacy Policy, Acceptable Use Policy, Subscription and Gift Terms, and Copyright policy."
     }
   ],
-  "hash": "2bf8dd37d007682fb80c0b7fd8465e86bf6ccba79d00f42c3e4cca03b9c2fe38"
+  "hash": "82e514c6ca8eefbeabf4f2686d8ce2c8bef0e8ac6578a8502518ef18797801a7"
 }

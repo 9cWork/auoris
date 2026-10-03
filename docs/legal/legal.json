@@ -1,5 +1,5 @@
 {
-  "version": "2026-10-03",
+  "version": "2026-10-03.2",
   "operator": "Auoris",
   "contact": "support@auoris.org",
   "docs": [
@@ -31,6 +31,10 @@
   ],
   "changes": [
     {
+      "version": "2026-10-03.2",
+      "summary": "Clarified that a ban on a network stays in place even if the banned account is deleted (so deleting an account can't undo a ban), alongside the earlier note about the hashes we keep to enforce bans."
+    },
+    {
       "version": "2026-10-03",
       "summary": "We now remember a one-way hash of the last few networks you sign in from, only to enforce bans (administrators can block a banned account's networks from creating new accounts, and server owners can block a banned member's networks from rejoining that server; nobody can see any address). A suspension also stops a Plus subscription from renewing, with no refund for the period already paid."
     },
@@ -51,5 +55,5 @@
       "summary": "First version of the Terms of Service, Privacy Policy, Acceptable Use Policy, Subscription and Gift Terms, and Copyright policy."
     }
   ],
-  "hash": "dc89e11d6d957d87b25f04c892bda845eefb21852fd9b30c75da855b32b27c73"
+  "hash": "a5cf88f0656bf8497bf0f0d767c6d2fb562ad59223a2fe6d29801b528fb060ef"
 }

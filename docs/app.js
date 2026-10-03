@@ -1768,15 +1768,15 @@ async function authSubmit(e) {
     authErr(/fetch|network/i.test(msg) ? 'Can\'t reach the Auoris servers right now.' : msg);
   } finally { btn.disabled = false; }
 }
-async function afterSignIn(fromForm) {
+async function afterSignIn(fromForm, quiet) {   // quiet: on a public page, remember the step the sign-in page needs but don't navigate there
   const { data: aal } = await sb.auth.mfa.getAuthenticatorAssuranceLevel();
-  if (aal && aal.nextLevel === 'aal2' && aal.currentLevel !== 'aal2') { if (!fromForm) { AUTH.resume = 'mfa'; AUTH.bounced = true; return go('signin'); } return authShow('mfa'); }
+  if (aal && aal.nextLevel === 'aal2' && aal.currentLevel !== 'aal2') { if (!fromForm) { AUTH.resume = 'mfa'; if (quiet) return; AUTH.bounced = true; return go('signin'); } return authShow('mfa'); }
   if (AUTH.pendingPass) { const { error } = await sb.auth.updateUser({ password: AUTH.pendingPass }); AUTH.pendingPass = null; if (error) throw error; }
   const { data: { user }, error } = await sb.auth.getUser();
   if (error) throw error;
   const { data: prof, error: profErr } = await sb.from('profiles').select(PCOLS + ',banned,legal_version').eq('id', user.id).maybeSingle();
   if (profErr) throw profErr;  // a lookup failure isn't "no profile yet" - don't send an existing user to claim_username
-  if (!prof) { AUTH.social = !!(user.app_metadata && user.app_metadata.provider && user.app_metadata.provider !== 'email'); if (!fromForm) { AUTH.resume = 'username'; AUTH.bounced = true; return go('signin'); } return authShow('username'); }
+  if (!prof) { AUTH.social = !!(user.app_metadata && user.app_metadata.provider && user.app_metadata.provider !== 'email'); if (!fromForm) { AUTH.resume = 'username'; if (quiet) return; AUTH.bounced = true; return go('signin'); } return authShow('username'); }
   if (prof.banned) {
     await sb.auth.signOut();
     if (!fromForm) { AUTH.notice = 'This account has been suspended.'; AUTH.resume = 'login'; AUTH.bounced = true; return go('signin'); }   // the sign-in page isn't on screen yet
@@ -3099,7 +3099,8 @@ document.addEventListener('submit', e => { if (e.target.closest && e.target.clos
   renderHeader();
   try {
     const { data: { session } } = await sb.auth.getSession();
-    if (session) await afterSignIn(false);
+    const first = location.pathname.replace(/^\/+/, '').split('/')[0];
+    if (session) await afterSignIn(false, !(first === 'signin' || first === 'signup' || NEEDS_AUTH.has(first)));
   } catch (e) { console.error(e); }
   if (!AUTH.bounced) route();   // afterSignIn already routed to the sign-in step it needs; routing again would reset it to the plain login form
 })();

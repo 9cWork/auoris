@@ -3,6 +3,8 @@ try { if (window.top !== window.self) { document.documentElement.style.display =
 // auoris.org - one small single-page app with hash routes (#/servers, #/dms/...). Same Supabase accounts as the desktop app.
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+// Safe inside style="...": only https, and every character that could close url('...') or the declaration is percent-encoded.
+const cssUrl = u => { u = String(u ?? ''); return (!/^https:\/\//i.test(u) || u.length > 600) ? 'none' : "url('" + esc(u.replace(/[^A-Za-z0-9\-._~:\/?#\[\]@!$&*+,=%]/g, c => '%' + c.charCodeAt(0).toString(16).padStart(2, '0'))) + "')"; };
 const SUPABASE_URL = 'https://utqswadleapgszwbkvzo.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_GatsXVrXWFclOrTpAjg3Xw_Jdyra6Hf';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -203,7 +205,7 @@ const who = (p, role) => p ? ` data-uid="${esc(p.id)}"${role ? ` data-role="${es
 // Real profile picture when the account has one (avatar_url is a basic/free feature, unlike the Plus-gated
 // banner_url above) - otherwise the same colored-initial fallback as before uploads existed.
 const avatar = (p, cls = '', role) => (p && p.avatar_url)
-  ? `<span class="av img ${cls}"${who(p, role)} style="background-image:url('${encodeURI(p.avatar_url)}')"></span>`
+  ? `<span class="av img ${cls}"${who(p, role)} style="background-image:${cssUrl(p.avatar_url)}"></span>`
   : `<span class="av ${cls}"${who(p, role)} style="--c:${esc((p && p.color) || '#5b9dff')}">${esc([...dname(p)][0].toUpperCase())}</span>`;
 const nameHtml = (p, role) => `<span class="name"${who(p, role)}>${esc(dname(p))}</span>`;
 const plainAv = (p, cls = '') => avatar(p, cls).replace(/ data-uid="[^"]*"/, '');  // for rows whose click does something else
@@ -215,7 +217,7 @@ async function showProfileCard(uid, role) {
   const friend = friends.find(f => f.other === uid);
   const rel = blocks.get(uid) || null;
   const card = document.createElement('div'); card.className = 'pcard';
-  const bannerStyle = p.banner_url && isPlus(p) ? `--bc:url('${encodeURI(p.banner_url)}')` : `--bc:${p.banner_color || '#1c2a52'}`;
+  const bannerStyle = p.banner_url && isPlus(p) ? `--bc:${cssUrl(p.banner_url)}` : `--bc:${esc(p.banner_color || '') || '#1c2a52'}`;
   card.innerHTML = `<div class="pcard-in"><div class="banner ${p.effect === 'aurora' && isPlus(p) ? 'effect-aurora' : ''}" style="${bannerStyle};height:90px"></div>
     <div class="profhead" style="margin-top:-34px">${avatar(p, 'lg').replace(/ data-uid="[^"]*"/, '')}</div>
     <div style="padding:6px 20px 20px"><h3 style="margin:4px 0 0">${esc(dname(p))}${badges(p, role)}</h3><div class="muted small">@${esc(p.username)}</div>
@@ -471,7 +473,7 @@ function chatPane(pane, o) {
   }
   function reactPillsHtml(id) {
     const em = reactions.get(id); if (!em || !em.size) return '';
-    return `<div class="reacts">${[...em].map(([e, s]) => `<button type="button" class="react${s.has(me.id) ? ' mine' : ''}" data-e="${esc(e)}">${e} ${s.size}</button>`).join('')}</div>`;
+    return `<div class="reacts">${[...em].map(([e, s]) => `<button type="button" class="react${s.has(me.id) ? ' mine' : ''}" data-e="${esc(e)}">${esc(e)} ${s.size}</button>`).join('')}</div>`;
   }
   function replyQuoteHtml(m) {
     if (!m.reply_to) return '';
@@ -1495,7 +1497,7 @@ PAGES[''] = async () => {
     ${dcFeat('chat', 265, "Servers, DMs & groups", 'Servers with channels, roles and banners, DMs and group chats, with :emoji:.')}
     ${dcFeat('pad', 25, 'Rich presence', 'See what friends are playing - and their Minecraft server or Roblox game - with a link to join.')}
     ${dcFeat('users', 190, 'AI projects', "Shared AI projects with friends, without ever exposing anyone's API key.")}
-    ${dcFeat('spark', 320, 'Auoris Plus', 'Banners, profile effects, AI Providers, server addresses and a gaming boost.')}</div></div></section>
+    ${dcFeat('spark', 320, 'Auoris Plus', 'Banners, profile effects, AI Providers and a gaming boost.')}</div></div></section>
   <section class="band alt"><div class="wrap dc-split"><div class="dc-txt"><span class="dc-kick">Messages</span><h2>Every chat in one place</h2>
     <p class="lead">Servers, DMs and group chats live side by side. Reply, react, pin, forward, edit and send files up to 50 MB - everything is scanned before it reaches anyone.</p>
     <ul class="dc-list"><li>Voice-style rail with all your servers</li><li>GIFs, reactions, replies and scheduled messages</li><li>Block, mute and privacy controls you actually own</li></ul></div>${dcMsgMock()}</div></section>
@@ -1740,10 +1742,12 @@ function authValidate(m, v) {
   return null;
 }
 function authAgeOk(dobStr) {   // sign-up age check: 13+. The date is only used here and is never stored or sent.
+  try { if (Date.now() - (+localStorage.getItem('auoris_age_block') || 0) < 864e5) return 'You must be at least 13 years old to use Auoris.'; } catch (e) { /* no storage: the check below still applies */ }
   const d = new Date(dobStr); if (!dobStr || isNaN(d)) return 'Enter your date of birth.';
   const now = new Date(); let age = now.getFullYear() - d.getFullYear(); const m = now.getMonth() - d.getMonth(); if (m < 0 || (m === 0 && now.getDate() < d.getDate())) age--;
   if (age < 0 || age > 120) return 'Enter a valid date of birth.';
-  return age < 13 ? 'You must be at least 13 years old to use Auoris.' : null;
+  if (age < 13) { try { localStorage.setItem('auoris_age_block', String(Date.now())); } catch (e) { /* ignore */ } return 'You must be at least 13 years old to use Auoris.'; }   // a rejected date can't simply be retyped: locked for 24 hours on this device
+  return null;
 }
 async function authSubmit(e) {
   e.preventDefault();
@@ -1849,7 +1853,7 @@ function svlRoleIcon(r, px) {
 function svlMemberRoles(uid) { const m = svCache && svCache.cm; return (m && m.get(uid)) || []; }
 function svlNameColor(uid) { const r = svlMemberRoles(uid)[0]; return r && /^#[0-9a-f]{6}$/i.test(r.color) ? r.color : ''; }
 function svlBadges(uid) { return svlMemberRoles(uid).slice(0, 4).map(r => svlRoleIcon(r, 14)).join(''); }
-function svlBannerCss(s) { const u = s && svlUrl(s.banner_path); return u ? `background:#1d2331 url(${esc(u)}) center/cover` : 'background:linear-gradient(135deg,#2b4680,#1d2331)'; }
+function svlBannerCss(s) { const u = s && svlUrl(s.banner_path); return u ? `background:#1d2331 ${cssUrl(u)} center/cover` : 'background:linear-gradient(135deg,#2b4680,#1d2331)'; }
 // Sparks: a Plus member can give up to 2; 2 Sparks = Level 1 (banner + image role icons)
 async function svlSparkLoad(sid) { try { const r = await sb.rpc('server_spark_info', { sid }); return r.data || { count: 0, level: 0, mine: false, used: 0, slots: 2, plus: false }; } catch (e) { return { count: 0, level: 0, mine: false, used: 0, slots: 2, plus: false }; } }
 function svlSparkHtml(sp, btnId) {
@@ -2229,10 +2233,17 @@ async function mgRenderHome(uid, gid) {
       <button class="btn primary" id="gCreate" style="margin-top:14px">Create group</button></div>`;
     $('mg').classList.add('mob-pane');
     $('gCreate').onclick = async () => {
+      const button = $('gCreate');
+      if (button.disabled) return;
+      button.disabled = true; button.textContent = 'Creating…';
       const members = [...$('mgPane').querySelectorAll('input[type=checkbox]:checked')].map(i => i.value);
       const name = $('gName').value.trim() || 'Group chat';
-      const { data, error } = await sb.rpc('create_group', { name, members });
-      if (error) return fail(error); go('messages/g/' + data);
+      try {
+        const { data, error } = await sb.rpc('create_group', { name, members });
+        if (error) { fail(error); return; }
+        if (!data) { toast('You have reached the group creation limit. Try again later.'); return; }
+        go('messages/g/' + data);
+      } finally { if (button.isConnected) { button.disabled = false; button.textContent = 'Create group'; } }
     };
   };
   const p = uid && acc.find(x => x.id === uid);
@@ -2315,7 +2326,7 @@ const BANNERS = ['#1c2a52', '#2c1d4f', '#1f3d2b', '#4a1d2b', '#3d2e12', '#12343d
 const COLORS = ['#5b9dff', '#8b6bff', '#e5484d', '#f5a524', '#30a46c', '#12a594', '#e93d82', '#8e8c99'];
 PAGES.profile = async () => {
   const p = myProfile, plus = isPlus(p), t = plusTier(p);
-  const bannerStyle = p.banner_url && plus ? `--bc:url('${encodeURI(p.banner_url)}')` : `--bc:${p.banner_color || '#1c2a52'}`;
+  const bannerStyle = p.banner_url && plus ? `--bc:${cssUrl(p.banner_url)}` : `--bc:${esc(p.banner_color || '') || '#1c2a52'}`;
   main().innerHTML = `<div class="wrap page"><h1>Profile</h1><p class="lead">How you appear in servers, DMs and the Auoris app.</p>
     <div class="card" style="padding:0;overflow:hidden"><div class="banner ${p.effect === 'aurora' && plus ? 'effect-aurora' : ''}" style="${bannerStyle}"></div>
       <div class="profhead">${avatar(p, 'lg')}<div style="padding-bottom:8px"><h2 style="margin:0">${esc(dname(p))}${badges(p)}</h2><div class="muted">@${esc(p.username)}${p.discord_name ? ` · Discord: ${esc(p.discord_name)}` : ''}</div></div></div>
@@ -2645,7 +2656,7 @@ PAGES.plus = async () => {
   const p = myProfile, t = plusTier(p);
   const perks = [['🖼', 'Custom banners & profile images', 'Free accounts keep banner colours.'], ['✨', 'Profile effects', 'Aurora, sparkle, flame and more.'],
     ['🌐', 'Browser proxy', 'Route the built-in browser through a proxy.'], ['🧠', 'AI Providers', 'Use Claude, GPT, Gemini and more with your own keys.'],
-    ['🎮', 'Gaming boost', 'FPS, ping and background-load tuning in the app.'], ['🖥', 'Server addresses', 'Up to 3 public addresses like yourname.servers.auoris.org for the Minecraft servers you host (free accounts get 1).']];
+    ['🎮', 'Gaming boost', 'FPS, ping and background-load tuning in the app.']];
   main().innerHTML = `<div class="wrap page"><div class="plushero">${ICON.plus('#ffffff')}<h1 style="margin-top:14px">Auoris Plus</h1>
     <div class="price">$19.99<small> / month</small></div><p class="muted">Cancel anytime.</p>
     <div class="row" style="justify-content:center;margin-top:18px">${t ? `<span class="pluspill">${ICON.check('#2ecc71').replace('<svg', '<svg width="16" height="16"')} You have Plus${t.name !== 'Plus' ? ` · ${esc(t.name)}` : ''}${t.months ? ` · ${t.months} months` : ''}</span><button class="btn" id="plusManage">Manage subscription</button>`

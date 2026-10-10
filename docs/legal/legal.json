@@ -1,5 +1,5 @@
 {
-  "version": "2026-10-03.3",
+  "version": "2026-10-10",
   "operator": "Auoris",
   "contact": "support@auoris.org",
   "docs": [
@@ -31,6 +31,22 @@
   ],
   "changes": [
     {
+      "version": "2026-10-10",
+      "summary": "Privacy Policy: added calls, defaults for presence and Minecraft sharing, GIF loading, the in-game /ai command and shared AI Project keys. Acceptable Use: Stream-proof HUD and other features must not be used to hide cheating from server staff or anticheat."
+    },
+    {
+      "version": "2026-10-09",
+      "summary": "Removed the local Minecraft server host and public server addresses; the related Privacy and Acceptable Use clauses were deleted."
+    },
+    {
+      "version": "2026-10-08",
+      "summary": "Privacy policy: emote you are playing is shared with other Auoris players; added how AI project messages are handled when someone asks the AI."
+    },
+    {
+      "version": "2026-10-03.4",
+      "summary": "Local-network server addresses (name.local.auoris.org) are a new option that publishes your computer's private home-network address in public DNS, and servers can optionally be reached through a third-party tunnel service you set up yourself."
+    },
+    {
       "version": "2026-10-03.3",
       "summary": "New optional feature: you can claim a public address like yourname.servers.auoris.org for a Minecraft server on your own computer. If you do, a public DNS record points that name at your computer's current IP address, so anyone can look it up. Address names must follow the Acceptable Use Policy."
     },
@@ -59,5 +75,5 @@
       "summary": "First version of the Terms of Service, Privacy Policy, Acceptable Use Policy, Subscription and Gift Terms, and Copyright policy."
     }
   ],
-  "hash": "bcd6abb003ab0024e55894142fdfe57ee20d3ee97ce87cadf0b2787a508e7a0f"
+  "hash": "8c41ed877f14952c95fd86706ffc0169109019a7513beb212d98b95c4909383b"
 }

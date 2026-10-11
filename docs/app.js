@@ -2503,11 +2503,12 @@ PAGES.admin = async () => {
   const isOwner = (myProfile.username || '').toLowerCase() === 'auoris';
   main().innerHTML = `<div class="wrap page"><h1>Admin</h1>
     <h2 style="margin:0 0 10px;font-size:18px">Reports</h2><div id="adReports" style="margin-bottom:26px"><div class="empty">Loading…</div></div>
-    <h2 style="margin:0 0 6px;font-size:18px">Announcements</h2><p class="lead">Shows as a banner in the Auoris app and as a chat message in Minecraft (the mod needs the app running).</p>
+    <h2 style="margin:0 0 6px;font-size:18px">Announcements</h2><p class="lead">Shows as a banner in the Auoris app for a few seconds, then goes away, and as a chat message in Minecraft (the mod needs the app running).</p>
     <div class="card" style="margin-bottom:12px"><input class="in" id="anT" maxlength="80" placeholder="Title" style="width:100%;margin-bottom:8px">
       <textarea class="in" id="anB" maxlength="400" rows="2" placeholder="Details (optional)" style="width:100%;margin-bottom:8px"></textarea>
       <div class="row" style="align-items:center;flex-wrap:wrap;gap:8px"><select class="in" id="anA" style="width:auto"><option value="all">App + Minecraft</option><option value="app">App only</option><option value="minecraft">Minecraft only</option></select>
-        <span class="muted small">Show for</span><input class="in" id="anH" type="number" min="1" max="720" value="72" style="width:80px"><span class="muted small">hours</span><span style="flex:1"></span><button class="btn sm" id="anGo">Publish</button></div></div>
+        <span class="muted small">On screen for</span><input class="in" id="anS" type="number" min="3" max="120" value="10" style="width:70px"><span class="muted small">seconds</span>
+        <span class="muted small" title="People who open Auoris after you post it still see it for this long">Still show to late openers for</span><input class="in" id="anM" type="number" min="1" max="1440" value="30" style="width:70px"><span class="muted small">minutes</span><span style="flex:1"></span><button class="btn sm" id="anGo">Publish</button></div></div>
     <div id="adAnn" style="margin-bottom:26px"></div>
     <h2 style="margin:0 0 6px;font-size:18px">Accounts</h2><p class="lead">Search a username to moderate their account.</p>
     <div class="row" style="margin-bottom:16px"><input class="in" id="adQ" placeholder="Search username…" style="max-width:320px" autocomplete="off"></div>
@@ -2593,11 +2594,12 @@ PAGES.admin = async () => {
     });
   }
   $('anGo').onclick = async () => {
-    const title = $('anT').value.trim(), hours = Math.round(Number($('anH').value));
+    const title = $('anT').value.trim(), secs = Math.round(Number($('anS').value)), mins = Math.round(Number($('anM').value));
     if (!title) return toast('Give it a title.');
-    if (!(hours >= 1 && hours <= 720)) return toast('Pick 1 to 720 hours.');
+    if (!(secs >= 3 && secs <= 120)) return toast('On screen for 3 to 120 seconds.');
+    if (!(mins >= 1 && mins <= 1440)) return toast('Late openers: 1 to 1440 minutes.');
     $('anGo').disabled = true;
-    const { error } = await sb.from('announcements').insert({ title, body: $('anB').value.trim(), audience: $('anA').value, expires_at: new Date(Date.now() + hours * 3600e3).toISOString() });
+    const { error } = await sb.from('announcements').insert({ title, body: $('anB').value.trim(), audience: $('anA').value, seconds: secs, expires_at: new Date(Date.now() + mins * 60e3).toISOString() });
     $('anGo').disabled = false;
     if (error) return fail(error);
     $('anT').value = ''; $('anB').value = ''; toast('Announcement published.'); loadAnn();

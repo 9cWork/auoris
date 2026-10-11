@@ -2503,6 +2503,12 @@ PAGES.admin = async () => {
   const isOwner = (myProfile.username || '').toLowerCase() === 'auoris';
   main().innerHTML = `<div class="wrap page"><h1>Admin</h1>
     <h2 style="margin:0 0 10px;font-size:18px">Reports</h2><div id="adReports" style="margin-bottom:26px"><div class="empty">Loading…</div></div>
+    <h2 style="margin:0 0 6px;font-size:18px">Announcements</h2><p class="lead">Shows as a banner in the Auoris app and as a chat message in Minecraft (the mod needs the app running).</p>
+    <div class="card" style="margin-bottom:12px"><input class="in" id="anT" maxlength="80" placeholder="Title" style="width:100%;margin-bottom:8px">
+      <textarea class="in" id="anB" maxlength="400" rows="2" placeholder="Details (optional)" style="width:100%;margin-bottom:8px"></textarea>
+      <div class="row" style="align-items:center;flex-wrap:wrap;gap:8px"><select class="in" id="anA" style="width:auto"><option value="all">App + Minecraft</option><option value="app">App only</option><option value="minecraft">Minecraft only</option></select>
+        <span class="muted small">Show for</span><input class="in" id="anH" type="number" min="1" max="720" value="72" style="width:80px"><span class="muted small">hours</span><span style="flex:1"></span><button class="btn sm" id="anGo">Publish</button></div></div>
+    <div id="adAnn" style="margin-bottom:26px"></div>
     <h2 style="margin:0 0 6px;font-size:18px">Accounts</h2><p class="lead">Search a username to moderate their account.</p>
     <div class="row" style="margin-bottom:16px"><input class="in" id="adQ" placeholder="Search username…" style="max-width:320px" autocomplete="off"></div>
     <div id="adBody"><div class="empty">Type a username, or leave it blank for the most recent accounts.</div></div></div>`;
@@ -2574,6 +2580,29 @@ PAGES.admin = async () => {
     });
   }
   loadReports();
+  async function loadAnn() {
+    const { data, error } = await sb.from('announcements').select('*').order('created_at', { ascending: false }).limit(20);
+    $('adAnn').innerHTML = error ? `<div class="empty">${esc(error.message)}</div>` : data.length ? data.map(a => `<div class="card" data-aid="${esc(a.id)}" style="margin-bottom:8px"><div class="row" style="align-items:center;flex-wrap:wrap">
+      <b>${esc(a.title)}</b><span class="pill">${a.audience === 'all' ? 'App + Minecraft' : a.audience === 'app' ? 'App' : 'Minecraft'}</span>
+      <span class="muted small">${new Date(a.expires_at) > new Date() ? 'until ' + esc(new Date(a.expires_at).toLocaleString()) : 'expired'}</span><span style="flex:1"></span><button class="btn sm danger" data-ad>Delete</button></div>
+      ${a.body ? `<p class="small" style="margin:6px 0 0;white-space:pre-wrap">${esc(a.body)}</p>` : ''}</div>`).join('') : '<div class="empty">No announcements.</div>';
+    $('adAnn').querySelectorAll('[data-ad]').forEach(btn => btn.onclick = async () => {
+      btn.disabled = true;
+      const { error: e2 } = await sb.from('announcements').delete().eq('id', btn.closest('[data-aid]').dataset.aid);
+      if (e2) { fail(e2); btn.disabled = false; } else loadAnn();
+    });
+  }
+  $('anGo').onclick = async () => {
+    const title = $('anT').value.trim(), hours = Math.round(Number($('anH').value));
+    if (!title) return toast('Give it a title.');
+    if (!(hours >= 1 && hours <= 720)) return toast('Pick 1 to 720 hours.');
+    $('anGo').disabled = true;
+    const { error } = await sb.from('announcements').insert({ title, body: $('anB').value.trim(), audience: $('anA').value, expires_at: new Date(Date.now() + hours * 3600e3).toISOString() });
+    $('anGo').disabled = false;
+    if (error) return fail(error);
+    $('anT').value = ''; $('anB').value = ''; toast('Announcement published.'); loadAnn();
+  };
+  loadAnn();
 };
 
 // ---- AI providers

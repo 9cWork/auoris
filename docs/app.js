@@ -1099,7 +1099,7 @@ function actDialog(o) {
   const card = document.createElement('div'); card.className = 'pcard';
   card.innerHTML = `<div class="pcard-in" style="padding:20px;max-height:92vh;overflow-y:auto"><h3 style="margin:0 0 4px">🎮 Start an activity</h3>
     <p class="muted small" style="margin:0 0 6px">Ping people to play something. They get an invite they can answer with I'm in / Can't make it.</p>
-    <label class="lbl">What are you playing?</label><input class="in" id="acTitle" maxlength="80" placeholder="Bedwars on BlockadeMC">
+    <label class="lbl">What are you playing?</label><input class="in" id="acTitle" maxlength="80" placeholder="My world">
     <label class="lbl">Game or service (optional)</label><input class="in" id="acGame" maxlength="40" placeholder="Minecraft, Roblox, Discord…">
     <label class="lbl">Link (optional, https only)</label><input class="in" id="acUrl" maxlength="500" placeholder="https://…" inputmode="url" autocomplete="off">
     <label class="lbl">Note (optional)</label><input class="in" id="acNote" maxlength="200" placeholder="Bring a mic">
@@ -1709,8 +1709,8 @@ function authShow(mode, sub) {
   const email = inp('aEmail', 'Email', 'email', 'autocomplete="email" required');
   $('authForm').innerHTML = {
     login: email + inp('aPass', 'Password', 'password', 'autocomplete="current-password" required') + '<button class="btn primary">Sign in</button>',
-    signup: email + inp('aPass', 'Password', 'password', 'autocomplete="new-password" required minlength="8"') + inp('aDob', 'Date of birth (to check you are 13 or older - not stored)', 'date', 'required') + '<button class="btn primary">Create account</button>',
-    username: inp('aUser', 'Username', 'text', 'autocomplete="username" required maxlength="20" pattern="[A-Za-z0-9_]{3,20}" title="3-20 letters, numbers or _"') + (AUTH.social ? inp('aDob', 'Date of birth (to check you are 13 or older - not stored)', 'date', 'required') : '') + '<button class="btn primary">Continue</button>',
+    signup: email + inp('aPass', 'Password', 'password', 'autocomplete="new-password" required minlength="8"') + inp('aDob', 'Date of birth (not stored)', 'date', 'required') + '<button class="btn primary">Create account</button>',
+    username: inp('aUser', 'Username', 'text', 'autocomplete="username" required maxlength="20" pattern="[A-Za-z0-9_]{3,20}" title="3-20 letters, numbers or _"') + (AUTH.social ? inp('aDob', 'Date of birth (not stored)', 'date', 'required') : '') + '<button class="btn primary">Continue</button>',
     verify: code + '<button class="btn primary">Verify</button>', forgot: email + '<button class="btn primary">Send code</button>',
     reset: code + inp('aPass', 'New password', 'password', 'autocomplete="new-password" required minlength="8"') + '<button class="btn primary">Save password</button>',
     mfa: code + '<button class="btn primary">Verify</button>',
@@ -2514,7 +2514,7 @@ PAGES.admin = async () => {
       ${p.banned ? '<span class="pill" style="color:var(--err)">Banned</span>' : ''}${isPlus(p) ? '<span class="pill" style="color:var(--acc2)">Plus</span>' : ''}
       <span style="flex:1"></span>
       <button class="btn sm" data-a="mod">${p.is_mod ? 'Remove mod' : 'Make mod'}</button>
-      <button class="btn sm" data-a="plus3">+3mo Plus</button>
+      <input class="in" data-plusn type="number" min="1" max="120" value="3" title="Months of Plus to add" style="width:64px;padding:4px 6px"> <button class="btn sm" data-a="plus3">Give Plus (months)</button>
       <button class="btn sm" data-a="unplus">Clear Plus</button>
       ${isOwner ? `<button class="btn sm" data-a="admin">${p.is_admin ? 'Remove admin' : 'Make admin'}</button>` : ''}
       <button class="btn sm danger" data-a="ban">${p.banned ? 'Unban' : 'Ban'}</button>
@@ -2535,7 +2535,7 @@ PAGES.admin = async () => {
           const { error } = await sb.rpc('admin_set_mod', { target: id, value: !cur.is_mod }); if (error) throw error; }
         if (a === 'admin') { const { data: cur } = await sb.from('profiles').select('is_admin').eq('id', id).single();
           const { error } = await sb.rpc('admin_set_admin', { target: id, value: !cur.is_admin }); if (error) throw error; }
-        if (a === 'plus3') { const { error } = await sb.rpc('admin_set_plus', { target: id, n_months: 3 }); if (error) throw error; }
+        if (a === 'plus3') { const n = Math.round(Number(btn.closest('.card').querySelector('[data-plusn]').value)); if (!(n >= 1 && n <= 120)) throw new Error('Pick 1 to 120 months.'); const { error } = await sb.rpc('admin_set_plus', { target: id, n_months: n }); if (error) throw error; }
         if (a === 'unplus') { const { error } = await sb.rpc('admin_set_plus', { target: id, n_months: 0 }); if (error) throw error; }
         search($('adQ').value.trim());
       } catch (e) { fail(e); btn.disabled = false; }

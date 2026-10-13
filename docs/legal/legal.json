@@ -1,5 +1,5 @@
 {
-  "version": "2026-10-10",
+  "version": "2026-10-13",
   "operator": "Auoris",
   "contact": "support@auoris.org",
   "docs": [
@@ -30,6 +30,18 @@
     }
   ],
   "changes": [
+    {
+      "version": "2026-10-13",
+      "summary": "We now keep a private security log of changes to an account's standing (bans, staff roles and Plus status) for 12 months, used only to investigate misuse."
+    },
+    {
+      "version": "2026-10-12.2",
+      "summary": "Added Auoris Extra (/extra), which sends a request to several AI models at once, and chat import (/import), which copies chats already on your computer into Auoris without uploading anything."
+    },
+    {
+      "version": "2026-10-12",
+      "summary": "The Privacy Policy now says that the Minecraft accounts you run through Auoris (names and IDs only) are stored for up to 60 days and visible to you and to administrators for moderation."
+    },
     {
       "version": "2026-10-10",
       "summary": "Privacy Policy: added calls, defaults for presence and Minecraft sharing, GIF loading, the in-game /ai command and shared AI Project keys. Acceptable Use: Stream-proof HUD and other features must not be used to hide cheating from server staff or anticheat."
@@ -75,5 +87,5 @@
       "summary": "First version of the Terms of Service, Privacy Policy, Acceptable Use Policy, Subscription and Gift Terms, and Copyright policy."
     }
   ],
-  "hash": "8c41ed877f14952c95fd86706ffc0169109019a7513beb212d98b95c4909383b"
+  "hash": "bc9266b5424e497871aa80f0b34c3c5ca369fea33a3d5a8196fab32b83f82eb4"
 }

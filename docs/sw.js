@@ -1,7 +1,7 @@
 // Minimal app-shell service worker so Auoris can be installed to a phone's home screen and reopen instantly
 // (even briefly offline) while it boots. It never caches Supabase API calls - those always go to the network,
 // same as if there were no service worker at all. Bump CACHE_NAME to force clients onto a fresh shell.
-const CACHE_NAME = 'auoris-shell-v7';
+const CACHE_NAME = 'auoris-shell-v8';
 const SHELL = ['/', '/index.html', '/app.css', '/app.js', '/emoji.js', '/vendor/supabase.js', '/logo.png', '/manifest.webmanifest'];
 
 self.addEventListener('install', event => {
@@ -29,9 +29,10 @@ self.addEventListener('fetch', event => {
     );
     return;
   }
-  // Code and pages (js / css / html): network-first, bypassing the browser's HTTP cache, so a deploy shows up on the next
-  // load instead of the one after. The cached copy is only used when the network is down.
-  if (/\.(js|css|html)$/.test(url.pathname) || url.pathname === '/' || url.pathname.endsWith('/')) {
+  // Code, pages and the legal documents (js / css / html / json / md): network-first, bypassing the browser's HTTP cache, so a
+  // deploy shows up on the next load instead of the one after (a stale legal.json would make people accept an old version).
+  // The cached copy is only used when the network is down.
+  if (/\.(js|css|html|json|md)$/.test(url.pathname) || url.pathname === '/' || url.pathname.endsWith('/')) {
     event.respondWith(
       fetch(req, { cache: 'no-cache' }).then(res => {
         if (res.ok && res.status === 200) { const copy = res.clone(); caches.open(CACHE_NAME).then(c => c.put(req, copy)); }

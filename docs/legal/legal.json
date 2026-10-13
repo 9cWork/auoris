@@ -1,5 +1,5 @@
 {
-  "version": "2026-10-13",
+  "version": "2026-10-13.9",
   "operator": "Auoris",
   "contact": "support@auoris.org",
   "docs": [
@@ -30,6 +30,38 @@
     }
   ],
   "changes": [
+    {
+      "version": "2026-10-13.9",
+      "summary": "We added linked accounts (an optional public GitHub, Discord or Twitch name on your profile, and Discord and Twitch sign-in) and described connectors (MCP servers) you can add to the AI"
+    },
+    {
+      "version": "2026-10-13.8",
+      "summary": "Privacy policy: ban enforcement keeps a keyed hash of a banned account's email; covers /divide, sub-agents and auoris.md"
+    },
+    {
+      "version": "2026-10-13.7",
+      "summary": "Privacy policy: covers sub-agents the AI starts in Code mode"
+    },
+    {
+      "version": "2026-10-13.6",
+      "summary": "Privacy policy: covers /divide and auoris.md project notes"
+    },
+    {
+      "version": "2026-10-13.5",
+      "summary": "Auto mode and agent memory"
+    },
+    {
+      "version": "2026-10-13.4",
+      "summary": "Multi-model modes (/team, /split, /debate, @agents, private mode) and local usage/cost tracking"
+    },
+    {
+      "version": "2026-10-13.3",
+      "summary": "Security log also covers in-game moderation actions and announcements"
+    },
+    {
+      "version": "2026-10-13.2",
+      "summary": "Phone relay, Minecraft account ownership proof, owner security alerts"
+    },
     {
       "version": "2026-10-13",
       "summary": "We now keep a private security log of changes to an account's standing (bans, staff roles and Plus status) for 12 months, used only to investigate misuse."
@@ -87,5 +119,5 @@
       "summary": "First version of the Terms of Service, Privacy Policy, Acceptable Use Policy, Subscription and Gift Terms, and Copyright policy."
     }
   ],
-  "hash": "bc9266b5424e497871aa80f0b34c3c5ca369fea33a3d5a8196fab32b83f82eb4"
+  "hash": "50bc0c1847238a4bea92604333aa89225238df73b35a508e67746690a6572dea"
 }

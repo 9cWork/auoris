@@ -8,16 +8,20 @@ const cssUrl = u => { u = String(u ?? ''); return (!/^https:\/\//i.test(u) || u.
 const SUPABASE_URL = 'https://utqswadleapgszwbkvzo.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_GatsXVrXWFclOrTpAjg3Xw_Jdyra6Hf';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-const PCOLS = 'id,username,display_name,color,is_admin,is_mod,staff_since,created_at,pronouns,plus_since,plus_until,banner_color,banner_url,avatar_url,effect,discord_name,bio';
+const linkedLine = p => { const n = { github: 'GitHub', discord: 'Discord', twitch: 'Twitch' }, e = Object.entries(p.linked_accounts || {}).filter(([k]) => n[k]);
+  return e.length ? `<p class="muted small" style="margin:10px 0 0">${e.map(([k, v]) => n[k] + ': ' + esc(String(v))).join(' · ')}</p>` : ''; };
+const PCOLS = 'id,username,display_name,color,is_admin,is_mod,staff_since,created_at,pronouns,plus_since,plus_until,banner_color,banner_url,avatar_url,effect,discord_name,bio,linked_accounts';
 
 let me = null, myProfile = null, pageSubs = [];
 const profiles = new Map();
 async function getProfiles(ids) {
   const missing = [...new Set(ids)].filter(id => id && !profiles.has(id));
-  if (missing.length) {
-    const { data } = await sb.from('profiles').select(PCOLS).in('id', missing);
+  // 100 ids per request: a big server's member list as one ?id=in.(...) URL is longer than the server accepts, and then nobody gets a name
+  const parts = []; for (let i = 0; i < missing.length; i += 100) parts.push(missing.slice(i, i + 100));
+  await Promise.all(parts.map(async part => {
+    const { data } = await sb.from('profiles').select(PCOLS).in('id', part);
     (data || []).forEach(p => profiles.set(p.id, p));
-  }
+  }));
   return ids.map(id => profiles.get(id));
 }
 function toast(msg) {
@@ -224,6 +228,7 @@ async function showProfileCard(uid, role) {
       ${t ? `<div class="pluspill" style="margin-top:10px">${ICON.plus(t.color).replace('<svg', '<svg width="15" height="15"')} Auoris Plus${t.name !== 'Plus' ? ` · ${esc(t.name)}` : ''}${t.months ? ` · ${t.months} months` : ''}</div>` : ''}
       ${p.bio ? `<p style="margin:12px 0 0">${emojify(esc(p.bio))}</p>` : ''}
       ${p.discord_name ? `<p class="muted small" style="margin:10px 0 0">Discord: ${esc(p.discord_name)}</p>` : ''}
+      ${linkedLine(p)}
       <div class="row" style="margin-top:14px">${isMe ? '<a class="btn sm" href="/profile">Edit profile</a>'
         : friend && friend.status === 'accepted' ? `<a class="btn sm primary" href="/messages/dm/${esc(uid)}">Message</a>` : me && !friend && rel !== 'block' ? '<button class="btn sm" id="pcAdd">Add friend</button>' : ''}
         </div><div class="row" id="pcExtra" style="margin-top:8px"></div>
@@ -577,7 +582,8 @@ function chatPane(pane, o) {
     }
     if (canReport) el.querySelector('.act-report').onclick = () => openReport(reportTable, m);
     { const eb = el.querySelector('.act-edit'); if (eb) eb.onclick = () => startEdit(el, m); const db = el.querySelector('.act-del'); if (db) db.onclick = () => deleteMsg(el, m); }
-    const stick = box.scrollHeight - box.scrollTop - box.clientHeight < 80;
+    // only for live messages: measuring after every one of the first 150 forces a layout per message (the loader scrolls once at the end)
+    const stick = live && box.scrollHeight - box.scrollTop - box.clientHeight < 80;
     if (box.querySelector('.empty')) box.innerHTML = '';
     box.appendChild(el); last = m;
     if (stick) box.scrollTop = box.scrollHeight;
@@ -1356,11 +1362,10 @@ async function getForwardTargets() {
   } catch (e) {}
   try {
     const { data } = await sb.from('server_members').select('server_id, servers(id,name)').eq('user_id', me.id);
-    for (const x of (data || [])) {
-      if (!x.servers) continue;
-      const { data: chans } = await sb.from('channels').select('id,name').eq('server_id', x.server_id).order('position');
-      (chans || []).forEach(c => targets.push({ type: 'channel', id: c.id, label: `${x.servers.name} / #${c.name}` }));
-    }
+    const svs = (data || []).filter(x => x.servers);
+    // one query for every server's channels instead of one per server
+    const { data: chans } = svs.length ? await sb.from('channels').select('id,name,server_id').in('server_id', svs.map(x => x.server_id)).order('position') : { data: [] };
+    svs.forEach(x => (chans || []).filter(c => c.server_id === x.server_id).forEach(c => targets.push({ type: 'channel', id: c.id, label: `${x.servers.name} / #${c.name}` })));
   } catch (e) {}
   return targets;
 }
@@ -1407,7 +1412,7 @@ const acceptedFriends = () => friends.filter(f => f.status === 'accepted').map(f
 
 // ---------------------------------------------------------------- router
 const main = () => $('view');
-const NEEDS_AUTH = new Set(['messages', 'servers', 'dms', 'groups', 'profile', 'settings', 'projects', 'admin']);
+const NEEDS_AUTH = new Set(['messages', 'servers', 'dms', 'groups', 'profile', 'settings', 'projects', 'admin', 'pc']);
 // 'localai' is deliberately NOT in this set - pairing with a PC needs no Auoris account at all (same as
 // mobile.html today), so it must stay reachable straight from a fresh install, signed in or not.
 function go(path) { history.pushState(null, '', '/' + path); route(); }
@@ -1482,6 +1487,19 @@ const dcMsgMock = () => `<div class="dc-win dc-msg-win" aria-hidden="true"><div 
 const dcPhone = () => `<div class="dc-phone" aria-hidden="true"><div class="dc-notch"></div>
   <div class="dc-pchat"><div class="dc-pb them">Is the model on your PC done?</div><div class="dc-pb me">Yep, ask it anything</div><div class="dc-pb them">📱 on the couch, nice</div></div><div class="dc-pin">Message…</div></div>`;
 
+let ghRelease = null;   // the latest-release lookup for the Download button (a promise)
+// The installer comes from a public file bucket on the same Supabase host the site already needs to sign in (tools/mirror_release.py keeps it
+// in step with the GitHub release), so Download still works on networks that block github.com. GitHub is only the fallback.
+const DL_MIRROR = SUPABASE_URL + '/storage/v1/object/public/downloads/';
+function dlLatest() {
+  return ghRelease = ghRelease || fetch(DL_MIRROR + 'latest.json', { cache: 'no-cache' }).then(r => r.ok ? r.json() : Promise.reject()).then(m => {
+    if (!m || !/^\d+(\.\d+){1,3}$/.test(m.version || '') || m.file !== `Auoris-Setup-${m.version}.exe`) return Promise.reject();
+    return { href: DL_MIRROR + m.file + '?download=Auoris-Setup.exe', ver: 'v' + m.version, size: Number(m.size) || 0 };
+  }).catch(() => fetch('https://api.github.com/repos/9cWork/auoris/releases/latest').then(r => r.json()).then(d => {
+    const a = (d.assets || []).find(x => x.name.toLowerCase() === 'auoris-setup.exe');
+    return a ? { href: a.browser_download_url, ver: d.tag_name, size: a.size } : { href: '', ver: d.tag_name || '', size: 0 };
+  }));
+}
 PAGES[''] = async () => {
   main().innerHTML = `
   <section class="hero"><div class="stars"></div><div class="aur a1"></div><div class="aur a2"></div><div class="aur a3"></div>
@@ -1517,11 +1535,12 @@ PAGES[''] = async () => {
   <section class="band dc-dl" id="dl"><div class="wrap" style="text-align:center"><h2>Download</h2><p class="lead">Windows 10/11. The installer sets up Ollama for you.</p>
     <a class="btn primary" id="dlBtn" href="https://github.com/9cWork/auoris/releases/latest">⬇ Download Auoris-Setup.exe</a><p class="muted small" id="dlVer">Checking latest version…</p></div></section>`;
   $('dlTop').onclick = e => { e.preventDefault(); $('dl').scrollIntoView(); };
-  fetch('https://api.github.com/repos/9cWork/auoris/releases/latest').then(r => r.json()).then(d => {
-    const a = (d.assets || []).find(x => x.name.toLowerCase() === 'auoris-setup.exe');
-    if (a) { $('dlBtn').href = a.browser_download_url; $('dlVer').textContent = `${d.tag_name} · ${(a.size / 1048576).toFixed(1)} MB`; }
-    else $('dlVer').textContent = d.tag_name || '';
-  }).catch(() => { $('dlVer').textContent = 'See all releases on GitHub.'; });
+  // Looked up once per visit: Home re-renders on every return to the tab, and GitHub allows 60 anonymous API calls an hour per address.
+  dlLatest().then(d => {
+    if (!$('dlBtn')) return;   // already navigated away
+    if (d.href) { $('dlBtn').href = d.href; $('dlVer').textContent = d.size ? `${d.ver} · ${(d.size / 1048576).toFixed(1)} MB` : d.ver; }
+    else $('dlVer').textContent = d.ver || '';
+  }).catch(() => { ghRelease = null; if ($('dlVer')) $('dlVer').textContent = 'See all releases on GitHub.'; });
 };
 
 // ---- sign in / sign up
@@ -1669,7 +1688,7 @@ function authPage(mode) {
   AUTH.notice = null;
   if (msg) authErr(String(msg).slice(0, 200));
 }
-const OAUTH_PROVIDERS = [['google', 'Google', '<svg viewBox="0 0 48 48" width="18" height="18"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>'], ['azure', 'Microsoft', '<svg viewBox="0 0 23 23" width="18" height="18"><path fill="#f25022" d="M1 1h10v10H1z"/><path fill="#7fba00" d="M12 1h10v10H12z"/><path fill="#00a4ef" d="M1 12h10v10H1z"/><path fill="#ffb900" d="M12 12h10v10H12z"/></svg>'], ['github', 'GitHub', '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 .5C5.73.5.5 5.73.5 12c0 5.08 3.29 9.39 7.86 10.91.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.54-3.88-1.54-.52-1.33-1.28-1.69-1.28-1.69-1.05-.71.08-.7.08-.7 1.15.08 1.76 1.19 1.76 1.19 1.03 1.76 2.69 1.25 3.35.96.1-.75.4-1.25.73-1.54-2.55-.29-5.24-1.28-5.24-5.68 0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.78 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.83 1.19 3.09 0 4.41-2.69 5.39-5.25 5.67.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 23.5 12C23.5 5.73 18.27.5 12 .5z"/></svg>']];
+const OAUTH_PROVIDERS = [['google', 'Google', '<svg viewBox="0 0 48 48" width="18" height="18"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>'], ['azure', 'Microsoft', '<svg viewBox="0 0 23 23" width="18" height="18"><path fill="#f25022" d="M1 1h10v10H1z"/><path fill="#7fba00" d="M12 1h10v10H12z"/><path fill="#00a4ef" d="M1 12h10v10H1z"/><path fill="#ffb900" d="M12 12h10v10H12z"/></svg>'], ['github', 'GitHub', '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 .5C5.73.5.5 5.73.5 12c0 5.08 3.29 9.39 7.86 10.91.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.54-3.88-1.54-.52-1.33-1.28-1.69-1.28-1.69-1.05-.71.08-.7.08-.7 1.15.08 1.76 1.19 1.76 1.19 1.03 1.76 2.69 1.25 3.35.96.1-.75.4-1.25.73-1.54-2.55-.29-5.24-1.28-5.24-5.68 0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.78 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.83 1.19 3.09 0 4.41-2.69 5.39-5.25 5.67.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 23.5 12C23.5 5.73 18.27.5 12 .5z"/></svg>'], ['discord', 'Discord', '<svg viewBox="0 0 24 24" width="18" height="18" fill="#5865F2"><path d="M20.3 4.4A19.8 19.8 0 0 0 15.4 3l-.2.5a18 18 0 0 0-4.4 0L10.6 3a19.8 19.8 0 0 0-4.9 1.4C2.6 9 1.8 13.5 2.2 18a19.9 19.9 0 0 0 6 3l1.3-2.1c-.7-.3-1.4-.6-2-1l.5-.4a14.2 14.2 0 0 0 12 0l.5.4c-.6.4-1.3.7-2 1l1.300 2.100a19.900 19.900 0 0 0 6-3c.5-5.200-.8-9.700-3.500-13.600zM8.700 15.300c-1.100 0-2-1-2-2.200s.9-2.200 2-2.200 2 1 2 2.200-.9 2.200-2 2.200zm6.600 0c-1.100 0-2-1-2-2.200s.9-2.200 2-2.200 2 1 2 2.200-.9 2.200-2 2.200z"/></svg>'], ['twitch', 'Twitch', '<svg viewBox="0 0 24 24" width="18" height="18" fill="#9146FF"><path d="M4.3 3 3 6.500v12.700h4.300V22h2.500l2.800-2.800h3.500L21 14.500V3H4.300zm14.900 10.800-2.800 2.800h-4.400l-2.400 2.400v-2.400H6.600V4.700h12.600v9.100zM16.500 7.700h-1.700v4.800h1.700V7.700zm-4.600 0h-1.700v4.800h1.700V7.700z"/></svg>']];
 // Which providers are switched on in Supabase (public endpoint) - buttons only show for those.
 let oauthEnabled = null;
 async function oauthLoad() {
@@ -1723,7 +1742,7 @@ function authShow(mode, sub) {
   $('authLinks').querySelectorAll('a[data-m]').forEach(a => a.onclick = async () => {
     const m = a.dataset.m;
     if (m === 'signout') { try { sessionStorage.removeItem('auoris_after_signin'); } catch (e) {} await sb.auth.signOut(); return authShow('login'); }
-    if (m === 'resend') { const { error } = await sb.auth.resend({ type: 'signup', email: AUTH.email }); return authErr(error ? error.message : 'Sent a new code.', !error); }
+    if (m === 'resend') { const { error } = await sb.auth.resend({ type: 'signup', email: AUTH.email, options: await withCaptcha({}) }); return authErr(error ? error.message : 'Sent a new code.', !error); }
     authShow(m);
   });
   if (AUTH.email && $('aEmail')) $('aEmail').value = AUTH.email;
@@ -1749,6 +1768,34 @@ function authAgeOk(dobStr) {   // sign-up age check: 13+. The date is only used 
   if (age < 13) { try { localStorage.setItem('auoris_age_block', String(Date.now())); } catch (e) { /* ignore */ } return 'You must be at least 13 years old to use Auoris.'; }   // a rejected date can't simply be retyped: locked for 24 hours on this device
   return null;
 }
+const CAPTCHA_URL = '/captcha.html';
+// Bot check (Cloudflare Turnstile via auoris.org/captcha.html, see site/captcha.js). Resolves to a token, or null when the check is
+// switched off or can't load - Supabase then decides (it only refuses a missing token once CAPTCHA is switched on there).
+function captchaToken() {
+  return new Promise(res => {
+    const f = document.createElement('iframe'), url = new URL(CAPTCHA_URL, location.href);
+    f.src = url.href; f.title = 'Bot check'; f.style.cssText = 'border:0;width:100%;height:72px;display:block;margin:6px 0';
+    let t = 0;
+    const done = v => { clearTimeout(t); removeEventListener('message', onMsg); f.remove(); res(v); };
+    const onMsg = e => {
+      if (e.origin !== url.origin || e.source !== f.contentWindow || !e.data || typeof e.data.auorisCaptcha !== 'string') return;
+      const v = e.data.auorisCaptcha;
+      done(v === 'off' || v === 'error' || v === 'expired' ? null : v);
+    };
+    addEventListener('message', onMsg);
+    f.onload = () => {
+      let doc = null; try { doc = f.contentDocument; } catch (e) {}
+      if (doc && doc.URL === 'about:blank') return;               // the frame's initial empty page, not the check yet
+      clearTimeout(t);
+      // loaded: give a person time to answer it. No readable page means the browser refused to show the frame (a CSP or
+      // X-Frame-Options header) - it still fires load, but nothing will ever answer, so don't hold sign-in up for two minutes.
+      t = setTimeout(() => done(null), doc ? 120000 : 0);
+    };
+    t = setTimeout(() => done(null), 10000);                                          // auoris.org unreachable: don't hang sign-in
+    ($('authErr') || document.body).before(f);
+  });
+}
+const withCaptcha = async opts => { const c = await captchaToken(); return c ? Object.assign({}, opts, { captchaToken: c }) : opts; };
 async function authSubmit(e) {
   e.preventDefault();
   const btn = $('authForm').querySelector('button'), v = id => ($(id)?.value || '').trim(), m = AUTH.mode;
@@ -1758,13 +1805,13 @@ async function authSubmit(e) {
   try {
     if ($('aEmail')) AUTH.email = v('aEmail');
     if (m === 'login') {
-      const { error } = await sb.auth.signInWithPassword({ email: AUTH.email, password: $('aPass').value });
-      if (error && /confirm/i.test(error.message)) { await sb.auth.resend({ type: 'signup', email: AUTH.email }); return authShow('verify'); }
+      const { error } = await sb.auth.signInWithPassword({ email: AUTH.email, password: $('aPass').value, options: await withCaptcha({}) });
+      if (error && /confirm/i.test(error.message)) { await sb.auth.resend({ type: 'signup', email: AUTH.email, options: await withCaptcha({}) }); return authShow('verify'); }
       if (error) throw error;
       await afterSignIn(true);
     } else if (m === 'signup') {
       if (/^[^@]*\+/.test(AUTH.email)) throw new Error('Email addresses with a + (like name+tag@mail.com) cannot be used. Please use your main address.');
-      const { data, error } = await sb.auth.signUp({ email: AUTH.email, password: $('aPass').value });
+      const { data, error } = await sb.auth.signUp({ email: AUTH.email, password: $('aPass').value, options: await withCaptcha({}) });
       if (error) throw error;
       if (data && data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) throw new Error('An account with this email already exists. Sign in instead.');
       if (data.session) await afterSignIn(true); else authShow('verify');
@@ -1779,7 +1826,7 @@ async function authSubmit(e) {
       if (error) throw error;
       await afterSignIn(true);
     } else if (m === 'forgot') {
-      const { error } = await sb.auth.resetPasswordForEmail(AUTH.email);
+      const { error } = await sb.auth.resetPasswordForEmail(AUTH.email, await withCaptcha({}));
       if (error) throw error;
       authShow('reset');
     } else if (m === 'reset') {
@@ -1798,13 +1845,27 @@ async function authSubmit(e) {
     authErr(/fetch|network/i.test(msg) ? 'Can\'t reach the Auoris servers right now.' : msg);
   } finally { btn.disabled = false; }
 }
+// Your own profile row, with the columns only you and admins may read (ban state, privacy settings, legal acceptance). my_profile() hands it
+// over; while that function isn't on the server yet, the old direct read is used.
+const OWN_PCOLS = 'avatar_url,banned,banner_color,banner_url,best_day,bio,color,created_at,discord_name,display_name,dm_policy,effect,friend_request_policy,group_invite_policy,id,is_admin,is_mod,kills,legal_accepted_at,legal_version,plus_since,plus_until,pronouns,staff_since,username';
+async function ownProfile(uid) {
+  const r = await sb.rpc('my_profile').maybeSingle();
+  return r.error && r.error.code === 'PGRST202' ? sb.from('profiles').select(OWN_PCOLS).eq('id', uid).maybeSingle() : r;
+}
+// Admin user search (or one account by id): other accounts' ban state is admin-only, so it goes through admin_find_profiles().
+async function adminFind(q, target) {
+  const r = await sb.rpc('admin_find_profiles', target ? { target } : { q: q || '' });
+  if (!(r.error && r.error.code === 'PGRST202')) return r;
+  const base = sb.from('profiles').select('id,username,display_name,is_admin,is_mod,banned,plus_until');
+  return target ? base.eq('id', target) : (q ? base.ilike('username', `%${q}%`) : base).order('created_at', { ascending: false }).limit(30);
+}
 async function afterSignIn(fromForm, quiet) {   // quiet: on a public page, remember the step the sign-in page needs but don't navigate there
   const { data: aal } = await sb.auth.mfa.getAuthenticatorAssuranceLevel();
   if (aal && aal.nextLevel === 'aal2' && aal.currentLevel !== 'aal2') { if (!fromForm) { AUTH.resume = 'mfa'; if (quiet) return; AUTH.bounced = true; return go('signin'); } return authShow('mfa'); }
   if (AUTH.pendingPass) { const { error } = await sb.auth.updateUser({ password: AUTH.pendingPass }); AUTH.pendingPass = null; if (error) throw error; }
   const { data: { user }, error } = await sb.auth.getUser();
   if (error) throw error;
-  const { data: prof, error: profErr } = await sb.from('profiles').select(PCOLS + ',banned,legal_version').eq('id', user.id).maybeSingle();
+  const { data: prof, error: profErr } = await ownProfile(user.id);
   if (profErr) throw profErr;  // a lookup failure isn't "no profile yet" - don't send an existing user to claim_username
   if (!prof) { AUTH.social = !!(user.app_metadata && user.app_metadata.provider && user.app_metadata.provider !== 'email'); if (!fromForm) { AUTH.resume = 'username'; if (quiet) return; AUTH.bounced = true; return go('signin'); } return authShow('username'); }
   if (prof.banned) {
@@ -2337,7 +2398,7 @@ PAGES.profile = async () => {
         <label class="lbl">Bio</label><textarea class="in" id="pfBio" maxlength="200" rows="2">${esc(p.bio || '')}</textarea>
         <label class="lbl">Avatar colour</label><div class="swatches" id="pfColor">${COLORS.map(c => `<i style="background:${c}" data-c="${c}" class="${c === p.color ? 'on' : ''}"></i>`).join('')}</div>
         <label class="lbl">Banner colour</label><div class="swatches" id="pfBanner">${BANNERS.map(c => `<i style="background:${c}" data-c="${c}" class="${c === p.banner_color ? 'on' : ''}"></i>`).join('')}</div>
-        <div class="${plus ? '' : 'locked'}"><label class="lbl">Banner image URL ${plus ? '' : '(Plus)'}</label><input class="in" id="pfBannerUrl" placeholder="https://…/banner.png" value="${esc(p.banner_url || '')}">
+        <div class="${plus ? '' : 'locked'}"><label class="lbl">Banner image URL ${plus ? '' : '(Plus)'}</label><input class="in" id="pfBannerUrl" placeholder="Upload a banner in the Auoris app" value="${esc(p.banner_url || '')}">
           <label class="lbl">Profile effect ${plus ? '' : '(Plus)'}</label><select class="in" id="pfEffect">${['none', 'aurora', 'sparkle', 'flame', 'glitch'].map(e => `<option ${e === (p.effect || 'none') ? 'selected' : ''}>${e}</option>`).join('')}</select></div>
         <div class="row" style="margin-top:16px"><button class="btn primary" id="pfSave">Save profile</button></div>
       </div></div>
@@ -2350,7 +2411,9 @@ PAGES.profile = async () => {
     if (pick.banner_color) patch.banner_color = pick.banner_color;
     if (plus) {
       const url = $('pfBannerUrl').value.trim();
-      if (url && !/^https:\/\/[^\s"'()]+$/i.test(url)) return toast('Banner image must be an https:// link.');
+      // the database only accepts images in our own avatars bucket (profiles_banner_host_check), i.e. ones uploaded from the app
+      if (url && !new RegExp(`^${SUPABASE_URL.replace(/\./g, '\\.')}/storage/v1/object/public/avatars/[0-9a-f-]{36}/(avatar|banner)\\.(png|jpe?g|gif|webp)(\\?v=[0-9]{1,16})?$`).test(url))
+        return toast('Banner images are uploaded in the Auoris app (Profile → Banner). Here you can keep yours, or clear the box to remove it.');
       patch.banner_url = url || null; patch.effect = $('pfEffect').value;
     }
     const { error } = await sb.from('profiles').update(patch).eq('id', me.id);
@@ -2382,8 +2445,8 @@ PAGES.settings = async () => {
 };
 async function renderPrivacy() {
   const box = $('stPriv'); if (!box) return;
-  const { data, error } = await sb.from('profiles').select('dm_policy,friend_request_policy,group_invite_policy').eq('id', me.id).single();
-  if (error) { box.innerHTML = `<h3 style="margin-top:0">Privacy</h3><p class="muted">Couldn't load these settings: ${esc(error.message)}</p>`; return; }
+  const { data, error } = await ownProfile(me.id);
+  if (error || !data) { box.innerHTML = `<h3 style="margin-top:0">Privacy</h3><p class="muted">Couldn't load these settings: ${esc(error ? error.message : 'profile not found')}</p>`; return; }
   const sel = (key, label, opts) => `<label class="lbl">${label}</label><select class="in" data-k="${key}">${opts.map(([v, l]) => `<option value="${v}"${data[key] === v ? ' selected' : ''}>${l}</option>`).join('')}</select>`;
   box.innerHTML = `<h3 style="margin-top:0">Privacy</h3><p class="muted">Choose who can reach you. Changes save instantly. Direct messages also need an accepted friendship.</p>`
     + sel('dm_policy', 'Who can send me direct messages', [['everyone', 'Everyone'], ['friends', 'Friends only'], ['nobody', 'Nobody']])
@@ -2425,7 +2488,7 @@ async function exportMyData(btn) {
   try {
     const mine = (table, col) => pageAll(() => sb.from(table).select('*').eq(col, me.id).order('id'));
     const [profileRes, friendships, dms, groupMsgs, channelMsgs, projectMsgs, reactions, reports, blockRows] = await Promise.all([
-      sb.from('profiles').select('avatar_url,banned,banner_color,banner_url,best_day,bio,color,created_at,discord_name,display_name,dm_policy,effect,friend_request_policy,group_invite_policy,id,is_admin,is_mod,kills,legal_accepted_at,legal_version,plus_since,plus_until,pronouns,staff_since,username').eq('id', me.id).single(),
+      ownProfile(me.id),
       pageAll(() => sb.from('friendships').select('*').order('created_at').order('requester')),
       mine('messages', 'sender'), mine('group_messages', 'sender'), mine('channel_messages', 'sender'), mine('ai_project_messages', 'sender'),
       mine('message_reactions', 'user_id'), mine('message_reports', 'reporter'),
@@ -2499,7 +2562,7 @@ async function renderMfa() {
 
 // ---- admin panel (visible only to admins; owner - the "Auoris" account - additionally gets admin_set_admin)
 PAGES.admin = async () => {
-  if (!myProfile.is_admin) { toast("You don't have admin access."); return go(''); }
+  if (!myProfile.is_admin) return go('');   // quietly: the staff tools aren't advertised to anyone else
   const isOwner = (myProfile.username || '').toLowerCase() === 'auoris';
   main().innerHTML = `<div class="wrap page"><h1>Admin</h1>
     <h2 style="margin:0 0 10px;font-size:18px">Reports</h2><div id="adReports" style="margin-bottom:26px"><div class="empty">Loading…</div></div>
@@ -2513,7 +2576,6 @@ PAGES.admin = async () => {
     <h2 style="margin:0 0 6px;font-size:18px">Accounts</h2><p class="lead">Search a username to moderate their account.</p>
     <div class="row" style="margin-bottom:16px"><input class="in" id="adQ" placeholder="Search username…" style="max-width:320px" autocomplete="off"></div>
     <div id="adBody"><div class="empty">Type a username, or leave it blank for the most recent accounts.</div></div></div>`;
-  const cols = 'id,username,display_name,is_admin,is_mod,banned,plus_until';
   const row = p => `<div class="card" data-id="${esc(p.id)}" style="margin-bottom:10px">
     <div class="row" style="align-items:center;flex-wrap:wrap">
       <b>${esc(p.display_name || p.username)}</b><span class="muted small">@${esc(p.username)}</span>
@@ -2527,15 +2589,14 @@ PAGES.admin = async () => {
       <button class="btn sm danger" data-a="ban">${p.banned ? 'Unban' : 'Ban'}</button>
     </div></div>`;
   async function search(q) {
-    const query = sb.from('profiles').select(cols).order('created_at', { ascending: false }).limit(30);
-    const { data, error } = q ? await query.ilike('username', `%${q}%`) : await query;
+    const { data, error } = await adminFind(q);
     if (error) { $('adBody').innerHTML = `<div class="empty">${esc(error.message)}</div>`; return; }
     $('adBody').innerHTML = data.length ? data.map(row).join('') : '<div class="empty">No matches.</div>';
     $('adBody').querySelectorAll('[data-a]').forEach(btn => btn.onclick = async () => {
       const id = btn.closest('[data-id]').dataset.id, a = btn.dataset.a;
       btn.disabled = true;
       try {
-        if (a === 'ban') { const { data: cur } = await sb.from('profiles').select('banned').eq('id', id).single();
+        if (a === 'ban') { const { data: rows } = await adminFind('', id); const cur = (rows && rows[0]) || {};
           if (!cur.banned && !confirm('Ban this user? They are locked out and their Plus will not renew.')) { btn.disabled = false; return; }
           await adminBanUser(id, !cur.banned); }
         if (a === 'mod') { const { data: cur } = await sb.from('profiles').select('is_mod').eq('id', id).single();
@@ -2644,9 +2705,73 @@ PAGES.localai = async () => {
         <p class="muted small" id="pcScanMsg" style="margin-top:10px"></p>
         <p class="muted small" style="margin-top:14px">⚠ Camera-based scanning needs a browser that supports it (recent Chrome/Edge on Android; not all iOS browsers). The camera-app method above always works.</p>`}
     </div></div>`;
+  main().querySelector('.wrap').insertAdjacentHTML('beforeend', `<div class="card" style="margin-top:16px"><h3 style="margin-top:0">🌍 Away from home?</h3>
+    <p class="muted">Turn on <b>Chat from anywhere</b> in Auoris on your PC (profile menu → Phone app), then chat with it from any network while it's open.</p>
+    <div class="row"><a class="btn primary" href="/pc">Chat with my PC →</a></div></div>`);
   if ($('pcForget')) $('pcForget').onclick = () => { setPcUrl(''); route(); };
   if ($('pcRescan')) $('pcRescan').onclick = () => { setPcUrl(''); route(); };
   if ($('pcScan')) $('pcScan').onclick = () => startPcScan();
+};
+// ---- My PC: chat with your own PC from any network. Both ends are signed in to the same account and meet on its private Realtime
+// topic phone:<id> (the database lets only that account use it). The PC must have "Chat from anywhere" on and Auoris open.
+PAGES.pc = async () => {
+  main().innerHTML = `<div class="wrap page" style="max-width:720px"><h1>My PC</h1>
+    <p class="muted" id="pcState">Looking for your PC…</p>
+    <div class="card" style="padding:14px"><div id="pcLog" style="display:flex;flex-direction:column;gap:10px;min-height:120px;max-height:60vh;overflow:auto"></div>
+      <div class="row" style="margin-top:12px;flex-wrap:nowrap"><textarea class="in" id="pcIn" rows="2" maxlength="8000" placeholder="Message your PC's AI…" style="resize:vertical"></textarea>
+      <button class="btn primary" id="pcSend" disabled>Send</button></div></div>
+    <p class="muted small" style="margin-top:10px">Chat only: your PC's AI can't run tools or open files from here. Nothing in this chat is saved.</p></div>`;
+  const log = $('pcLog'), state = $('pcState'), input = $('pcIn'), btn = $('pcSend');
+  const history = []; let pc = null, cur = null, timer = null;
+  // this browser's own id: the PC asks once to allow it, then remembers it
+  let dev = ''; try { dev = localStorage.getItem('pcDev') || ''; } catch (e) {}
+  if (!/^[a-z0-9]{12,32}$/.test(dev)) { dev = Array.from(crypto.getRandomValues(new Uint8Array(12)), b => (b % 36).toString(36)).join(''); try { localStorage.setItem('pcDev', dev); } catch (e) {} }
+  const ua = navigator.userAgent, label = (/iPhone|iPad/.test(ua) ? 'iPhone/iPad' : /Android/.test(ua) ? 'Android' : /Mac/.test(ua) ? 'Mac' : /Windows/.test(ua) ? 'Windows' : 'Browser')
+    + ' · ' + (/Edg\//.test(ua) ? 'Edge' : /Firefox\//.test(ua) ? 'Firefox' : /Chrome\//.test(ua) ? 'Chrome' : /Safari\//.test(ua) ? 'Safari' : 'web');
+  const ch = sb.channel('phone:' + me.id, { config: { broadcast: { self: false }, private: true } });
+  const send = (event, payload) => ch.send({ type: 'broadcast', event, payload }).catch(() => {});
+  const bubble = (role, text) => {
+    const d = document.createElement('div');
+    d.style.cssText = `white-space:pre-wrap;word-break:break-word;padding:9px 12px;border-radius:12px;max-width:88%;${role === 'user' ? 'align-self:flex-end;background:var(--panel2)' : 'align-self:flex-start;border:1px solid var(--border)'}`;
+    d.textContent = text; log.appendChild(d); log.scrollTop = log.scrollHeight; return d;
+  };
+  const finish = err => {
+    clearTimeout(timer);
+    if (!cur) return;
+    if (err) cur.el.textContent = (cur.text ? cur.text + '\n\n' : '') + '⚠ ' + err;
+    else history.push({ role: 'assistant', content: cur.text });
+    cur = null; btn.textContent = 'Send'; btn.disabled = !pc;
+  };
+  // No answer for a minute: the PC may have restarted (it then has a new id and ignores the old one), so look for it again.
+  const idle = () => { clearTimeout(timer); timer = setTimeout(() => { pc = null; state.textContent = 'Looking for your PC…'; finish('Your PC stopped answering - is Auoris still open?'); ping(); }, 60000); };
+  ch.on('broadcast', { event: 'pong' }, ({ payload: p }) => {
+    if (pc || !p || typeof p.pc !== 'string') return;
+    pc = p.pc; state.textContent = '🟢 Connected to your PC.'; btn.disabled = false;
+  });
+  ch.on('broadcast', { event: 'chunk' }, ({ payload: p }) => {
+    if (!cur || !p || p.id !== cur.id || typeof p.t !== 'string') return;
+    cur.text += p.t; cur.el.textContent = cur.text; log.scrollTop = log.scrollHeight; idle();
+  });
+  ch.on('broadcast', { event: 'done' }, ({ payload: p }) => { if (cur && p && p.id === cur.id) finish(typeof p.err === 'string' ? p.err : ''); });
+  const ping = () => send('ping', {});
+  ch.subscribe(st => {
+    if (st === 'SUBSCRIBED') ping();
+    else if (st === 'CHANNEL_ERROR' || st === 'TIMED_OUT') state.textContent = "Couldn't connect - try reloading the page.";
+  });
+  const retry = setInterval(() => { if (!pc) ping(); }, 4000);
+  const hint = setTimeout(() => { if (!pc) state.innerHTML = 'No PC answered yet. Make sure Auoris is open on your PC, signed in to this account, with <b>Chat from anywhere</b> switched on (profile menu → Phone app).'; }, 9000);
+  pageSubs.push(() => { clearInterval(retry); clearTimeout(hint); clearTimeout(timer); if (cur) send('stop', { id: cur.id }); try { sb.removeChannel(ch); } catch (e) {} });
+  btn.onclick = () => {
+    if (cur) { send('stop', { id: cur.id }); return; }
+    const text = input.value.trim();
+    if (!text || !pc) return;
+    input.value = '';
+    history.push({ role: 'user', content: text }); bubble('user', text);
+    cur = { id: Math.random().toString(36).slice(2) + Date.now().toString(36), text: '', el: bubble('assistant', '…') };
+    btn.textContent = 'Stop';
+    send('ask', { id: cur.id, pc, dev, label, messages: history.slice(-20).map(m => ({ role: m.role, content: m.content.slice(-6000) })) }); idle();   // stays under Realtime's message size
+  };
+  input.onkeydown = e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); btn.click(); } };
 };
 async function startPcScan() {
   const box = $('pcScanBox'), msg = $('pcScanMsg');
@@ -2671,7 +2796,8 @@ async function startPcScan() {
         const hit = codes.find(c => /^https?:\/\//.test(c.rawValue));
         if (hit) {
           stopScan();
-          setPcUrl(hit.rawValue);
+          setPcUrl(hit.rawValue.split('#')[0]);   // keep the address, not the one-time pairing code (#p=...): it is burnt by this visit,
+                                                  // and re-sending it later only counts as a wrong guess against the PC's next code
           toast("Paired! Opening your PC's chat…");
           location.href = hit.rawValue;  // hands off to mobile.html, served by the PC itself
           return;
@@ -2830,7 +2956,7 @@ sb.auth.onAuthStateChange(ev => {
   me = myProfile = null; gifFavs = null; renderHeader();
   if (document.getElementById('authForm')) authShow('login'); else go('');   // on the sign-in page, stay on it
 });
-window.addEventListener('popstate', route);
+window.addEventListener('popstate', () => route());   // late-bound: route is wrapped just below
 // Re-run the current page when the tab comes back (switching browser tabs/apps and back, or the page being
 // restored from the browser's back/forward cache) instead of leaving whatever was last rendered on screen -
 // otherwise switching away and back shows stale data until a manual reload.
@@ -2838,8 +2964,13 @@ let lastRouteAt = Date.now();
 const realRoute = route;
 route = async (...a) => { lastRouteAt = Date.now(); return realRoute(...a); };
 window.addEventListener('pageshow', e => { if (e.persisted) route(); });
+// ...but not while something is half-done: a typed message, files waiting to be sent, an open dialog or picker, the QR scanner or
+// a My PC chat (re-rendering throws all of that away, and on a phone just picking a photo or switching apps hides the page).
+const pageBusy = () => location.pathname.replace(/^\/+/, '').split('/')[0] === 'pc'
+  || !!document.querySelector('.atttray .attitem, .pcard, .schedpop, .gifpick, .picker, .editbox, .pinpanel, dialog[open], #pcScanBox:not([hidden])')
+  || [...document.querySelectorAll('#view input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=color]), #view textarea')].some(el => el.value !== el.defaultValue);
 document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible' && Date.now() - lastRouteAt > 15000) route();
+  if (document.visibilityState === 'visible' && Date.now() - lastRouteAt > 15000 && !pageBusy()) route();
 });
 // Intercept same-origin path links (href="/...") so they route client-side instead of hitting GitHub Pages'
 // server (which has no real file at e.g. /servers - only index.html exists). Plain "#..." in-page anchors like
@@ -3064,7 +3195,7 @@ function tySync() {
   }
   tyRender();
 }
-setInterval(() => { try { tySync(); } catch {} }, 700);
+setInterval(() => { if (document.hidden) return; try { tySync(); } catch {} }, 700);   // nothing to show while the tab is hidden
 document.addEventListener('input', e => {
   const t = e.target; if (!t || t.tagName !== 'INPUT' || t.type !== 'text' || !t.closest('#mgPane .composer form')) return;
   tySync();

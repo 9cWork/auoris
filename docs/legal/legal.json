@@ -1,5 +1,5 @@
 {
-  "version": "2026-10-13.11",
+  "version": "2026-10-13.13",
   "operator": "Auoris",
   "contact": "support@auoris.org",
   "docs": [
@@ -30,6 +30,14 @@
     }
   ],
   "changes": [
+    {
+      "version": "2026-10-13.13",
+      "summary": "Pets: Auto-pick chooses which pet reads a prompt on your computer, and an optional second opinion sends the prompt to a second pet's model too."
+    },
+    {
+      "version": "2026-10-13.12",
+      "summary": "Pets: the per-message 'No learning' switch is gone; instead you can switch each pet off completely."
+    },
     {
       "version": "2026-10-13.11",
       "summary": "Pets: we now say that each pet's last 60 analyses (with your prompt) are kept on your computer, that deleting all memories deletes them too, and that nothing is kept from incognito chats."
@@ -127,5 +135,5 @@
       "summary": "First version of the Terms of Service, Privacy Policy, Acceptable Use Policy, Subscription and Gift Terms, and Copyright policy."
     }
   ],
-  "hash": "ef449dcb673bb80a4e5e89fdeaa3234ca72e9553bae755f9f780f252d53c8dfc"
+  "hash": "e867fd6609e5ea52e5067be2fb2a7620aa08c4c2c2afa85d2a9669046a29c3df"
 }

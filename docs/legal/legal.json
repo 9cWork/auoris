@@ -1,5 +1,5 @@
 {
-  "version": "2026-10-13.13",
+  "version": "2026-10-13.16",
   "operator": "Auoris",
   "contact": "support@auoris.org",
   "docs": [
@@ -30,6 +30,18 @@
     }
   ],
   "changes": [
+    {
+      "version": "2026-10-13.16",
+      "summary": "Usage now shows your Claude Code and Codex plan limits, read from what those apps report on your computer."
+    },
+    {
+      "version": "2026-10-13.15",
+      "summary": "Pets: chatting with a pet sends the chat to the pet's AI model. Voice input and calls use speech recognition on your device or the web engine's online speech service."
+    },
+    {
+      "version": "2026-10-13.14",
+      "summary": "Optional natural reading voice: the program and voice are downloaded once from GitHub and Hugging Face, then speech is made on your computer."
+    },
     {
       "version": "2026-10-13.13",
       "summary": "Pets: Auto-pick chooses which pet reads a prompt on your computer, and an optional second opinion sends the prompt to a second pet's model too."
@@ -135,5 +147,5 @@
       "summary": "First version of the Terms of Service, Privacy Policy, Acceptable Use Policy, Subscription and Gift Terms, and Copyright policy."
     }
   ],
-  "hash": "e867fd6609e5ea52e5067be2fb2a7620aa08c4c2c2afa85d2a9669046a29c3df"
+  "hash": "55fefcc9136dfda27f1dbf726e22c9cf61eb9cbf7f2e540ad66e496223271f10"
 }

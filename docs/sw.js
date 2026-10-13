@@ -1,7 +1,7 @@
 // Minimal app-shell service worker so Auoris can be installed to a phone's home screen and reopen instantly
 // (even briefly offline) while it boots. It never caches Supabase API calls - those always go to the network,
 // same as if there were no service worker at all. Bump CACHE_NAME to force clients onto a fresh shell.
-const CACHE_NAME = 'auoris-shell-v8';
+const CACHE_NAME = 'auoris-shell-v9';
 const SHELL = ['/', '/index.html', '/app.css', '/app.js', '/emoji.js', '/vendor/supabase.js', '/logo.png', '/manifest.webmanifest'];
 
 self.addEventListener('install', event => {
@@ -20,6 +20,7 @@ self.addEventListener('fetch', event => {
   if (req.method !== 'GET') return;  // never touch POSTs (Supabase writes, functions, etc.)
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return;  // leave Supabase/GitHub API calls alone - network only
+  if (url.pathname.startsWith('/download/')) return;  // the installer (65 MB) goes straight to the network, never into the cache
 
   if (req.mode === 'navigate') {
     // Network-first for page loads, so the GitHub Pages 404->redirect SPA routing trick keeps working online.

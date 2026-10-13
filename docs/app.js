@@ -1488,13 +1488,13 @@ const dcPhone = () => `<div class="dc-phone" aria-hidden="true"><div class="dc-n
   <div class="dc-pchat"><div class="dc-pb them">Is the model on your PC done?</div><div class="dc-pb me">Yep, ask it anything</div><div class="dc-pb them">📱 on the couch, nice</div></div><div class="dc-pin">Message…</div></div>`;
 
 let ghRelease = null;   // the latest-release lookup for the Download button (a promise)
-// The installer comes from a public file bucket on the same Supabase host the site already needs to sign in (tools/mirror_release.py keeps it
-// in step with the GitHub release), so Download still works on networks that block github.com. GitHub is only the fallback.
-const DL_MIRROR = SUPABASE_URL + '/storage/v1/object/public/downloads/';
+// The installer comes from auoris.org/download/ itself (a Cloudflare Worker serving an R2 bucket; tools/mirror_release.py keeps it in step with
+// the GitHub release), so Download still works on networks that block github.com. GitHub is only the fallback.
+const DL_MIRROR = '/download/';
 function dlLatest() {
   return ghRelease = ghRelease || fetch(DL_MIRROR + 'latest.json', { cache: 'no-cache' }).then(r => r.ok ? r.json() : Promise.reject()).then(m => {
     if (!m || !/^\d+(\.\d+){1,3}$/.test(m.version || '') || m.file !== `Auoris-Setup-${m.version}.exe`) return Promise.reject();
-    return { href: DL_MIRROR + m.file + '?download=Auoris-Setup.exe', ver: 'v' + m.version, size: Number(m.size) || 0 };
+    return { href: location.origin + DL_MIRROR + m.file, ver: 'v' + m.version, size: Number(m.size) || 0 };   // absolute: the router below would hijack a link that starts with "/"
   }).catch(() => fetch('https://api.github.com/repos/9cWork/auoris/releases/latest').then(r => r.json()).then(d => {
     const a = (d.assets || []).find(x => x.name.toLowerCase() === 'auoris-setup.exe');
     return a ? { href: a.browser_download_url, ver: d.tag_name, size: a.size } : { href: '', ver: d.tag_name || '', size: 0 };
@@ -2978,7 +2978,7 @@ document.addEventListener('visibilitychange', () => {
 document.addEventListener('click', e => {
   if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
   const a = e.target.closest('a[href^="/"]');
-  if (!a || a.target === '_blank') return;
+  if (!a || a.target === '_blank' || a.hasAttribute('download') || a.getAttribute('href').startsWith('/download/')) return;   // files, not pages
   e.preventDefault();
   go(a.getAttribute('href').replace(/^\/+/, ''));
 });

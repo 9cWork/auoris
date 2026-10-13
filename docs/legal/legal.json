@@ -1,5 +1,5 @@
 {
-  "version": "2026-10-13.9",
+  "version": "2026-10-13.11",
   "operator": "Auoris",
   "contact": "support@auoris.org",
   "docs": [
@@ -30,6 +30,14 @@
     }
   ],
   "changes": [
+    {
+      "version": "2026-10-13.11",
+      "summary": "Pets: we now say that each pet's last 60 analyses (with your prompt) are kept on your computer, that deleting all memories deletes them too, and that nothing is kept from incognito chats."
+    },
+    {
+      "version": "2026-10-13.10",
+      "summary": "We added Auoris Pets (optional companions that read your prompt with the AI model you choose and keep memories only on your computer)"
+    },
     {
       "version": "2026-10-13.9",
       "summary": "We added linked accounts (an optional public GitHub, Discord or Twitch name on your profile, and Discord and Twitch sign-in) and described connectors (MCP servers) you can add to the AI"
@@ -119,5 +127,5 @@
       "summary": "First version of the Terms of Service, Privacy Policy, Acceptable Use Policy, Subscription and Gift Terms, and Copyright policy."
     }
   ],
-  "hash": "50bc0c1847238a4bea92604333aa89225238df73b35a508e67746690a6572dea"
+  "hash": "ef449dcb673bb80a4e5e89fdeaa3234ca72e9553bae755f9f780f252d53c8dfc"
 }

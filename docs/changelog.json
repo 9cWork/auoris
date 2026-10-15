@@ -1,0 +1,24 @@
+{
+  "releases": [
+    {
+      "version": "1.8.33",
+      "date": "2026-10-14",
+      "notes": [
+        "Cosmetics: redesigned pets and hats, a new wings slot, reworked emotes with custom sounds.",
+        "Minecraft: a faster resource pack menu, the potion HUD in inventory order, and the Auoris mod now updates together with the app.",
+        "Security: Minecraft is protected against Log4Shell chat messages and runs on an up-to-date Java 8.",
+        "Minecraft ownership is checked without your sign-in token leaving the PC.",
+        "System health scan fixes, and a much smaller installer."
+      ]
+    },
+    {
+      "version": "1.8.32",
+      "date": "2026-10-13",
+      "notes": [
+        "Minecraft client: new Settings tab (nametags, HUD, controls, menu look, backup and reset), see your own nametag in F5, update notes now wrap and scroll instead of being cut off, Inventory mod shows in the menu again, and many new module options.",
+        "App: a cleaner message bar (one upload button for files and images, Call is now at the top right, the prompt library moved to Settings > Prompts), Stop during compaction keeps your chat, connector programs shut down fully, queued /extra and /team wait for the current reply, plus more reliability fixes.",
+        "Security updates for bundled libraries."
+      ]
+    }
+  ]
+}

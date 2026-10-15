@@ -1,5 +1,5 @@
 {
-  "version": "2026-10-13.16",
+  "version": "2026-10-13.19",
   "operator": "Auoris",
   "contact": "support@auoris.org",
   "docs": [
@@ -30,6 +30,18 @@
     }
   ],
   "changes": [
+    {
+      "version": "2026-10-13.19",
+      "summary": "Terms: Auoris staff can send actions to the Minecraft client; your own AI plans follow their providers' terms. Privacy: Minecraft ownership is proven without sending your token; link previews."
+    },
+    {
+      "version": "2026-10-13.18",
+      "summary": "Privacy: the PC health scan also reads security settings (UAC, Secure Boot, Remote Desktop, SMB1)"
+    },
+    {
+      "version": "2026-10-13.17",
+      "summary": "Privacy: Gaming boost & PC health deep scan, and the optional Ask AI to look deeper"
+    },
     {
       "version": "2026-10-13.16",
       "summary": "Usage now shows your Claude Code and Codex plan limits, read from what those apps report on your computer."
@@ -147,5 +159,5 @@
       "summary": "First version of the Terms of Service, Privacy Policy, Acceptable Use Policy, Subscription and Gift Terms, and Copyright policy."
     }
   ],
-  "hash": "55fefcc9136dfda27f1dbf726e22c9cf61eb9cbf7f2e540ad66e496223271f10"
+  "hash": "dc4430447f6af4afd180abc0e5fc5361d95524600627a97b16bb3d50e284f254"
 }

@@ -20,7 +20,7 @@ You promise that you have the right to share Your Content and that it follows ou
 
 Auoris can run AI models and, in Code mode, let the AI read files, edit files and run commands on your computer. **You decide what the AI may do.** In "ask" mode it asks before changing anything; if you choose to auto-accept actions, it will act without asking. AI output can be wrong, unsafe or out of date. You are responsible for checking what the AI proposes, for backing up your data and for any command or change you approve or auto-approve. Do not rely on AI output for medical, legal, financial or safety decisions.
 
-If you use a cloud AI provider, your prompts go to that provider under your own account and key and under their terms and privacy policy, not ours.
+If you use a cloud AI provider, your prompts go to that provider under your own account and key and under their terms and privacy policy, not ours. The same applies when you let Auoris use an AI app that you sign in to with your own plan (such as Claude Code, Codex or Gemini CLI): that provider's terms may limit how the plan can be used through other software, and following them is up to you.
 
 ## 5. Accounts, friends and messaging
 
@@ -35,6 +35,8 @@ Auoris Plus is an optional paid subscription and can also be bought as a gift. P
 ## 7. The Minecraft client
 
 **This is not an official Minecraft product or service.** The Auoris Minecraft features are not made by, endorsed by or associated with Mojang Studios or Microsoft. Minecraft is a trademark of Mojang Studios and Microsoft. You need your own legitimate copy of Minecraft to play. The launcher signs in with your Microsoft account through Microsoft's own sign-in. Mods you add yourself are not made or checked by us; use only mods you trust, and don't use any feature of the Service to cheat on servers that forbid it.
+
+While you play with the Auoris Minecraft client, Auoris staff can send actions to it: these can disconnect it from a server or, for a limited time, restrict what it can do or change what it shows. They only affect the Auoris client on your computer, never your Minecraft account or the server itself.
 
 ## 8. Acceptable use
 

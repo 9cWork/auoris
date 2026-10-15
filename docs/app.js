@@ -1435,7 +1435,7 @@ async function route() {
 function renderHeader() {
   const links = me
     ? [['', 'Home'], ['messages', 'Messages'], ['projects', 'Projects'], ['localai', 'Local AI'], ['plus', 'Plus'], ...(myProfile && myProfile.is_admin ? [['admin', 'Admin']] : [])]
-    : [['', 'Home'], ['localai', 'Local AI'], ['plus', 'Plus']];
+    : [['', 'Home'], ['localai', 'Local AI'], ['plus', 'Plus'], ['changelog', 'Changelog']];
   $('topnav').innerHTML = links.map(([r, t]) => `<a href="/${r}" data-r="${r}">${t}</a>`).join('');
   $('me').innerHTML = me && myProfile
     ? `<button id="meBtn">${plainAv(myProfile, 'sm')}<span class="name">${esc(dname(myProfile))}</span></button>
@@ -1509,7 +1509,7 @@ PAGES[''] = async () => {
     <p>A desktop AI agent for local Ollama models or your own cloud keys, with servers, DMs, group chats, rich presence and a phone companion.</p>
     <div class="row"><a class="btn primary" href="#dl" id="dlTop">⬇ Download for Windows</a>${me ? '<a class="btn" href="/messages">Open Messages</a>' : '<a class="btn" href="/signup">Create an account</a>'}</div>
     ${dcAppMock()}</div></section>
-  <section class="band"><div class="wrap"><h2>What's inside</h2><p class="lead">Your chats, files and models stay on your own PC.</p><div class="grid dc-grid3">
+  <section class="band"><div class="wrap"><h2>What's inside</h2><p class="lead">With a local AI model, your chats, files and models stay on your own PC.</p><div class="grid dc-grid3">
     ${dcFeat('cpu', 215, 'Local + cloud AI', 'Local Ollama models, or your own Anthropic / OpenAI-style keys.')}
     ${dcFeat('wrench', 160, 'Real tool access', 'Reads and edits files, runs commands and browses the web when you let it.')}
     ${dcFeat('chat', 265, "Servers, DMs & groups", 'Servers with channels, roles and banners, DMs and group chats, with :emoji:.')}
@@ -1517,7 +1517,7 @@ PAGES[''] = async () => {
     ${dcFeat('users', 190, 'AI projects', "Shared AI projects with friends, without ever exposing anyone's API key.")}
     ${dcFeat('spark', 320, 'Auoris Plus', 'Banners, profile effects, AI Providers and a gaming boost.')}</div></div></section>
   <section class="band alt"><div class="wrap dc-split"><div class="dc-txt"><span class="dc-kick">Messages</span><h2>Every chat in one place</h2>
-    <p class="lead">Servers, DMs and group chats live side by side. Reply, react, pin, forward, edit and send files up to 50 MB - everything is scanned before it reaches anyone.</p>
+    <p class="lead">Servers, DMs and group chats live side by side. Reply, react, pin, forward, edit and send files up to 50 MB - files are checked for known malware before they're shared.</p>
     <ul class="dc-list"><li>Voice-style rail with all your servers</li><li>GIFs, reactions, replies and scheduled messages</li><li>Block, mute and privacy controls you actually own</li></ul></div>${dcMsgMock()}</div></section>
   <section class="band"><div class="wrap"><div class="dc-txt dc-center"><span class="dc-kick">Minecraft</span><h2>Make your Minecraft yours</h2>
     <p class="lead">Capes, hats, pets and tool skins, with a live preview of your real skin. Other Auoris players see them too, and your nametag gets the Auoris moon.</p></div>
@@ -1648,10 +1648,24 @@ function legalFooter() {
   legalStyle();
   if (document.getElementById('siteFoot')) return;
   const f = document.createElement('footer'); f.id = 'siteFoot'; f.style.cssText = 'text-align:center;padding:22px 16px 28px;font-size:12.5px;color:var(--dim)';
-  f.innerHTML = ['terms|Terms', 'privacy|Privacy', 'acceptable-use|Acceptable use', 'subscription-terms|Subscriptions', 'copyright|Copyright'].map(x => { const [i, t] = x.split('|'); return `<a href="/${i}" style="color:inherit;margin:0 8px">${t}</a>`; }).join('') + '<div style="margin-top:6px">© Auoris</div>';
+  f.innerHTML = ['changelog|Changelog', 'terms|Terms', 'privacy|Privacy', 'acceptable-use|Acceptable use', 'subscription-terms|Subscriptions', 'copyright|Copyright'].map(x => { const [i, t] = x.split('|'); return `<a href="/${i}" style="color:inherit;margin:0 8px">${t}</a>`; }).join('') + '<div style="margin-top:6px">© Auoris</div>';
   const m = document.getElementById('view'); if (m && m.parentNode) m.parentNode.insertBefore(f, m.nextSibling); else document.body.appendChild(f);
 }
 ['terms', 'privacy', 'acceptable-use', 'subscription-terms', 'copyright'].forEach(id => { PAGES[id] = () => legalPage(id); });
+
+// ---- changelog: /changelog.json, newest first (release.ps1 adds every public release at the top)
+PAGES.changelog = async () => {
+  main().innerHTML = '<div class="wrap page" style="max-width:1000px"><h1>Changelog</h1><p class="muted">What changed in each Auoris release.</p><div id="clList" class="card">Loading…</div></div>';
+  let d = null;
+  try { d = await (await fetch('/changelog.json', { cache: 'no-cache' })).json(); } catch (e) { d = null; }
+  const box = $('clList'); if (!box) return;
+  const rel = d && Array.isArray(d.releases) ? d.releases : [];
+  if (!rel.length) { box.textContent = "Couldn't load the changelog. Try again in a moment."; return; }
+  const day = s => { const t = new Date(String(s) + 'T12:00:00'); return isNaN(t) ? esc(String(s)) : t.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }); };
+  box.className = 'cl';
+  box.innerHTML = rel.map(r => `<div class="clrow"><div class="clver"><span class="clpill">v${esc(String(r.version || ''))}</span><div class="cldate">${day(r.date || '')}</div></div>
+    <ul>${(Array.isArray(r.notes) ? r.notes : []).map(n => `<li>${esc(String(n))}</li>`).join('')}</ul></div>`).join('');
+};
 
 PAGES.invite = async code => {
   main().innerHTML = '<div class="wrap page" style="max-width:420px"><div class="card" id="invBox">Loading invite…</div></div>';
@@ -2827,7 +2841,10 @@ PAGES.plus = async () => {
   if ($('plusBuy')) $('plusBuy').onclick = async () => {
     if (!me) return go('signin');
     const { data, error } = await sb.functions.invoke('stripe-checkout', { body: { action: 'checkout', return_url: location.origin + '/plus' } });
-    if (error || !data || !data.url) return toast('Checkout isn\'t live yet - check back soon.');
+    if (error || !data || !data.url) {   // a 409 means a subscription already exists: say so instead of "not live"
+      let m = ''; try { const j = await error.context.json(); m = (j && j.error) || ''; } catch (e) { /* no JSON body */ }
+      return toast(/already have a Plus/.test(m) ? m : 'Checkout isn\'t live yet - check back soon.');
+    }
     location.href = data.url;
   };
   if ($('plusManage')) $('plusManage').onclick = async () => {

@@ -1,6 +1,20 @@
 {
   "releases": [
     {
+      "version": "1.8.34",
+      "date": "2026-10-16",
+      "notes": [
+        "Screenshot buttons in chat (Copy, Open in Explorer, Delete).",
+        "New Chunk borders module.",
+        "Fly boost in Toggle sprint (creative).",
+        "1.7 Visuals: armour flashes red when hit.",
+        "Capes and wings move as you walk.",
+        "Redesigned pets.",
+        "Translated chat now sends only plain keyboard characters.",
+        "Search chats moved above Explore, and the empty member list no longer takes space in DMs."
+      ]
+    },
+    {
       "version": "1.8.33",
       "date": "2026-10-14",
       "notes": [

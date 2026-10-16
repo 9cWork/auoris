@@ -1,6 +1,19 @@
 {
   "releases": [
     {
+      "version": "1.8.35",
+      "date": "2026-10-16",
+      "notes": [
+        "Smooth font in the Auoris menus (Settings > Menu look).",
+        "Cleaner mod menu: brighter descriptions, lined-up counts, smooth scrolling edges, no key hint.",
+        "Emotes and Cosmetics now live on their own hub tiles.",
+        "Screenshot buttons sit on the screenshot line.",
+        "Potion effects are hidden in the inventory by default.",
+        "Closing Auoris while Minecraft runs keeps it in the tray, and opening it again brings the same window back.",
+        "A clear message when the AI declines a request."
+      ]
+    },
+    {
       "version": "1.8.34",
       "date": "2026-10-16",
       "notes": [

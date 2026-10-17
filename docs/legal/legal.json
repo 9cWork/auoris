@@ -1,5 +1,5 @@
 {
-  "version": "2026-10-13.19",
+  "version": "2026-10-16",
   "operator": "Auoris",
   "contact": "support@auoris.org",
   "docs": [
@@ -30,6 +30,10 @@
     }
   ],
   "changes": [
+    {
+      "version": "2026-10-16",
+      "summary": "Moderators, not only administrators, can now see which Minecraft accounts are running on an Auoris account."
+    },
     {
       "version": "2026-10-13.19",
       "summary": "Terms: Auoris staff can send actions to the Minecraft client; your own AI plans follow their providers' terms. Privacy: Minecraft ownership is proven without sending your token; link previews."
@@ -159,5 +163,5 @@
       "summary": "First version of the Terms of Service, Privacy Policy, Acceptable Use Policy, Subscription and Gift Terms, and Copyright policy."
     }
   ],
-  "hash": "dc4430447f6af4afd180abc0e5fc5361d95524600627a97b16bb3d50e284f254"
+  "hash": "b41b5b16ae4d21335ecac1735bc6174845d32657c4bd3e15bb0a7db681904734"
 }

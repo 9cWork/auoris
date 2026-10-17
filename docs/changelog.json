@@ -1,6 +1,17 @@
 {
   "releases": [
     {
+      "version": "1.8.37",
+      "date": "2026-10-16",
+      "notes": [
+        "Fixed low FPS: FPS boost no longer limits your frame rate when Windows thinks the game isn't focused (second monitor, a second game window, overlays).",
+        "Fixed a small stutter every couple of seconds from the audio device check.",
+        "Fixed a coloured tint that could show up when a far-away mob was hit.",
+        "The Team window shows an example prompt.",
+        "Updated Privacy Policy."
+      ]
+    },
+    {
       "version": "1.8.36",
       "date": "2026-10-16",
       "notes": [

@@ -1,6 +1,14 @@
 {
   "releases": [
     {
+      "version": "1.8.39",
+      "date": "2026-10-17",
+      "notes": [
+        "Fixed a crash on chunks with a lot of water ('Tesselating block in world').",
+        "Ground pets now stand on the blocks under them instead of hanging at the wrong height after you fly, climb or swim."
+      ]
+    },
+    {
       "version": "1.8.38",
       "date": "2026-10-17",
       "notes": [

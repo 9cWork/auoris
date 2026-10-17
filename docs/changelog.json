@@ -1,6 +1,13 @@
 {
   "releases": [
     {
+      "version": "1.8.40",
+      "date": "2026-10-17",
+      "notes": [
+        "Fixed the water crash ('Tesselating block in world') still happening right after joining a server next to a waterfall."
+      ]
+    },
+    {
       "version": "1.8.39",
       "date": "2026-10-17",
       "notes": [

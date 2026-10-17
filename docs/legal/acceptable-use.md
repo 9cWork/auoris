@@ -15,7 +15,7 @@ This policy applies to everything you do with Auoris: messages, files, profiles,
 - Try to break, probe or overload the Service, bypass rate limits, upload limits or bans, or access accounts, data or systems that aren't yours.
 - Evade a ban or suspension by making new accounts.
 - Share content you don't have the right to share, including pirated software or copyrighted work you don't have permission for.
-- Use the Minecraft features to cheat on servers that forbid it, or to harm other players' games. Do not use Stream-proof HUD, or any other feature, to hide cheating, modifications or software from server staff, screenshare checks or anticheat.
+- Use the Minecraft features to cheat on servers that forbid it, or to harm other players' games. Do not use Streamer mode, or any other feature, to hide cheating, modifications or software from server staff, screenshare checks or anticheat.
 - Use the AI features to produce content that breaks this policy, or to attack other people's systems.
 - Buy, sell or trade accounts, or use Plus perks you did not pay for.
 

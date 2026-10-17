@@ -1,6 +1,24 @@
 {
   "releases": [
     {
+      "version": "1.9.1",
+      "date": "2026-10-17",
+      "notes": [
+        "New menu backgrounds: pick from 14 backgrounds with the button at the top right of the main menu (point at one to preview it), or add your own pictures.",
+        "New account switcher: every account shows its face, hovering one shows it in 3D with its cape, and you can drag accounts into any order, in game or in the app.",
+        "Streamer mode (Settings > Streamer mode) hides server addresses, your name, private messages and your skin, each with its own switch, and replaces the Stream-proof HUD.",
+        "Disconnect asks first on servers, so a misclick doesn't drop you out of a game.",
+        "Minecraft starts faster and stays hidden until its menu is ready, with no loading screens.",
+        "Hide loading screen also skips the dirt screen between worlds.",
+        "New RAM optimizer (Settings, off by default) frees memory other programs aren't using when your PC runs low.",
+        "Replay clips save as MP4 and get Watch and Open folder buttons.",
+        "Hurtcam is now a slider from no shake to vanilla.",
+        "The emote wheel key can no longer get stuck on none.",
+        "Dragging the skin preview in the app turns the skin.",
+        "Privacy Policy and Acceptable Use Policy updated."
+      ]
+    },
+    {
       "version": "1.9.0",
       "date": "2026-10-17",
       "notes": [

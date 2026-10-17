@@ -1,6 +1,14 @@
 {
   "releases": [
     {
+      "version": "1.9.2",
+      "date": "2026-10-17",
+      "notes": [
+        "Fixes two problems in 1.9.1: the new main menu backgrounds were missing (the menu was plain dark and the picker could not show them), and Hide loading screen showed the dirt loading screen again when you switch worlds or servers.",
+        "Both work again."
+      ]
+    },
+    {
       "version": "1.9.1",
       "date": "2026-10-17",
       "notes": [

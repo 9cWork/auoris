@@ -1,6 +1,20 @@
 {
   "releases": [
     {
+      "version": "1.8.36",
+      "date": "2026-10-16",
+      "notes": [
+        "Fixed Minecraft crashing at startup on some sound devices (newer OpenAL).",
+        "Your game now stays online for friends and other players even if you close the Auoris app.",
+        "Only one Auoris runs at a time; opening it again brings the same window back.",
+        "Auoris pauses its animations when it isn't focused, so it takes less from your FPS.",
+        "Account switching works with two game windows open.",
+        "Chat hotkeys can be edited.",
+        "Fixed garbled arrows and dashes in the mod.",
+        "Team mode knows your name and instructions and compares models through your linked accounts."
+      ]
+    },
+    {
       "version": "1.8.35",
       "date": "2026-10-16",
       "notes": [

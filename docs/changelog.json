@@ -1,6 +1,15 @@
 {
   "releases": [
     {
+      "version": "1.8.38",
+      "date": "2026-10-17",
+      "notes": [
+        "Fixed freezes on servers with NPCs (like Pika Network): broken scoreboard updates from the server no longer stall the game.",
+        "When the game does freeze for a moment, one line about it now goes into the game's log, to help track down stutters.",
+        "Updated Terms and Privacy Policy."
+      ]
+    },
+    {
       "version": "1.8.37",
       "date": "2026-10-16",
       "notes": [

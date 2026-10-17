@@ -1,5 +1,5 @@
 {
-  "version": "2026-10-16",
+  "version": "2026-10-16.2",
   "operator": "Auoris",
   "contact": "support@auoris.org",
   "docs": [
@@ -30,6 +30,10 @@
     }
   ],
   "changes": [
+    {
+      "version": "2026-10-16.2",
+      "summary": "Removed the part about Auoris staff sending actions to your Minecraft client, and the list of Minecraft accounts in use: that feature is gone."
+    },
     {
       "version": "2026-10-16",
       "summary": "Moderators, not only administrators, can now see which Minecraft accounts are running on an Auoris account."
@@ -163,5 +167,5 @@
       "summary": "First version of the Terms of Service, Privacy Policy, Acceptable Use Policy, Subscription and Gift Terms, and Copyright policy."
     }
   ],
-  "hash": "b41b5b16ae4d21335ecac1735bc6174845d32657c4bd3e15bb0a7db681904734"
+  "hash": "0986d76b538a692ad80e8378bc39f9d31aaf523a39671bf079dc200dd2ac12c5"
 }

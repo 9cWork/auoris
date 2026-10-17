@@ -36,8 +36,6 @@ Auoris Plus is an optional paid subscription and can also be bought as a gift. P
 
 **This is not an official Minecraft product or service.** The Auoris Minecraft features are not made by, endorsed by or associated with Mojang Studios or Microsoft. Minecraft is a trademark of Mojang Studios and Microsoft. You need your own legitimate copy of Minecraft to play. The launcher signs in with your Microsoft account through Microsoft's own sign-in. Mods you add yourself are not made or checked by us; use only mods you trust, and don't use any feature of the Service to cheat on servers that forbid it.
 
-While you play with the Auoris Minecraft client, Auoris staff can send actions to it: these can disconnect it from a server or, for a limited time, restrict what it can do or change what it shows. They only affect the Auoris client on your computer, never your Minecraft account or the server itself.
-
 ## 8. Acceptable use
 
 You agree to follow the Acceptable Use Policy. We may remove content, limit features, suspend or close accounts that break these Terms or the Acceptable Use Policy, or that put other people or the Service at risk.

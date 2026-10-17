@@ -15,6 +15,8 @@ Auoris Pets (optional, off until you adopt one and accept the warning) keep each
 
 Gaming boost & PC health (Plus) scans your PC on your computer only. The System health deep scan only reads information from Windows (hardware, drivers, drive health and free space, crash and error logs, antivirus, firewall and update status, security settings such as User Account Control, Secure Boot, Remote Desktop and SMB1, start-up programs, battery wear and the programs using the most memory); it changes nothing, and the results are not sent to us. If you press **Ask AI to look deeper**, a text summary of that scan (no files, folder paths or user names) is sent as a chat message to the AI model you have selected: your own computer for a local model, or the cloud provider you chose, which handles it under its own terms.
 
+The Minecraft client's Discord status: while the Discord app is open on your computer, the client tells it, on your computer only, that you are playing Auoris Client, the Minecraft version, how long you have played and the name and address of the public server you are on, and Discord shows that on your profile under Discord's own privacy policy. The server's icon is a link to api.mcsrvstat.us that Discord loads itself, which shares the server's address (never anything about you) with that service. Singleplayer, LAN and private server addresses are never shown. Auoris does not receive any of it. Switch it off, or hide only the server, under Settings > Discord in the Auoris menu.
+
 ## 3. What we collect when you have an account
 
 - **Age check:** when you sign up we ask for your date of birth only to check that you are old enough. We do not store it.

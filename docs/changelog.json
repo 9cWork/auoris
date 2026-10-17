@@ -1,6 +1,21 @@
 {
   "releases": [
     {
+      "version": "1.9.0",
+      "date": "2026-10-17",
+      "notes": [
+        "Big FPS boost: chat and the scoreboard are drawn from a cached picture instead of letter by letter every frame, the game no longer checks for graphics errors twice every frame, and Performance mode turns off OptiFine's Smooth FPS.",
+        "Golden apples always register now: your client waits for the server to finish the eat (Gapple sync), and Armor switch no longer cancels eating.",
+        "New Discord rich presence: your Discord profile shows Playing Auoris Client with the server you're on and its icon (Settings > Discord).",
+        "Graphics and brightness settings you change no longer switch back by themselves.",
+        "The emote wheel key and other Auoris keybinds no longer reset.",
+        "Auto text waits half a second after you close chat, so a letter typed right after doesn't fire it.",
+        "Players with arrows in them no longer vanish for a moment.",
+        "The in-game translator and /ai work again for chat with symbols like ».",
+        "Scrolling while zoomed no longer delays your clicks."
+      ]
+    },
+    {
       "version": "1.8.40",
       "date": "2026-10-17",
       "notes": [

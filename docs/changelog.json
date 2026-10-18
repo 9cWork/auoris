@@ -1,6 +1,19 @@
 {
   "releases": [
     {
+      "version": "1.9.5",
+      "date": "2026-10-17",
+      "notes": [
+        "Hotkeys now run the moment you press the key, even straight after closing chat or a loading screen, and a key you were already holding no longer counts.",
+        "The game window title shows your Auoris version, build and the account you are on.",
+        "Right-clicking a chat message copies the whole message, and changing chat settings no longer wipes stacked chat messages.",
+        "Fly boost in Toggle sprint now works whenever you can fly, including a server's /fly, and keeps the server's own fly speed.",
+        "New Modern lever hitbox module (off by default) gives levers the smaller hitbox from newer Minecraft versions.",
+        "Signing out now removes your Minecraft presence right away, and the Minecraft account check only ever shows Mojang a hash.",
+        "The Privacy Policy and Terms were updated to match."
+      ]
+    },
+    {
       "version": "1.9.4",
       "date": "2026-10-17",
       "notes": [

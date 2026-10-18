@@ -1,5 +1,5 @@
 {
-  "version": "2026-10-17.4",
+  "version": "2026-10-17.5",
   "operator": "Auoris",
   "contact": "support@auoris.org",
   "docs": [
@@ -30,6 +30,10 @@
     }
   ],
   "changes": [
+    {
+      "version": "2026-10-17.5",
+      "summary": "Privacy Policy: your Minecraft name, logo and cosmetics are always shared while you play through Auoris signed in (only emotes can be switched off), a game started by Auoris keeps that up to date with a one-off key while the app is closed, and Discord and Twitch sign-in are listed. Terms: Cloudflare and Discord added to the services list."
+    },
     {
       "version": "2026-10-17.4",
       "summary": "The Privacy Policy now explains that the AI can read public web pages for you, and that those sites see your IP address."
@@ -183,5 +187,5 @@
       "summary": "First version of the Terms of Service, Privacy Policy, Acceptable Use Policy, Subscription and Gift Terms, and Copyright policy."
     }
   ],
-  "hash": "2feb31244e58f153d525ca0c3733b85f1eaa43f229209d69fb8d30d4a52234cf"
+  "hash": "08913907dfc241126ebea3a52f2a2a10e7a8cbd43e1d13fd524d95c979d47da3"
 }

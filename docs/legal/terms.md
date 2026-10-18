@@ -46,7 +46,7 @@ The Service, including the apps, website, branding and the Auoris mod and cosmet
 
 ## 10. Third-party services
 
-The Service connects to services made by others, such as Supabase (accounts and storage), Stripe (payments), GitHub (updates and website hosting), Giphy (GIF search), Google, Microsoft and GitHub (sign-in), Mojang and Microsoft (Minecraft), Ollama and your chosen AI providers. Their services are governed by their own terms.
+The Service connects to services made by others, such as Supabase (accounts and storage), Stripe (payments), GitHub (updates and website hosting), Cloudflare (content delivery and security), Giphy (GIF search), Google, Microsoft, GitHub, Discord and Twitch (sign-in), Discord (the Minecraft client's Discord status), Mojang and Microsoft (Minecraft), Ollama and your chosen AI providers. Their services are governed by their own terms.
 
 ## 11. Availability and changes
 

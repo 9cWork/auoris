@@ -1,6 +1,19 @@
 {
   "releases": [
     {
+      "version": "1.9.6",
+      "date": "2026-10-18",
+      "notes": [
+        "The Auoris logo now shows in front of Auoris players' names in the tab list.",
+        "Modern lever hitbox is now a switch in Settings > General.",
+        "Minecraft 1.7 to 1.12 now plays normal stereo sound, so audio software can no longer make it sound like fake 3D.",
+        "Your chat keeps its place when you have scrolled up and someone talks.",
+        "Translated chat now shows the original message in front of the translation.",
+        "Fixed an FPS drop with your inventory open and with hats and pets on screen.",
+        "The Privacy Policy was updated."
+      ]
+    },
+    {
       "version": "1.9.5",
       "date": "2026-10-17",
       "notes": [

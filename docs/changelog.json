@@ -1,6 +1,18 @@
 {
   "releases": [
     {
+      "version": "1.9.4",
+      "date": "2026-10-17",
+      "notes": [
+        "Fixed the half-second freeze every time you switch worlds or servers (Minecraft 1.8.9 to 1.16).",
+        "Opening Options or Video Settings no longer reloads your chunks when Performance mode is on.",
+        "Click the number next to any slider to type an exact value.",
+        "New settings: Block outline can fill the block, Time changer has a custom hour, and Toggle sneak can keep sneaking after menus.",
+        "Esc now removes a keybind in the Auoris settings, and removing the emote wheel key in Controls sticks.",
+        "The AI: /agents 8 sets how many helper agents it can run for one prompt (/agents auto resets it), it can read public web pages, and /remember adds a note it keeps for that folder."
+      ]
+    },
+    {
       "version": "1.9.3",
       "date": "2026-10-17",
       "notes": [

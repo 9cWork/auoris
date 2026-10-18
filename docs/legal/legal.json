@@ -1,5 +1,5 @@
 {
-  "version": "2026-10-17.3",
+  "version": "2026-10-17.4",
   "operator": "Auoris",
   "contact": "support@auoris.org",
   "docs": [
@@ -30,6 +30,10 @@
     }
   ],
   "changes": [
+    {
+      "version": "2026-10-17.4",
+      "summary": "The Privacy Policy now explains that the AI can read public web pages for you, and that those sites see your IP address."
+    },
     {
       "version": "2026-10-17.3",
       "summary": "The Privacy Policy now covers the RAM optimizer and skin lookups from Mojang, and the Acceptable Use Policy names Streamer mode instead of the removed Stream-proof HUD."
@@ -179,5 +183,5 @@
       "summary": "First version of the Terms of Service, Privacy Policy, Acceptable Use Policy, Subscription and Gift Terms, and Copyright policy."
     }
   ],
-  "hash": "19a8ddd7f0010f6a356e419ecd228c5c9cbea5a060b8002fa7ddd5ed66738c5e"
+  "hash": "2feb31244e58f153d525ca0c3733b85f1eaa43f229209d69fb8d30d4a52234cf"
 }

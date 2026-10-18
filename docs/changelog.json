@@ -1,6 +1,14 @@
 {
   "releases": [
     {
+      "version": "1.9.3",
+      "date": "2026-10-17",
+      "notes": [
+        "Fixed the game freezing for several seconds each time you switched worlds or servers with Performance mode on (joining a server could even time out on Logging in).",
+        "Ask before disconnecting is now off by default (turn it on in Settings if you want it)."
+      ]
+    },
+    {
       "version": "1.9.2",
       "date": "2026-10-17",
       "notes": [

@@ -1435,12 +1435,12 @@ async function route() {
 function renderHeader() {
   const links = me
     ? [['', 'Home'], ['messages', 'Messages'], ['projects', 'Projects'], ['localai', 'Local AI'], ['plus', 'Plus'], ...(myProfile && myProfile.is_admin ? [['admin', 'Admin']] : [])]
-    : [['', 'Home'], ['localai', 'Local AI'], ['plus', 'Plus'], ['changelog', 'Changelog']];
+    : [['#minecraft', 'Minecraft'], ['#features', 'Features'], ['plus', 'Plus'], ['#faq', 'FAQ']];
   $('topnav').innerHTML = links.map(([r, t]) => `<a href="/${r}" data-r="${r}">${t}</a>`).join('');
   $('me').innerHTML = me && myProfile
     ? `<button id="meBtn">${plainAv(myProfile, 'sm')}<span class="name">${esc(dname(myProfile))}</span></button>
        <div id="meMenu" hidden><a href="/profile">Profile</a><a href="/settings">Settings</a><a href="/ai">AI Providers</a><a href="/plus">Auoris Plus</a><hr><a href="#" id="signOut">Sign out</a></div>`
-    : `<a class="btn primary sm" href="/signin">Sign in</a>`;
+    : `<a class="btn sm ghost" href="/signin">Sign in</a><a class="btn primary sm hdl" href="/#dl">Download</a>`;
   if ($('meBtn')) {
     $('meBtn').onclick = e => { e.stopPropagation(); $('meMenu').hidden = !$('meMenu').hidden; };
     $('signOut').onclick = e => { e.preventDefault(); sb.auth.signOut(); };
@@ -1453,39 +1453,28 @@ document.addEventListener('click', () => { if ($('meMenu')) $('meMenu').hidden =
 // ---------------------------------------------------------------- pages
 const PAGES = {};
 
-// ---- home page decoration (all inline SVG / CSS / generated pixel art, no external images)
-const DC_ICON = {
-  cpu: '<rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 14h3M1 9h3M1 14h3"/>',
-  wrench: '<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94z"/>',
+// ---- home page
+// The gallery: one picture per tab, from /img/shots/<name>.webp. To update a screenshot, replace its file (same name; any 16:9 size).
+const SHOTS = [
+  ['main-menu', 'Main menu', 'Switch accounts and pick a menu background right from the main menu.'],
+  ['mod-menu', 'Mod menu', 'Press Right Shift to open the Auoris menu, then turn modules on and tune them.'],
+  ['in-game', 'In game', 'Your HUD shows only what you turn on, right where you put it.'],
+  ['launcher', 'Launcher', 'Pick a version and press Play. The Auoris app sets up Minecraft and the client for you.'],
+];
+const HOME_ICON = {
+  hud: '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 8h4M7 12h2M14 16h3"/>',
+  zoom: '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5M11 8v6M8 11h6"/>',
+  emote: '<circle cx="12" cy="5" r="2"/><path d="M12 8v7l-3 6M12 15l3 6M12 10 7 7M12 10l5-4"/>',
+  clip: '<rect x="3" y="6" width="13" height="12" rx="2"/><path d="m16 10 5-3v10l-5-3z"/>',
+  friends: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>',
+  stream: '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/><path d="M3 3l18 18"/>',
+  ai: '<rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 14h3M1 9h3M1 14h3"/>',
   chat: '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
-  pad: '<path d="M6 12h4M8 10v4"/><circle cx="15" cy="13" r="1"/><circle cx="18" cy="11" r="1"/><path d="M17.32 5H6.68a4 4 0 0 0-3.98 3.59C2.6 9.4 2 14.46 2 16a3 3 0 0 0 3 3c1 0 1.5-.5 2-1l1.41-1.41A2 2 0 0 1 9.83 16h4.34a2 2 0 0 1 1.41.59L17 18c.5.5 1 1 2 1a3 3 0 0 0 3-3c0-1.55-.6-6.58-.68-7.26A4 4 0 0 0 17.32 5z"/>',
-  users: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>',
-  spark: '<path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M19 15l.7 1.8 1.8.7-1.8.7L19 20l-.7-1.8-1.8-.7 1.8-.7z"/>',
+  phone: '<rect x="6" y="2" width="12" height="20" rx="2"/><path d="M11 18h2"/>',
 };
-const dcIcon = (k, hue) => `<span class="dc-ic" style="--h:${hue}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${DC_ICON[k]}</svg></span>`;
-const dcFeat = (k, hue, t, d) => `<div class="card feat dc-feat" style="--hh:${hue}">${dcIcon(k, hue)}<h3>${t}</h3><p>${d}</p></div>`;
+const homeIcon = k => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${HOME_ICON[k]}</svg>`;
+const homeCell = (k, t, d) => `<div>${homeIcon(k)}<h3>${t}</h3><p>${d}</p></div>`;
 const MC_IMG = n => `<img src="/img/mc/${n}.png" alt="" loading="lazy">`;
-const dcAppMock = () => `<div class="dc-win dc-hero-win" aria-hidden="true">
-  <div class="dc-bar"><i></i><i></i><i></i><span>Auoris</span></div>
-  <div class="dc-body">
-    <div class="dc-rail"><b class="on"></b><b></b><b></b><b></b><b></b></div>
-    <div class="dc-side"><div class="dc-sh">Chats</div><div class="dc-li on"><u></u><s>Project helper</s></div><div class="dc-li"><u></u><s>Weekly planning</s></div><div class="dc-li"><u></u><s>Daily summary</s></div><div class="dc-li"><u></u><s>Tax questions</s></div></div>
-    <div class="dc-main">
-      <div class="dc-msg me"><p>Find why the build fails and fix it.</p></div>
-      <div class="dc-msg ai"><div class="dc-tool">⚙ read_file  build.ps1</div><div class="dc-tool">⚙ run_command  python -m pytest</div><p>Found it: a missing import on line 42. Fixed, and the tests pass now.</p></div>
-      <div class="dc-msg me"><p>Nice. Commit it.</p></div>
-      <div class="dc-input"><span>Message Auoris…</span><b>↑</b></div>
-    </div></div></div>`;
-const dcMsgMock = () => `<div class="dc-win dc-msg-win" aria-hidden="true"><div class="dc-body">
-  <div class="dc-rail"><b class="on"></b><em style="--c:#8b5cf6">G</em><em style="--c:#34e6a8">M</em><em style="--c:#ff7a1f">R</em></div>
-  <div class="dc-side"><div class="dc-sh">Direct messages</div><div class="dc-li on"><u style="--c:#5b9dff"></u><s>Alex</s></div><div class="dc-li"><u style="--c:#ff7a8a"></u><s>Weekend group</s></div><div class="dc-li"><u style="--c:#34e6a8"></u><s>Sam</s></div></div>
-  <div class="dc-main">
-    <div class="dc-chat"><u style="--c:#5b9dff"></u><div><b>Alex</b><p>want to hop on the server later?</p></div></div>
-    <div class="dc-chat"><u style="--c:#34e6a8"></u><div><b>You</b><p>yep, 8pm. sending the pack 👇</p><div class="dc-file">📎 cool-pack.zip · 12 MB <i>scanned ✓</i></div></div></div>
-    <div class="dc-chat"><u style="--c:#5b9dff"></u><div><b>Alex</b><p>🔥</p><div class="dc-react">🔥 2 &nbsp; 👍 1</div></div></div>
-  </div></div></div>`;
-const dcPhone = () => `<div class="dc-phone" aria-hidden="true"><div class="dc-notch"></div>
-  <div class="dc-pchat"><div class="dc-pb them">Is the model on your PC done?</div><div class="dc-pb me">Yep, ask it anything</div><div class="dc-pb them">📱 on the couch, nice</div></div><div class="dc-pin">Message…</div></div>`;
 
 let ghRelease = null;   // the latest-release lookup for the Download button (a promise)
 // The installer comes from auoris.org/download/ itself (a Cloudflare Worker serving an R2 bucket; tools/mirror_release.py keeps it in step with
@@ -1501,45 +1490,104 @@ function dlLatest() {
   }));
 }
 PAGES[''] = async () => {
-  main().innerHTML = `
-  <section class="hero"><div class="stars"></div><div class="aur a1"></div><div class="aur a2"></div><div class="aur a3"></div>
-    <div class="hero-in">
-    <div class="logowrap"><span class="ring r1"></span><span class="ring r2"></span><img src="/logo.png" alt=""></div>
-    <h1>Meet <span class="grad">Auoris</span></h1>
-    <p>A desktop AI agent for local Ollama models or your own cloud keys, with servers, DMs, group chats, rich presence and a phone companion.</p>
-    <div class="row"><a class="btn primary" href="#dl" id="dlTop">⬇ Download for Windows</a>${me ? '<a class="btn" href="/messages">Open Messages</a>' : '<a class="btn" href="/signup">Create an account</a>'}</div>
-    ${dcAppMock()}</div></section>
-  <section class="band"><div class="wrap"><h2>What's inside</h2><p class="lead">With a local AI model, your chats, files and models stay on your own PC.</p><div class="grid dc-grid3">
-    ${dcFeat('cpu', 215, 'Local + cloud AI', 'Local Ollama models, or your own Anthropic / OpenAI-style keys.')}
-    ${dcFeat('wrench', 160, 'Real tool access', 'Reads and edits files, runs commands and browses the web when you let it.')}
-    ${dcFeat('chat', 265, "Servers, DMs & groups", 'Servers with channels, roles and banners, DMs and group chats, with :emoji:.')}
-    ${dcFeat('pad', 25, 'Rich presence', 'See what friends are playing - and their Minecraft server or Roblox game - with a link to join.')}
-    ${dcFeat('users', 190, 'AI projects', "Shared AI projects with friends, without ever exposing anyone's API key.")}
-    ${dcFeat('spark', 320, 'Auoris Plus', 'Banners, profile effects, AI Providers and a gaming boost.')}</div></div></section>
-  <section class="band alt"><div class="wrap dc-split"><div class="dc-txt"><span class="dc-kick">Messages</span><h2>Every chat in one place</h2>
-    <p class="lead">Servers, DMs and group chats live side by side. Reply, react, pin, forward, edit and send files up to 50 MB - files are checked for known malware before they're shared.</p>
-    <ul class="dc-list"><li>Voice-style rail with all your servers</li><li>GIFs, reactions, replies and scheduled messages</li><li>Block, mute and privacy controls you actually own</li></ul></div>${dcMsgMock()}</div></section>
-  <section class="band"><div class="wrap"><div class="dc-txt dc-center"><span class="dc-kick">Minecraft</span><h2>Make your Minecraft yours</h2>
-    <p class="lead">Capes, hats, pets and tool skins, with a live preview of your real skin. Other Auoris players see them too, and your nametag gets the Auoris moon.</p></div>
-    <div class="dc-mc">
-      <div class="dc-tag"><img src="/img/mc/auoris-logo.png" alt="" class="px"><span>Steve</span></div>
-      <div class="dc-row capes">${['auoris', 'aurora_wave', 'starlight', 'midnight', 'inferno', 'frostbite', 'royal', 'toxic'].map(n => MC_IMG('cape_' + n)).join('')}</div>
-      <div class="dc-row pets">${['dog', 'cat', 'fox', 'parrot', 'dragon'].map(n => MC_IMG('pet_' + n)).join('')}</div>
-      <div class="dc-row hats">${['wizard', 'crown', 'top_hat', 'viking', 'party', 'cat_ears'].map(n => MC_IMG('hat_' + n)).join('')}</div>
-      <div class="dc-row tools">${['frostbite', 'molten', 'void', 'aurora', 'golden', 'emerald'].map(n => MC_IMG('tool_' + n)).join('')}</div>
-    </div><p class="muted small" style="text-align:center;margin-top:18px">Works with the Auoris mod on Minecraft 1.8.9 (Forge). Auoris installs it for you.</p></div></section>
-  <section class="band alt" id="mobile"><div class="wrap dc-split rev">${dcPhone()}<div class="dc-txt"><span class="dc-kick">On your phone</span><h2>Auoris on your phone</h2><p class="lead" style="text-align:left">No App Store needed. Install this site as an app - Servers, DMs, group chats, AI projects and Plus all work from anywhere, cellular data included.</p><ol class="steps" style="margin:0">
-    <li>Tap Share (iPhone) or the browser menu (Android) → <b>Add to Home Screen</b> / <b>Install app</b>. It now opens full-screen, like an installed app.</li>
-    <li>Sign in once - friends, servers and DMs sync the same as the desktop app and website.</li>
-    <li>Want to chat with your PC's own local AI model too? Open <a href="/localai">Local AI</a> and pair with your PC - that one feature needs to be on the same Wi-Fi, since the model runs on your PC.</li></ol></div></div></section>
-  <section class="band dc-dl" id="dl"><div class="wrap" style="text-align:center"><h2>Download</h2><p class="lead">Windows 10/11. The installer sets up Ollama for you.</p>
-    <a class="btn primary" id="dlBtn" href="https://github.com/9cWork/auoris/releases/latest">⬇ Download Auoris-Setup.exe</a><p class="muted small" id="dlVer">Checking latest version…</p></div></section>`;
-  $('dlTop').onclick = e => { e.preventDefault(); $('dl').scrollIntoView(); };
+  const dlBtn = '<a class="btn primary lg dllink" href="https://github.com/9cWork/auoris/releases/latest">Download for Windows</a>';
+  main().innerHTML = `<div class="home">
+  <section class="hero"><div class="wrap">
+    <a class="chip" href="/changelog"><i></i><span id="heroVer">See what's new</span></a>
+    <h1>One app for Minecraft, AI and friends.</h1>
+    <p class="sub">A Minecraft client with mods, HUD and cosmetics built in, an AI agent on your PC, and chats with your friends.</p>
+    <div class="row">${dlBtn}${me ? '<a class="btn lg" href="/messages">Open Messages</a>' : '<a class="btn lg" href="/signup">Create an account</a>'}</div>
+    <p class="mono">Free · Windows 10 and 11 · Minecraft Java Edition</p>
+    <div class="shots" id="minecraft">
+      <div class="shot-tabs" role="tablist">${SHOTS.map(([id, t], i) => `<button type="button" role="tab" aria-selected="${!i}" data-i="${i}">${t}</button>`).join('')}</div>
+      <div class="shot-frame">${SHOTS.map(([id, t], i) => `<img src="/img/shots/${id}.webp" alt="Auoris ${t.toLowerCase()}"${i ? ' loading="lazy"' : ' class="on"'}>`).join('')}</div>
+      <p class="shot-cap" id="shotCap">${SHOTS[0][2]}</p>
+    </div>
+  </div></section>
+
+  <section><div class="wrap">
+    <p class="kick">Minecraft</p><h2>Everything built in.</h2>
+    <p class="lead">The client comes with the Auoris app, and the app keeps it up to date.</p>
+    <div class="panel c2">
+      <div><span class="tag">1.8.9</span><h3>The full Auoris client.</h3><ul><li>Over 60 modules, a HUD editor and waypoints.</li><li>FPS boost and Performance mode.</li><li>OptiFine included.</li></ul></div>
+      <div><span class="tag">Other versions</span><h3>Set up for you.</h3><ul><li>1.21.11 and 26.3 get the Auoris menu, HUD editor, cosmetics and many of its modules.</li><li>1.12.2 and 1.7.10 get the Auoris client with fewer modules.</li><li>Newer versions start with Fabric and Sodium.</li></ul></div>
+    </div>
+  </div></section>
+
+  <section id="features"><div class="wrap">
+    <p class="kick">Features</p><h2>The things you use every game.</h2>
+    <p class="lead">All in one menu. Turn on what you want and leave the rest off.</p>
+    <div class="panel c3">
+      ${homeCell('hud', 'HUD', 'FPS, CPS, keystrokes, armor, potions, coordinates, ping and more. Drag each one where you want it.')}
+      ${homeCell('zoom', 'Zoom and freelook', 'Plus toggle sprint and toggle sneak, all on your own keys.')}
+      ${homeCell('emote', 'Emotes', 'Wave, dance and more from the emote wheel, with sounds.')}
+      ${homeCell('clip', 'Replay clips', 'Press a key to save the last seconds of your game as an MP4.')}
+      ${homeCell('friends', 'Friends', 'See which Auoris friends are online and join their server.')}
+      ${homeCell('stream', 'Streamer mode', 'Hide server addresses, your name, private messages and your skin.')}
+    </div>
+  </div></section>
+
+  <section><div class="wrap">
+    <p class="kick">Cosmetics</p><h2>Make your player yours.</h2>
+    <p class="lead">Capes, wings, hats, pets and tool skins, with a live preview of your skin in the app. Other Auoris players see them too.</p>
+    <div class="panel cosm"><div>
+      <div class="cosm-row capes">${['auoris', 'aurora_wave', 'starlight', 'midnight', 'inferno', 'frostbite', 'royal'].map(n => MC_IMG('cape_' + n)).join('')}</div>
+      <div class="cosm-row pets">${['dog', 'cat', 'fox', 'parrot', 'dragon'].map(n => MC_IMG('pet_' + n)).join('')}${['wizard', 'crown', 'party'].map(n => MC_IMG('hat_' + n)).join('')}</div>
+    </div></div>
+  </div></section>
+
+  <section><div class="wrap">
+    <p class="kick">More than Minecraft</p><h2>The rest of Auoris.</h2>
+    <p class="lead">The same app is also an AI agent and a place to chat.</p>
+    <div class="panel c3">
+      ${homeCell('ai', 'AI on your PC', 'Use a local Ollama model, and your chats and files stay on your PC. It reads files, runs commands and browses the web when you let it.')}
+      ${homeCell('chat', 'Messages', 'Servers, DMs and group chats with your friends, in the app and on this site.')}
+      ${homeCell('phone', 'On your phone', 'Add auoris.org to your home screen. To talk to your PC\'s AI from your phone, use <a href="/localai">Local AI</a>.')}
+    </div>
+  </div></section>
+
+  <section id="dl"><div class="wrap"><div class="dlcard">
+    <p class="kick">Download</p><h2>Get Auoris.</h2>
+    <p class="lead">One installer for Windows 10 and 11. It also sets up Ollama for local AI.</p>
+    <div class="row">${dlBtn}<a class="btn lg" href="/changelog">What's new</a></div>
+    <p class="mono" id="dlVer">Checking the latest version…</p>
+  </div></div></section>
+
+  <section id="faq"><div class="wrap faq">
+    <div><p class="kick">FAQ</p><h2>Questions.</h2></div>
+    <div>${[
+      ['Is Auoris free?', 'Yes. The app and the Minecraft client are free. <a href="/plus">Auoris Plus</a> is an optional monthly plan with extras like custom banners, profile effects and AI Providers.'],
+      ['Which Minecraft versions work?', 'The full client runs on 1.8.9 (Forge). 1.21.11 and 26.3 (Fabric) have the Auoris menu, HUD editor, cosmetics and many of its modules. 1.12.2 and 1.7.10 have the Auoris client with fewer modules. Other versions start with Fabric and Sodium or with OptiFine, set up for you.'],
+      ['How do I open the Auoris menu?', 'Press Right Shift in game. The emote wheel is on B. You can change both in Controls.'],
+      ['Does the AI need the internet?', 'Not with a local Ollama model: your chats and files stay on your PC. With Plus you can also use Claude, GPT, Gemini and others with your own keys.'],
+      ['How do updates work?', 'Auoris updates itself. Every update is signed, and the <a href="/changelog">changelog</a> lists what changed.'],
+      ['Can I use Auoris on my phone?', 'Yes. Open auoris.org and choose Add to Home Screen (Share on iPhone, the browser menu on Android). Messages, servers, AI projects and Plus work from anywhere.'],
+    ].map(([q, a], i) => `<details${i ? '' : ' open'}><summary>${q}</summary><p>${a}</p></details>`).join('')}</div>
+  </div></section>
+
+  <section class="community"><div class="wrap">
+    <p class="kick">Community</p><h2>Chat with other players.</h2>
+    <div class="commcard"><img src="/logo.png" alt=""><div><b>Auoris Messages</b><span>Servers, DMs and group chats, in the app and on this site.</span></div>
+      <a class="btn primary" href="${me ? '/messages' : '/signup'}">${me ? 'Open' : 'Join'}</a></div>
+  </div></section>
+  </div>`;
+
+  const tabs = main().querySelectorAll('.shot-tabs button'), imgs = main().querySelectorAll('.shot-frame img');
+  tabs.forEach(b => b.onclick = () => {
+    const i = +b.dataset.i;
+    tabs.forEach((t, k) => t.setAttribute('aria-selected', k === i));
+    imgs.forEach((im, k) => im.classList.toggle('on', k === i));
+    $('shotCap').textContent = SHOTS[i][2];
+  });
+  // A link like /#dl (the desktop app's "Download page") or the nav's /#features: the section only exists once this page has rendered.
+  const target = location.hash.length > 1 && document.getElementById(location.hash.slice(1));
+  if (target) { target.scrollIntoView(); history.replaceState(null, '', '/'); }
   // Looked up once per visit: Home re-renders on every return to the tab, and GitHub allows 60 anonymous API calls an hour per address.
   dlLatest().then(d => {
-    if (!$('dlBtn')) return;   // already navigated away
-    if (d.href) { $('dlBtn').href = d.href; $('dlVer').textContent = d.size ? `${d.ver} · ${(d.size / 1048576).toFixed(1)} MB` : d.ver; }
-    else $('dlVer').textContent = d.ver || '';
+    if (!$('dlVer')) return;   // already navigated away
+    if (d.href) main().querySelectorAll('.dllink').forEach(a => { a.href = d.href; });
+    $('dlVer').textContent = d.href && d.size ? `${d.ver} · ${(d.size / 1048576).toFixed(1)} MB` : d.ver || '';
+    if (d.ver) $('heroVer').textContent = `${d.ver} is out · See what's new`;
   }).catch(() => { ghRelease = null; if ($('dlVer')) $('dlVer').textContent = 'See all releases on GitHub.'; });
 };
 
@@ -1647,8 +1695,8 @@ async function legalPage(id) {
 function legalFooter() {
   legalStyle();
   if (document.getElementById('siteFoot')) return;
-  const f = document.createElement('footer'); f.id = 'siteFoot'; f.style.cssText = 'text-align:center;padding:22px 16px 28px;font-size:12.5px;color:var(--dim)';
-  f.innerHTML = ['changelog|Changelog', 'terms|Terms', 'privacy|Privacy', 'acceptable-use|Acceptable use', 'subscription-terms|Subscriptions', 'copyright|Copyright'].map(x => { const [i, t] = x.split('|'); return `<a href="/${i}" style="color:inherit;margin:0 8px">${t}</a>`; }).join('') + '<div style="margin-top:6px">© Auoris</div>';
+  const f = document.createElement('footer'); f.id = 'siteFoot';
+  f.innerHTML = '<a class="footbrand" href="/"><img src="/logo.png" alt=""><span>Auoris</span></a><nav>' + ['changelog|Changelog', 'localai|Local AI', 'terms|Terms', 'privacy|Privacy', 'acceptable-use|Acceptable use', 'subscription-terms|Subscriptions', 'copyright|Copyright'].map(x => { const [i, t] = x.split('|'); return `<a href="/${i}">${t}</a>`; }).join('') + '</nav><span>© Auoris</span>';
   const m = document.getElementById('view'); if (m && m.parentNode) m.parentNode.insertBefore(f, m.nextSibling); else document.body.appendChild(f);
 }
 ['terms', 'privacy', 'acceptable-use', 'subscription-terms', 'copyright'].forEach(id => { PAGES[id] = () => legalPage(id); });
@@ -3012,19 +3060,7 @@ const W2_THEMES = [
   { id: 'aurora', name: 'Aurora', vars: { '--bg': '#08130f', '--side': '#0b1914', '--panel': '#0f211b', '--panel2': '#152d25', '--border': '#1d3a30', '--border2': '#2a5646', '--acc': '#6ee7b7', '--acc2': '#34d399' } },
   { id: 'light', name: 'Light', scheme: 'light', vars: { '--bg': '#f3f5fa', '--side': '#e9edf5', '--panel': '#ffffff', '--panel2': '#eef1f8', '--border': '#d5dbe8', '--border2': '#b7c1d6', '--text': '#1a2033', '--muted': '#55607a', '--dim': '#8791a8', '--acc': '#2f6fd6', '--acc2': '#2f6fd6', '--ok': '#1a8f55', '--warn': '#a86a00', '--err': '#c4343a' },
     extra: `header { background: #f3f5fad9 !important; }
-    .hero { background: radial-gradient(900px 520px at 50% -10%, #d9e5ff, transparent 62%) !important; }
-    .hero .aur { opacity: .2 !important; } .hero .stars { display: none; } .hero .ring { border-color: #2f6fd655; }
-    .hero .logowrap img { filter: drop-shadow(0 10px 22px #2f6fd655); }
-    .grad { background: linear-gradient(120deg, #2f6fd6, #7a4fe0 55%, #12a58a); -webkit-background-clip: text; background-clip: text; color: transparent; }
-    .dc-win, .dc-phone { background: #fff !important; border-color: #d5dbe8 !important; box-shadow: 0 30px 70px -28px #1a203366 !important; }
-    .dc-bar, .dc-rail { background: #e9edf5 !important; } .dc-side { background: #f3f5fa !important; } .dc-main { background: #fff !important; }
-    .dc-rail b { background: #d5dbe8 !important; } .dc-rail b.on { background: linear-gradient(135deg, #5b9dff, #8b6bff) !important; }
-    .dc-li.on, .dc-msg.ai p, .dc-pb.them { background: #e9edf5 !important; color: #1a2033 !important; }
-    .dc-input, .dc-file { background: #f3f5fa !important; border-color: #d5dbe8 !important; } .dc-tool { background: #2f6fd612 !important; border-color: #2f6fd633 !important; }
-    .dc-feat { background: linear-gradient(180deg, #fff, #f6f8fc) !important; }
-    section.band.alt { background: linear-gradient(180deg, #e9eef8, #f3f5fa) !important; }
-    .dc-notch { background: #c9d1e3 !important; } .dc-phone { border-color: #c9d1e3 !important; }
-    .dc-dl { background: radial-gradient(700px 260px at 50% 100%, #2f6fd620, transparent) !important; }
+    .shot-frame { box-shadow: 0 30px 70px -36px #1a203366; }
     .plushero svg, .ladder svg { filter: drop-shadow(0 1px 2px #1a203388); }
     .rail { background: #e9edf5 !important; } .msg:hover { background: #0000000a !important; } .pluspill, .status { background: #0000000d !important; } .pill.actyou { color: #fff !important; }` },
   { id: 'contrast', name: 'High contrast', vars: { '--bg': '#000', '--side': '#000', '--panel': '#0a0a0a', '--panel2': '#161616', '--border': '#8c8c8c', '--border2': '#fff', '--text': '#fff', '--muted': '#e6e6e6', '--dim': '#c4c4c4', '--acc': '#ffe14d', '--acc2': '#ffd000' }, extra: 'header { background: #000d !important; }' },

@@ -1,5 +1,5 @@
 {
-  "version": "2026-10-18.3",
+  "version": "2026-10-19",
   "operator": "Auoris",
   "contact": "support@auoris.org",
   "docs": [
@@ -30,6 +30,10 @@
     }
   ],
   "changes": [
+    {
+      "version": "2026-10-19",
+      "summary": "Live health shown to Auoris staff now only comes from a Minecraft account proven to be yours."
+    },
     {
       "version": "2026-10-18.3",
       "summary": "Replay clips can now include the game's own sound (never your microphone or other programs like voice chat or music), and they still stay on your computer."
@@ -203,5 +207,5 @@
       "summary": "First version of the Terms of Service, Privacy Policy, Acceptable Use Policy, Subscription and Gift Terms, and Copyright policy."
     }
   ],
-  "hash": "1fe400e28efcab016afae8fc9f5f9044c827075a48f7460a25bc7b4df6974b85"
+  "hash": "e45f094038b984d1ff1c96c9b46af9bfa329c63151db494415dabe1224eed78c"
 }

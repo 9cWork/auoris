@@ -1,6 +1,19 @@
 {
   "releases": [
     {
+      "version": "1.9.9",
+      "date": "2026-10-19",
+      "notes": [
+        "A new Minecraft launcher screen in the app: tabs, a big skin, one Launch button with a version switch, Quick play with your server icons, friends and news.",
+        "The Auoris client now runs on 1.21.11 and 26.3 with the Auoris menu, HUD editor, cosmetics and many of its modules, and 1.7.10 gets the same menu and HUD.",
+        "FPS boost can keep item models on the graphics card (on by default for new settings), which helps a lot near other players.",
+        "New settings: more crosshair shapes, zoom speed and zoom per scroll notch, sprint text styles, brackets and value colours for HUD text.",
+        "Cleaner menus and HUD editor, and the default HUD spots no longer overlap.",
+        "Fixes: a key combo no longer stops the plain key from working; servers can no longer check for files on your PC through a resource pack link; a macro Hit step only hits what you look at.",
+        "The Fabric versions no longer need WalksyLib."
+      ]
+    },
+    {
       "version": "1.9.8",
       "date": "2026-10-18",
       "notes": [

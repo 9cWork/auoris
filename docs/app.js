@@ -1454,7 +1454,7 @@ document.addEventListener('click', () => { if ($('meMenu')) $('meMenu').hidden =
 const PAGES = {};
 
 // ---- home page
-// The gallery: one picture per tab, from /img/shots/<name>.webp. To update a screenshot, replace its file (same name; any 16:9 size).
+// The gallery: one picture per tab, from /img/shots/<name>.webp. To update a screenshot, replace its file (same name; any 16:9 size) and bump the ?v= below so browsers fetch it again.
 const SHOTS = [
   ['main-menu', 'Main menu', 'Switch accounts and pick a menu background right from the main menu.'],
   ['mod-menu', 'Mod menu', 'Press Right Shift to open the Auoris menu, then turn modules on and tune them.'],
@@ -1500,7 +1500,7 @@ PAGES[''] = async () => {
     <p class="mono">Free · Windows 10 and 11 · Minecraft Java Edition</p>
     <div class="shots" id="minecraft">
       <div class="shot-tabs" role="tablist">${SHOTS.map(([id, t], i) => `<button type="button" role="tab" aria-selected="${!i}" data-i="${i}">${t}</button>`).join('')}</div>
-      <div class="shot-frame">${SHOTS.map(([id, t], i) => `<img src="/img/shots/${id}.webp" alt="Auoris ${t.toLowerCase()}"${i ? ' loading="lazy"' : ' class="on"'}>`).join('')}</div>
+      <div class="shot-frame">${SHOTS.map(([id, t], i) => `<img src="/img/shots/${id}.webp?v=2" alt="Auoris ${t.toLowerCase()}"${i ? ' loading="lazy"' : ' class="on"'}>`).join('')}</div>
       <p class="shot-cap" id="shotCap">${SHOTS[0][2]}</p>
     </div>
   </div></section>

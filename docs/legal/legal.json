@@ -1,5 +1,5 @@
 {
-  "version": "2026-10-17.6",
+  "version": "2026-10-18.2",
   "operator": "Auoris",
   "contact": "support@auoris.org",
   "docs": [
@@ -30,6 +30,14 @@
     }
   ],
   "changes": [
+    {
+      "version": "2026-10-18.2",
+      "summary": "Privacy Policy: the live Minecraft numbers passed to Auoris staff now include your Resistance and Regeneration effects, and are also kept in a file on your own computer for a second game there."
+    },
+    {
+      "version": "2026-10-18",
+      "summary": "Terms, Privacy Policy and Acceptable Use: community roles (Tester, Creator, Host, Developer) shown as badges on profiles, Creators' channel links, Hosts' announcements (deleted 30 days after they end), and early test builds for Testers and Developers, provided as is."
+    },
     {
       "version": "2026-10-17.6",
       "summary": "Privacy Policy: your Minecraft health and armor can be passed live to Auoris staff in the same game world (never stored)."
@@ -191,5 +199,5 @@
       "summary": "First version of the Terms of Service, Privacy Policy, Acceptable Use Policy, Subscription and Gift Terms, and Copyright policy."
     }
   ],
-  "hash": "829bed52b84994041ed2553a2a214c29ebb9efc296e1f857adbc80af6751ed17"
+  "hash": "d4d4ccacfb626cd7ed3052c52f083dcc1bed9595bec61b5d1ae932b5478cdd2b"
 }

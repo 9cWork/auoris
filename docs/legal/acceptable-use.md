@@ -23,6 +23,10 @@ This policy applies to everything you do with Auoris: messages, files, profiles,
 
 People who run servers are responsible for their communities and must follow this policy. Moderators can remove content and members from their own servers. We may act on a server, or on the people who run it, if it breaks this policy.
 
+## Community roles
+
+Hosts may use announcements only for Auoris community events and news, never for advertising, spam, links to harmful sites or anything else this policy forbids. A Creator's channel link must be their own channel.
+
 ## Reporting
 
 You can report a message or a person from inside the app and on the website. To report something that needs urgent attention, contact {{contact}}.

@@ -28,6 +28,8 @@ Direct messages, group chats and server channels are **not end-to-end encrypted*
 
 You can block people, report messages and delete your account. Moderators and administrators of a server can remove content in their server.
 
+**Community roles.** We may give an account a community role, and remove it at any time: Tester and Developer (early test builds of Auoris), Creator (a Creator badge and cape, and a link to your own YouTube or Twitch channel on your profile) and Host (short community announcements that every Auoris user sees, within the limits the app shows, signed with your username). Roles are shown publicly as badges. Test builds (beta and dev builds) are unfinished and provided "as is": they may have bugs, may crash or lose settings or data, may change or be withdrawn at any time, and are for your own use only, so don't share them or their download links. Host announcements and Creator links must follow the Acceptable Use Policy; we may remove them, and the role, if they don't.
+
 ## 6. Auoris Plus and payments
 
 Auoris Plus is an optional paid subscription and can also be bought as a gift. Plus members can also give "Sparks" to servers they are in; the Subscription Terms explain how Sparks work. Payments are handled by Stripe; we never see your full card number. The price is shown before you pay. Subscriptions renew automatically each billing period until you cancel, and you can cancel at any time from Manage subscription. If you cancel, Plus stays active until the end of the period you already paid for. Our Subscription Terms explain renewals, refunds, gifts and what happens when Plus ends.

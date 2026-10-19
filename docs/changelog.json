@@ -1,6 +1,20 @@
 {
   "releases": [
     {
+      "version": "1.9.7",
+      "date": "2026-10-18",
+      "notes": [
+        "The gapple regen timer over players no longer disappears when the server lags or a player is out of sight for a moment.",
+        "New Macros button in the Auoris menu: when a chat line matches or when you send a message, run steps such as sending a message or command, waiting, switching slot or holding movement keys, and each macro has an On / Off switch.",
+        "New Hitboxes module shows hit boxes for the entities you pick, in your own colour.",
+        "The replay buffer records up to 120 fps (60 by default) and has a new Ultra quality.",
+        "Data from a server can no longer freeze or crash the game, and most errors are now caught instead of closing Minecraft.",
+        "New HUD editor and HUD looks, streamer mode, community role badges, a faster first Minecraft install and a faster resource pack screen.",
+        "Fly boost now works with Always sprint, and Hide foliage hides every plant without holes to the sky.",
+        "The Privacy Policy and Terms were updated."
+      ]
+    },
+    {
       "version": "1.9.6",
       "date": "2026-10-18",
       "notes": [

@@ -1,6 +1,21 @@
 {
   "releases": [
     {
+      "version": "1.9.8",
+      "date": "2026-10-18",
+      "notes": [
+        "Chat has a search box and a scroll bar, chat is saved to log files on your computer (a Chat tweaks setting), and taking a screenshot no longer jumps the chat to the bottom.",
+        "Replay clips now include the game's own sound, never your microphone or other programs; Game sound in the replay buffer settings turns it off.",
+        "Chat hotkeys and macros can use mouse buttons, and macros can now run when you press a key.",
+        "Simpler, calmer menus with the Auoris logo on the main menu.",
+        "Zooming out no longer leaves chunks missing until you move the mouse.",
+        "Nametags keep the gapple regen timer over a sneaking player in plain sight (walls still hide it).",
+        "The replay buffer makes far less memory garbage, for fewer stutters while it records.",
+        "The pack loading boost is now always on.",
+        "The Privacy Policy was updated."
+      ]
+    },
+    {
       "version": "1.9.7",
       "date": "2026-10-18",
       "notes": [

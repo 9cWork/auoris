@@ -1,5 +1,5 @@
 {
-  "version": "2026-10-18.2",
+  "version": "2026-10-18.3",
   "operator": "Auoris",
   "contact": "support@auoris.org",
   "docs": [
@@ -30,6 +30,10 @@
     }
   ],
   "changes": [
+    {
+      "version": "2026-10-18.3",
+      "summary": "Replay clips can now include the game's own sound (never your microphone or other programs like voice chat or music), and they still stay on your computer."
+    },
     {
       "version": "2026-10-18.2",
       "summary": "Privacy Policy: the live Minecraft numbers passed to Auoris staff now include your Resistance and Regeneration effects, and are also kept in a file on your own computer for a second game there."
@@ -199,5 +203,5 @@
       "summary": "First version of the Terms of Service, Privacy Policy, Acceptable Use Policy, Subscription and Gift Terms, and Copyright policy."
     }
   ],
-  "hash": "d4d4ccacfb626cd7ed3052c52f083dcc1bed9595bec61b5d1ae932b5478cdd2b"
+  "hash": "1fe400e28efcab016afae8fc9f5f9044c827075a48f7460a25bc7b4df6974b85"
 }

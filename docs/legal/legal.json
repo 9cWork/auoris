@@ -1,5 +1,5 @@
 {
-  "version": "2026-10-19",
+  "version": "2026-10-19.3",
   "operator": "Auoris",
   "contact": "support@auoris.org",
   "docs": [
@@ -30,6 +30,14 @@
     }
   ],
   "changes": [
+    {
+      "version": "2026-10-19.3",
+      "summary": "The privacy policy now explains that the launcher asks the servers in your Minecraft server list for their player count and ping."
+    },
+    {
+      "version": "2026-10-19.2",
+      "summary": "Auoris Plus now includes seven Minecraft cosmetics; wings, hats and pets come from the new Shop (not taking payments yet), and we store which cosmetics you own."
+    },
     {
       "version": "2026-10-19",
       "summary": "Live health shown to Auoris staff now only comes from a Minecraft account proven to be yours."
@@ -207,5 +215,5 @@
       "summary": "First version of the Terms of Service, Privacy Policy, Acceptable Use Policy, Subscription and Gift Terms, and Copyright policy."
     }
   ],
-  "hash": "e45f094038b984d1ff1c96c9b46af9bfa329c63151db494415dabe1224eed78c"
+  "hash": "c7ef778eac72ef91b1b7fb6a71fa9504bfbafadc89914d2f98bcf3d46b32393f"
 }

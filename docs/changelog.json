@@ -1,6 +1,18 @@
 {
   "releases": [
     {
+      "version": "1.9.11",
+      "date": "2026-10-19",
+      "notes": [
+        "Auoris Mind is the AI assistant as its own app, so Auoris itself is your Minecraft launcher and friends: open it with the Mind button or add it in Setup.",
+        "A new Shop in the launcher: wings, hats and pets now come from the Shop, which isn't taking payments yet.",
+        "Auoris Plus now includes the Auoris Moon, Aurora Wave and Nether Portal capes, Auoris Wings, the Jewelled Crown, and the Axolotl and Bee pets.",
+        "Tool skins are gone.",
+        "Every server in your list shows its players online and ping.",
+        "Every on/off option is now a switch, the memory slider fills as you drag it, and the Servers and Mods tabs have icon buttons and cleaner cards."
+      ]
+    },
+    {
       "version": "1.9.10",
       "date": "2026-10-19",
       "notes": [

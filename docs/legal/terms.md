@@ -34,6 +34,8 @@ You can block people, report messages and delete your account. Moderators and ad
 
 Auoris Plus is an optional paid subscription and can also be bought as a gift. Plus members can also give "Sparks" to servers they are in; the Subscription Terms explain how Sparks work. Payments are handled by Stripe; we never see your full card number. The price is shown before you pay. Subscriptions renew automatically each billing period until you cancel, and you can cancel at any time from Manage subscription. If you cancel, Plus stays active until the end of the period you already paid for. Our Subscription Terms explain renewals, refunds, gifts and what happens when Plus ends.
 
+**Cosmetics and the Shop.** Capes are free, except those that come with Plus. Wings, hats and pets are used by buying them in the Shop in the Minecraft launcher; the Shop does not take payments yet. A cosmetic you buy gives you a personal, non-transferable right to use it with your Auoris account in Auoris; it has no cash value and can't be sold or moved to another account. The price is shown before you pay.
+
 ## 7. The Minecraft client
 
 **This is not an official Minecraft product or service.** The Auoris Minecraft features are not made by, endorsed by or associated with Mojang Studios or Microsoft. Minecraft is a trademark of Mojang Studios and Microsoft. You need your own legitimate copy of Minecraft to play. The launcher signs in with your Microsoft account through Microsoft's own sign-in. Mods you add yourself are not made or checked by us; use only mods you trust, and don't use any feature of the Service to cheat on servers that forbid it.

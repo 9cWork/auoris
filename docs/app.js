@@ -1529,7 +1529,7 @@ PAGES[''] = async () => {
 
   <section><div class="wrap">
     <p class="kick">Cosmetics</p><h2>Make your player yours.</h2>
-    <p class="lead">Capes, wings, hats, pets and tool skins, with a live preview of your skin in the app. Other Auoris players see them too.</p>
+    <p class="lead">Capes, wings, hats and pets, with a live preview of your skin in the app. Other Auoris players see them too.</p>
     <div class="panel cosm"><div>
       <div class="cosm-row capes">${['auoris', 'aurora_wave', 'starlight', 'midnight', 'inferno', 'frostbite', 'royal'].map(n => MC_IMG('cape_' + n)).join('')}</div>
       <div class="cosm-row pets">${['dog', 'cat', 'fox', 'parrot', 'dragon'].map(n => MC_IMG('pet_' + n)).join('')}${['wizard', 'crown', 'party'].map(n => MC_IMG('hat_' + n)).join('')}</div>
@@ -2875,7 +2875,7 @@ PAGES.plus = async () => {
   const p = myProfile, t = plusTier(p);
   const perks = [['🖼', 'Custom banners & profile images', 'Free accounts keep banner colours.'], ['✨', 'Profile effects', 'Aurora, sparkle, flame and more.'],
     ['🌐', 'Browser proxy', 'Route the built-in browser through a proxy.'], ['🧠', 'AI Providers', 'Use Claude, GPT, Gemini and more with your own keys.'],
-    ['🎮', 'Gaming boost', 'FPS, ping and background-load tuning in the app.']];
+    ['🎮', 'Gaming boost', 'FPS, ping and background-load tuning in the app.'], ['👑', 'Plus cosmetics in Minecraft', 'Auoris Moon, Aurora Wave and Nether Portal capes, Auoris Wings, the Jewelled Crown, and the Axolotl and Bee pets.']];
   main().innerHTML = `<div class="wrap page"><div class="plushero">${ICON.plus('#ffffff')}<h1 style="margin-top:14px">Auoris Plus</h1>
     <div class="price">$19.99<small> / month</small></div><p class="muted">Cancel anytime.</p>
     <div class="row" style="justify-content:center;margin-top:18px">${t ? `<span class="pluspill">${ICON.check('#2ecc71').replace('<svg', '<svg width="16" height="16"')} You have Plus${t.name !== 'Plus' ? ` · ${esc(t.name)}` : ''}${t.months ? ` · ${t.months} months` : ''}</span><button class="btn" id="plusManage">Manage subscription</button>`

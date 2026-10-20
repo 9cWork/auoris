@@ -1,15 +1,15 @@
-// The website demo (auoris.org/demo/): app.html is the app's own page (ui.html, copied by tools/publish_site.py) with this file in place
+// The website demo (auoris.org/demo/): the page is the app's own (ui.html, built by tools/publish_site.py) with this file in place
 // of the Python side (app.py's Api, reached as window.pywebview.api) and of the Auoris servers (the Supabase client). Everything here
 // is made up and lives in memory: nothing is sent anywhere, nothing is saved, and anything that would do something real only says so.
 (() => {
 const VERSION = document.currentScript.dataset.version || '';
-const MIND = location.search === '?mind';   // app.html?mind is Auoris Mind (the demo page's switch)
+const MIND = location.search === '?mind';   // /demo/?mind is Auoris Mind (the demo bar's switch)
 const DEMO_MSG = 'This is a demo. Download Auoris to do this for real.';
 const STEVE = 'https://textures.minecraft.net/texture/31f477eb1a7beee631c2ca64d06f8f68fa93a3386d04452ab27f43acdf1b60cb';   // Mojang's Steve, as the app loads it
 const NOW = Date.now(), ago = mins => new Date(Date.now() - mins * 60000).toISOString();
 const later = (ms, v) => new Promise(r => setTimeout(() => r(v), ms));
 const never = () => new Promise(() => {});   // an action the demo can't do: the toast said so, nothing else happens
-function demoToast() { toast('This is a demo', 'Download Auoris to do this for real. Click here to get it.', () => { window.top.location.href = '/#dl'; }); }   // ui.html's toast()
+function demoToast() { toast('This is a demo', 'Download Auoris to do this for real. Click here to get it.', () => { location.href = '/#dl'; }); }   // ui.html's toast()
 const getJson = url => fetch(url).then(r => { if (!r.ok) throw new Error(url + ' ' + r.status); return r.json(); });
 const dataUrl = url => fetch(url).then(r => r.blob()).then(b => new Promise(res => { const f = new FileReader(); f.onload = () => res(f.result); f.readAsDataURL(b); }));
 const catalog = getJson('cosmetics.json');
@@ -19,7 +19,15 @@ const legal = getJson('/legal/legal.json').then(async L => {   // the site's cop
   L.docs = await Promise.all(L.docs.map(async d => ({ id: d.id, title: d.title, text: await fetch('/legal/' + d.file).then(r => r.text()) })));
   return L;
 });
-const steve = dataUrl(STEVE).catch(() => null);
+// an image, not fetch(): the site's Content-Security-Policy header lets a page show pictures from anywhere but connect only to the site
+const steve = new Promise(res => {
+  const im = new Image(); im.crossOrigin = 'anonymous';   // Mojang's skin server allows it, so the picture can be read back
+  im.onload = () => {
+    try { const c = document.createElement('canvas'); c.width = im.naturalWidth; c.height = im.naturalHeight; c.getContext('2d').drawImage(im, 0, 0); res(c.toDataURL()); } catch (e) { res(null); }
+  };
+  im.onerror = () => res(null);
+  im.src = STEVE;
+});
 
 // ---------------------------------------------------------------- made-up people
 const ID = n => '00000000-0000-4000-8000-' + String(n).padStart(12, '0');
@@ -272,7 +280,7 @@ const API = {
   acct_config: () => ({ url: 'https://demo.invalid', key: 'demo' }),
   open_url: url => { if (/^https:\/\//.test(url)) window.open(url, '_blank', 'noopener'); },
   mind_installed: () => true,
-  mind_open: () => { location.href = 'app.html?mind'; },
+  mind_open: () => { location.href = '/demo/?mind'; },
   send: text => { fakeTurn(text); return { ok: true }; },
   log_js_error: (...a) => console.warn('app error', ...a),
   chat_ext_state: () => ({ persona: null, folder: null, cloud: false }),
@@ -329,4 +337,24 @@ if (window.navigation) navigation.addEventListener('navigate', e => {
 });
 // the app starts when pywebview says its bridge is ready
 window.addEventListener('DOMContentLoaded', () => setTimeout(() => window.dispatchEvent(new Event('pywebviewready')), 0));
+// The demo bar: what this is, the switch between the two apps, and Download. It floats over the app: the site's security headers allow
+// no frame around it.
+window.addEventListener('DOMContentLoaded', () => {
+  const st = document.createElement('style');
+  st.textContent = `#demoBar { position: fixed; z-index: 2147483000; top: 8px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 8px;
+      max-width: calc(100vw - 24px); padding: 5px 6px 5px 10px; border-radius: 999px; background: #10141fe8; border: 1px solid #ffffff26; box-shadow: 0 8px 24px #0009;
+      color: #c9d1e4; font: 12.5px/1.2 system-ui, "Segoe UI", sans-serif; backdrop-filter: blur(8px); }
+    #demoBar b { flex: none; padding: 2px 8px; border-radius: 999px; background: #5b9dff33; color: #9cc3ff; font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase; }
+    #demoBar span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+    #demoBar .dbp { display: none; }
+    #demoBar a { flex: none; padding: 4px 9px; border-radius: 999px; color: #c9d1e4; text-decoration: none; font-weight: 600; white-space: nowrap; }
+    #demoBar a:hover, #demoBar a.on { background: #ffffff1a; color: #fff; }
+    #demoBar a.dl { background: linear-gradient(135deg, #5b9dff, #8b6bff); color: #fff; }
+    @media (max-width: 900px) { #demoBar .dbn { display: none; } #demoBar .dbp { display: inline; } }
+    @media (max-width: 520px) { #demoBar .dbp { display: none; } }`;
+  const bar = document.createElement('div'); bar.id = 'demoBar';
+  bar.innerHTML = '<b>Demo</b><span class="dbn">The real app with made-up data. Nothing you do here is saved or sent.</span><span class="dbp">Made-up data. Best on a computer.</span>'
+    + `<a href="/demo/"${MIND ? '' : ' class="on"'}>Auoris</a><a href="/demo/?mind"${MIND ? ' class="on"' : ''}>Auoris Mind</a><a class="dl" href="/#dl">Download</a>`;
+  document.head.append(st); document.body.append(bar);
+});
 })();

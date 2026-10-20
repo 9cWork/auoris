@@ -1496,7 +1496,7 @@ PAGES[''] = async () => {
     <a class="chip" href="/changelog"><i></i><span id="heroVer">See what's new</span></a>
     <h1>One app for Minecraft, AI and friends.</h1>
     <p class="sub">A Minecraft client with mods, HUD and cosmetics built in, an AI agent on your PC, and chats with your friends.</p>
-    <div class="row">${dlBtn}${me ? '<a class="btn lg" href="/messages">Open Messages</a>' : '<a class="btn lg" href="/signup">Create an account</a>'}</div>
+    <div class="row">${dlBtn}<a class="btn lg" href="/demo/">Try it in your browser</a>${me ? '<a class="btn lg" href="/messages">Open Messages</a>' : '<a class="btn lg" href="/signup">Create an account</a>'}</div>
     <p class="mono">Free · Windows 10 and 11 · Minecraft Java Edition</p>
     <div class="shots" id="minecraft">
       <div class="shot-tabs" role="tablist">${SHOTS.map(([id, t], i) => `<button type="button" role="tab" aria-selected="${!i}" data-i="${i}">${t}</button>`).join('')}</div>
@@ -3043,7 +3043,7 @@ document.addEventListener('visibilitychange', () => {
 document.addEventListener('click', e => {
   if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
   const a = e.target.closest('a[href^="/"]');
-  if (!a || a.target === '_blank' || a.hasAttribute('download') || a.getAttribute('href').startsWith('/download/')) return;   // files, not pages
+  if (!a || a.target === '_blank' || a.hasAttribute('download') || /^\/(download|demo)\//.test(a.getAttribute('href'))) return;   // files and the demo, not pages of this app
   e.preventDefault();
   go(a.getAttribute('href').replace(/^\/+/, ''));
 });

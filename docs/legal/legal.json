@@ -1,5 +1,5 @@
 {
-  "version": "2026-10-19.3",
+  "version": "2026-10-20",
   "operator": "Auoris",
   "contact": "support@auoris.org",
   "docs": [
@@ -30,6 +30,10 @@
     }
   ],
   "changes": [
+    {
+      "version": "2026-10-20",
+      "summary": "The privacy policy now covers the demo on our website, which loads Minecraft's default skin from Mojang."
+    },
     {
       "version": "2026-10-19.3",
       "summary": "The privacy policy now explains that the launcher asks the servers in your Minecraft server list for their player count and ping."
@@ -215,5 +219,5 @@
       "summary": "First version of the Terms of Service, Privacy Policy, Acceptable Use Policy, Subscription and Gift Terms, and Copyright policy."
     }
   ],
-  "hash": "c7ef778eac72ef91b1b7fb6a71fa9504bfbafadc89914d2f98bcf3d46b32393f"
+  "hash": "0fe16ca7d26df283d16eff88d384f767be669e3f2ce1bdaec370433811263fec"
 }

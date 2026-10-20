@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Try Auoris</title>
+<meta name="description" content="Click through the real Auoris app in your browser, with made-up data. Nothing you do is saved or sent.">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<meta name="theme-color" content="#0e1119">
+<!-- No scripts on this page: the app below is app.html (ui.html with demo.js, built by tools/publish_site.py). -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'none'; style-src 'unsafe-inline'; img-src 'self'; frame-src 'self'; base-uri 'none'; form-action 'none'">
+<style>
+  :root { --bg: #0e1119; --panel: #161b27; --panel2: #1d2331; --border: #262d3d; --text: #e9edf5; --muted: #8b93a7; --acc2: #5b9dff; }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body { margin: 0; display: flex; flex-direction: column; background: var(--bg); color: var(--text); font: 14px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif; overflow: hidden; }
+  .bar { display: flex; align-items: center; gap: 12px; padding: 8px 16px; padding-top: max(8px, env(safe-area-inset-top)); border-bottom: 1px solid var(--border); background: var(--panel); min-width: 0; }
+  .brand { display: flex; align-items: center; gap: 8px; color: var(--text); text-decoration: none; font-weight: 700; flex: none; }
+  .brand img { width: 26px; height: 26px; border-radius: 7px; }
+  .tag { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; padding: 2px 8px; border-radius: 999px; background: #5b9dff26; color: #9cc3ff; }
+  .note { color: var(--muted); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+  .note .phone { display: none; }
+  .modes { display: flex; gap: 2px; padding: 3px; border-radius: 10px; background: var(--bg); border: 1px solid var(--border); flex: none; }
+  .modes a { padding: 5px 10px; border-radius: 7px; color: var(--muted); text-decoration: none; font-weight: 600; font-size: 13px; white-space: nowrap; }
+  .modes a:hover { color: var(--text); background: var(--panel2); }
+  .btn { flex: none; padding: 7px 14px; border-radius: 9px; background: linear-gradient(135deg, var(--acc2), #8b6bff); color: #fff; text-decoration: none; font-weight: 600; white-space: nowrap; }
+  .btn:hover { filter: brightness(1.08); }
+  iframe { flex: 1; width: 100%; min-height: 0; border: 0; display: block; background: var(--bg); }
+  @media (max-width: 900px) { .note .desk { display: none; } .note .phone { display: inline; } }
+  @media (max-width: 560px) {   /* two rows: logo and Download, then the switch and the note */
+    .bar { flex-wrap: wrap; gap: 8px 10px; }
+    .brand span { display: none; }
+    .btn { margin-left: auto; }
+    .modes { order: 3; }
+    .note { order: 4; flex: 1 1 100px; white-space: normal; font-size: 12.5px; }
+  }
+</style>
+</head>
+<body>
+<div class="bar">
+  <a class="brand" href="/"><img src="/logo.png" alt=""><span>Auoris</span></a>
+  <span class="tag">Demo</span>
+  <span class="note"><span class="desk">The real app with made-up data. Nothing you do here is saved or sent.</span><span class="phone">Made-up data. Best on a computer.</span></span>
+  <nav class="modes" aria-label="Which app"><a href="app.html" target="app">Auoris</a><a href="app.html?mind" target="app">Auoris Mind</a></nav>
+  <a class="btn" href="/#dl">Download</a>
+</div>
+<iframe name="app" src="app.html" title="Auoris demo"></iframe>
+</body>
+</html>

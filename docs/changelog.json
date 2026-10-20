@@ -1,6 +1,16 @@
 {
   "releases": [
     {
+      "version": "1.9.12",
+      "date": "2026-10-20",
+      "notes": [
+        "The Play tab has a Shop card where Alex shows off wings, hats and pets while playing the Wave, Dance and Cheer emotes.",
+        "Quick play fills its row with your servers and ends with an Add server tile.",
+        "The game window's title now starts with Minecraft and its version, so clip recording apps spot the game again.",
+        "You can now try Auoris in your browser at auoris.org/demo before you download it."
+      ]
+    },
+    {
       "version": "1.9.11",
       "date": "2026-10-19",
       "notes": [

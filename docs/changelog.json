@@ -1,6 +1,17 @@
 {
   "releases": [
     {
+      "version": "1.9.15",
+      "date": "2026-10-22",
+      "notes": [
+        "The armor switch no longer stops halfway when the server refuses a click during a fight: it puts the item on your cursor back and finishes the swap.",
+        "While the armor switch runs, mouse clicks and the hotbar and drop keys in your inventory wait, so nothing gets thrown out.",
+        "Hold the player list key (Tab) and then open chat to keep the player list on screen while you type (Chat tweaks, on by default).",
+        "The creative inventory search box lines up with the inventory again when Hide potion effects is on.",
+        "New Pack Icons and Descriptions toggles on the Resource Packs screen and in Settings > General."
+      ]
+    },
+    {
       "version": "1.9.14",
       "date": "2026-10-22",
       "notes": [

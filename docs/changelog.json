@@ -1,6 +1,19 @@
 {
   "releases": [
     {
+      "version": "1.9.13",
+      "date": "2026-10-22",
+      "notes": [
+        "Armor switch: if the server closes your inventory in the middle of a switch (some servers do when a special armor piece comes off), it opens it again and finishes the set.",
+        "The gapple regen timer on nametags keeps counting while you're tabbed out.",
+        "Gaming boost no longer turns itself off when Auoris Mind runs a routine.",
+        "Your settings are no longer reset if the settings file can't be read for a moment.",
+        "Updates are found within a minute, and the restart is a few seconds quicker.",
+        "A new Minecraft skin shows in the launcher within seconds.",
+        "On the Shop card, Alex's raised hand no longer goes through her head."
+      ]
+    },
+    {
       "version": "1.9.12",
       "date": "2026-10-20",
       "notes": [

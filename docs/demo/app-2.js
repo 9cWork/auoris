@@ -3422,6 +3422,7 @@ function mcSwitchTab(tab) {
   $('mcPageTitle').textContent = MC_TAB_TITLES[tab] || '';
   mcVerClose();
   if (tab === 'cosmetics' && typeof mcPreviewKick === 'function') mcPreviewKick();   // the preview loop stops while its pane is hidden
+  if (tab === 'play' || tab === 'cosmetics') mcLoadSkin(true);   // a skin changed elsewhere shows without a restart
   if (tab === 'play') { mcHeroDraw(); mcServersLoad(); mcFriendsRender(); mcNotifRender(); mcNewsLoad(); }
   if (tab === 'servers') mcServersLoad();
   if (tab === 'news') mcNewsLoad();
@@ -3505,19 +3506,31 @@ function mcDefaultSkin() {
   R('#3a3aa0', 4, 20, 4, 12); R('#3a3aa0', 12, 20, 4, 12); R('#3a3aa0', 20, 52, 4, 12); R('#3a3aa0', 28, 52, 4, 12);
   return { img: c, slim: false, legacy: false };
 }
-async function mcLoadSkin() {
-  MC_COSM.skin = mcDefaultSkin(); $('mcSkinNote').textContent = 'Steve · sign in to Minecraft for your own skin';
+let mcSkinAt = 0, mcSkinSeq = 0;   // when the skin was last asked for, and which ask is the latest (an older answer is dropped)
+// refresh: a look for a changed skin (Play or Cosmetics opened, the window back in front, a game closed), at most every 15 s and only
+// while the launcher shows; the skin on show stays until a different one is in. Without it (signed in or out, another account) Steve
+// shows until the account's skin is in.
+async function mcLoadSkin(refresh) {
+  if (refresh && ($('minecraftView').hidden || Date.now() - mcSkinAt < 15000)) return;
+  mcSkinAt = Date.now();
+  const seq = ++mcSkinSeq;
+  if (!refresh || !MC_COSM.own) { MC_COSM.skin = mcDefaultSkin(); $('mcSkinNote').textContent = 'Steve · sign in to Minecraft for your own skin'; }
   if (!mcSteve) mcLoadSteve();
   mcLoadShopSkin();
-  let own = null;   // the Play tab keeps showing the last skin until this one is in
+  let own = refresh ? MC_COSM.own : null;   // the Play tab keeps showing the last skin until this one is in
   try {
     const s = await api().mc_skin();
-    if (!s) return;
+    if (!s || seq !== mcSkinSeq || (own && own.src === s.data)) return;
     const im = new Image(); im.src = s.data;
     await new Promise(r => { im.onload = r; im.onerror = r; });
-    if (!im.naturalWidth) return;
-    MC_COSM.skin = own = { img: im, slim: s.slim, legacy: im.naturalHeight < 64, real: true }; $('mcSkinNote').textContent = s.name || '';
-  } catch (e) {} finally { MC_COSM.own = own; mcHeroDraw(); }
+    if (!im.naturalWidth || seq !== mcSkinSeq) return;
+    MC_COSM.skin = own = { img: im, slim: s.slim, legacy: im.naturalHeight < 64, real: true, src: s.data }; $('mcSkinNote').textContent = s.name || '';
+    mcHeadFrom(s.data).then(u => {   // the account switcher's head shows the new skin too
+      if (!u || seq !== mcSkinSeq) return;
+      mcHeadCache.set(s.id, u); $('mcAcctHead').src = u;
+      const it = $('mcAcctPop').querySelector(`[data-id="${CSS.escape(s.id)}"] .mchead`); if (it) it.src = u;
+    });
+  } catch (e) {} finally { if (seq === mcSkinSeq) { MC_COSM.own = own; mcHeroDraw(); } }
 }
 // Project box models (hats: front/back view, pets: side view) and fill them flat with face shading.
 function mcBoxes(g, parts, view, cx, baseY, S, t) {
@@ -3578,7 +3591,7 @@ var appAsleep = false;   // var: mcPreviewFrame can run before this line does
 function appSleep(on) {
   on = !!on; if (on === appAsleep) return;
   appAsleep = on; document.documentElement.classList.toggle('appasleep', on);
-  if (!on) { mcPreviewKick(); mcHeroDraw(); }
+  if (!on) { mcPreviewKick(); mcHeroDraw(); mcLoadSkin(true); }   // back in front: maybe from changing the skin elsewhere
 }
 window.addEventListener('blur', () => setTimeout(() => appSleep(!document.hasFocus()), 300));
 window.addEventListener('focus', () => appSleep(false));
@@ -3678,7 +3691,6 @@ async function mcCosmeticsInit() {
     if (!MC_COSM.locks) await mcCosmAccess();
     if (r && r.catalog) { MC_COSM.data = r; Object.keys(r.png).forEach(k => mcCosmImg(k)); setTimeout(renderMcCosmetics, 200); }
   }
-  if (!MC_COSM.skin || !MC_COSM.skin.real) mcLoadSkin();   // retry until the real skin has loaded (e.g. after signing in)
   renderMcCosmetics();
   $('mcShareEmotes').checked = prefs.mc_share_emotes !== false; $('mcShowEmotes').checked = prefs.mc_show_emotes !== false;
 }
@@ -3901,20 +3913,21 @@ function mcHeroDraw() {
 }
 // ---- Play tab: the Shop card. Alex (Mojang's other default skin, from a Minecraft jar on this PC) shows Shop items, playing the game's
 // own emotes in turn, a new outfit with each. The angles are the mod's (Emotes.java pose0, t in ticks) with y and z turned the other way,
-// as this renderer's y points up and z forward; the mod's bounce is the lift.
+// as this renderer's y points up and z forward; the mod's bounce is the lift. A raised arm swings out to the side instead (its z the
+// other way, or a hand went through the head).
 const mcPulse = (T, p) => Math.sin(Math.PI * Math.pow(T / p - Math.floor(T / p), .6));
 const MC_SHOP_SHOW = [
   { name: 'Wave', wings: 'wings_dragon', hat: 'crown', pet: 'parrot', lift: T => Math.abs(Math.sin(T * .7)) * .4,
-    pose: (i, T) => { const w = Math.sin(T * .7); return [[-.1, 0, -.12 - w * .08], [0, 0, -w * .04], [-2.75, 0, -.3 - w * .55], [.1, 0, .12 + Math.abs(w) * .05], [0, 0, -.06], [0, 0, .1]][i]; } },
+    pose: (i, T) => { const w = Math.sin(T * .7); return [[-.1, 0, -.12 - w * .08], [0, 0, -w * .04], [-2.75, 0, .5 + w * .35], [.1, 0, .12 + Math.abs(w) * .05], [0, 0, -.06], [0, 0, .1]][i]; } },
   { name: 'Dance', wings: 'wings_fairy', hat: 'headphones', pet: 'owl', lift: T => mcPulse(T, 10) * 1.3,
     pose: (i, T) => {
       const k = mcPulse(T, 10), sw = Math.sin(Math.PI * T / 10), r = Math.max(0, sw), l = Math.max(0, -sw);
-      return [[.18 * k - .05, 0, -sw * .16], [0, 0, sw * .08], [-1.7 - sw * 1.15, 0, -.35 - sw * .75], [-.25, -.5, .8], [-r * .55, 0, -.12 - r * .2], [-l * .55, 0, .12 + l * .2]][i];
+      return [[.18 * k - .05, 0, -sw * .16], [0, 0, sw * .08], [-1.7 - sw * 1.15, 0, .45 + sw * .1], [-.25, -.5, .8], [-r * .55, 0, -.12 - r * .2], [-l * .55, 0, .12 + l * .2]][i];
     } },
   { name: 'Cheer', wings: 'wings_phoenix', hat: 'wizard', pet: 'fox', lift: T => mcPulse(T, 14) * 3,
     pose: (i, T) => {
       const k = mcPulse(T, 14), f = Math.sin(Math.PI * T / 7);
-      return [[-.45 + k * .1, 0, -f * .1], [0, 0, 0], [-2.95 + k * .25, 0, -.45 - k * .2 - f * .08], [-2.95 + k * .25, 0, .45 + k * .2 - f * .08], [k * .35, 0, 0], [-k * .1, 0, k * .15]][i];
+      return [[-.45 + k * .1, 0, -f * .1], [0, 0, 0], [-2.95 + k * .25, 0, .45 + k * .2 + f * .08], [-2.95 + k * .25, 0, -.45 - k * .2 + f * .08], [k * .35, 0, 0], [-k * .1, 0, k * .15]][i];
     } }];
 // 4 s per emote; the first .4 s blends over from the one before so the arms don't jump
 function mcShopMix(t, f) {
@@ -4278,7 +4291,7 @@ function mcError(msg) { if (/^Minecraft is already starting/.test(String(msg))) 
 function mcProgress(msg) { $('mcStatus').textContent = msg; }
 function mcLaunched() { $('mcStatus').textContent = ''; toast('Minecraft', 'Launched! You can close Auoris if you don\'t need it open.'); mcLaunchBtnReset(); mcPresenceStart(); mcRunRefresh(); mcVerRender.asked = false; }
 function mcCosmeticsChanged(sel) { try { prefs.mc_cosmetics = sel; mcHeroDraw(); } catch (e) {} }
-function mcExited(left) { if (!left) mcPresenceStop(false); mcRunRefresh(); }
+function mcExited(left) { if (!left) mcPresenceStop(false); mcRunRefresh(); mcLoadSkin(true); }
 let mcRunList = [], mcEmptyRuns = 0;
 async function mcRunRefresh() {
   let list = [];
@@ -4334,8 +4347,9 @@ async function mcHeadFor(a) {
   if (mcHeadCache.has(a.id)) return mcHeadCache.get(a.id);
   let url = '';
   if (!a.offline) { try { const s = await api().mc_skin_by_name(a.name); if (s && s.data) url = await mcHeadFrom(s.data); } catch (e) {} }
-  if (url) mcHeadCache.set(a.id, url);   // a failed lookup is retried next time
-  return url;
+  // a failed lookup is retried next time; the signed-in account's head from its own up-to-date skin (mcLoadSkin) wins over this one
+  if (url && !mcHeadCache.has(a.id)) mcHeadCache.set(a.id, url);
+  return mcHeadCache.get(a.id) || '';
 }
 function mcAcctUi(list, hasPremium, cur) {
   $('mcAcctName').textContent = $('mcHeroName').textContent = cur ? cur.name : 'Not signed in';

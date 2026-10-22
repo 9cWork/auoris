@@ -3913,8 +3913,7 @@ function mcHeroDraw() {
 }
 // ---- Play tab: the Shop card. Alex (Mojang's other default skin, from a Minecraft jar on this PC) shows Shop items, playing the game's
 // own emotes in turn, a new outfit with each. The angles are the mod's (Emotes.java pose0, t in ticks) with y and z turned the other way,
-// as this renderer's y points up and z forward; the mod's bounce is the lift. A raised arm swings out to the side instead (its z the
-// other way, or a hand went through the head).
+// as this renderer's y points up and z forward; the mod's bounce is the lift.
 const mcPulse = (T, p) => Math.sin(Math.PI * Math.pow(T / p - Math.floor(T / p), .6));
 const MC_SHOP_SHOW = [
   { name: 'Wave', wings: 'wings_dragon', hat: 'crown', pet: 'parrot', lift: T => Math.abs(Math.sin(T * .7)) * .4,

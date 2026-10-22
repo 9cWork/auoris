@@ -1,6 +1,21 @@
 {
   "releases": [
     {
+      "version": "1.9.14",
+      "date": "2026-10-22",
+      "notes": [
+        "In the Wave, Dance, Cheer and Headbang emotes a raised arm now swings out to the side instead of through your head.",
+        "New in Settings > General: Mouse delay fix (on by default) makes your clicks hit what the crosshair is on while you turn.",
+        "Hit delay fix (off by default) removes 1.8's half-second pause after a missed click; some servers may not allow it.",
+        "The gapple regen timer now shows past Max distance (through walls only within 64 blocks, like name tags), stays right when players leave and come back, and follows PikaNetwork's Totem Of Regeneration.",
+        "A golden apple eaten during a longer regen no longer cuts the timer short.",
+        "Translated chat keeps the line's own colours: the message is translated in place with a clickable (translated) after it.",
+        "Clicking (translated) now translates only your next message, !t cancels it, and the new Translate all my messages to setting translates everything you send.",
+        "Security fixes: 1.7.10 only follows web links for server resource packs, and the Microsoft sign-in page shows its error text safely.",
+        "The privacy policy now covers the in-game chat translator."
+      ]
+    },
+    {
       "version": "1.9.13",
       "date": "2026-10-22",
       "notes": [

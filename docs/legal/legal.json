@@ -1,5 +1,5 @@
 {
-  "version": "2026-10-20",
+  "version": "2026-10-22",
   "operator": "Auoris",
   "contact": "support@auoris.org",
   "docs": [
@@ -30,6 +30,10 @@
     }
   ],
   "changes": [
+    {
+      "version": "2026-10-22",
+      "summary": "The privacy policy now explains the in-game chat translator (off by default; it uses the AI model you picked in the app), and says live health goes to the games of Auoris staff that ask for your player."
+    },
     {
       "version": "2026-10-20",
       "summary": "The privacy policy now covers the demo on our website, which loads Minecraft's default skin from Mojang."
@@ -219,5 +223,5 @@
       "summary": "First version of the Terms of Service, Privacy Policy, Acceptable Use Policy, Subscription and Gift Terms, and Copyright policy."
     }
   ],
-  "hash": "0fe16ca7d26df283d16eff88d384f767be669e3f2ce1bdaec370433811263fec"
+  "hash": "ee314f3648788b733c267889aa7b2b6b92f258cc739077758e5b10fecbfe6a3d"
 }

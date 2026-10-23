@@ -1,6 +1,17 @@
 {
   "releases": [
     {
+      "version": "1.9.16",
+      "date": "2026-10-23",
+      "notes": [
+        "New Bow draw on your HUD: while you draw a bow it shows the shot's power, and a green FULL once the arrow will be full power and critical.",
+        "The bow looks fully drawn a little before that, so wait for FULL.",
+        "New Bow release fix in Settings > General (on by default): letting go of right click and pressing it again quickly while drawing a bow now always shoots, instead of the bow sometimes staying drawn.",
+        "The regen timer now restarts at 10 minutes when a player uses another Totem Of Regeneration while the first one is still running.",
+        "Armor switch: when your armor gets low and no fresh set is left in your inventory, a notification and a beep tell you (Armor switch > Notify when no fresh set is left)."
+      ]
+    },
+    {
       "version": "1.9.15",
       "date": "2026-10-22",
       "notes": [

@@ -1,6 +1,14 @@
 {
   "releases": [
     {
+      "version": "1.9.18",
+      "date": "2026-10-23",
+      "notes": [
+        "Fixed Invalid session when joining a server after playing for a while: Auoris now gives the game a fresh Minecraft sign-in before it runs out, and if a server still turns it down, the game gets a new one from the Auoris app and joins that server again by itself.",
+        "An offline account that tries to join a server that needs a Microsoft account now says so, instead of Invalid session."
+      ]
+    },
+    {
       "version": "1.9.17",
       "date": "2026-10-23",
       "notes": [

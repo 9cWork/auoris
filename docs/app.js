@@ -1,5 +1,12 @@
 // Anti-clickjacking (GitHub Pages can't send X-Frame-Options): never run inside someone else's frame.
 try { if (window.top !== window.self) { document.documentElement.style.display = 'none'; window.top.location = window.self.location; } } catch (e) { document.documentElement.style.display = 'none'; }
+// Undoes 404.html's redirect: GitHub Pages has no real file for a path like /plus, so 404.html sends the browser to /?/plus instead; this
+// restores the real /plus URL before supabase-js and the router read it (https://github.com/rafgraph/spa-github-pages). It lives here, not
+// inline in index.html: the Cloudflare CSP header only runs inline scripts whose hash it lists, and a stale list silently blocks them.
+try {
+  const l = location;
+  if (l.search[1] === '/') history.replaceState(null, '', l.pathname.slice(0, -1) + l.search.slice(1).split('&').map(s => s.replace(/~and~/g, '&')).join('?') + l.hash);
+} catch (e) { /* a path like //other.host can't be put back (another origin): the page stays on the home route */ }
 // auoris.org - one small single-page app with hash routes (#/servers, #/dms/...). Same Supabase accounts as the desktop app.
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -1804,7 +1811,7 @@ function authShow(mode, sub) {
   $('authLinks').querySelectorAll('a[data-m]').forEach(a => a.onclick = async () => {
     const m = a.dataset.m;
     if (m === 'signout') { try { sessionStorage.removeItem('auoris_after_signin'); } catch (e) {} await sb.auth.signOut(); return authShow('login'); }
-    if (m === 'resend') { const { error } = await sb.auth.resend({ type: 'signup', email: AUTH.email, options: await withCaptcha({}) }); return authErr(error ? error.message : 'Sent a new code.', !error); }
+    if (m === 'resend') { const { error } = await sb.auth.resend({ type: 'signup', email: AUTH.email }); return authErr(error ? error.message : 'Sent a new code.', !error); }
     authShow(m);
   });
   if (AUTH.email && $('aEmail')) $('aEmail').value = AUTH.email;
@@ -1830,34 +1837,6 @@ function authAgeOk(dobStr) {   // sign-up age check: 13+. The date is only used 
   if (age < 13) { try { localStorage.setItem('auoris_age_block', String(Date.now())); } catch (e) { /* ignore */ } return 'You must be at least 13 years old to use Auoris.'; }   // a rejected date can't simply be retyped: locked for 24 hours on this device
   return null;
 }
-const CAPTCHA_URL = '/captcha.html';
-// Bot check (Cloudflare Turnstile via auoris.org/captcha.html, see site/captcha.js). Resolves to a token, or null when the check is
-// switched off or can't load - Supabase then decides (it only refuses a missing token once CAPTCHA is switched on there).
-function captchaToken() {
-  return new Promise(res => {
-    const f = document.createElement('iframe'), url = new URL(CAPTCHA_URL, location.href);
-    f.src = url.href; f.title = 'Bot check'; f.style.cssText = 'border:0;width:100%;height:72px;display:block;margin:6px 0';
-    let t = 0;
-    const done = v => { clearTimeout(t); removeEventListener('message', onMsg); f.remove(); res(v); };
-    const onMsg = e => {
-      if (e.origin !== url.origin || e.source !== f.contentWindow || !e.data || typeof e.data.auorisCaptcha !== 'string') return;
-      const v = e.data.auorisCaptcha;
-      done(v === 'off' || v === 'error' || v === 'expired' ? null : v);
-    };
-    addEventListener('message', onMsg);
-    f.onload = () => {
-      let doc = null; try { doc = f.contentDocument; } catch (e) {}
-      if (doc && doc.URL === 'about:blank') return;               // the frame's initial empty page, not the check yet
-      clearTimeout(t);
-      // loaded: give a person time to answer it. No readable page means the browser refused to show the frame (a CSP or
-      // X-Frame-Options header) - it still fires load, but nothing will ever answer, so don't hold sign-in up for two minutes.
-      t = setTimeout(() => done(null), doc ? 120000 : 0);
-    };
-    t = setTimeout(() => done(null), 10000);                                          // auoris.org unreachable: don't hang sign-in
-    ($('authErr') || document.body).before(f);
-  });
-}
-const withCaptcha = async opts => { const c = await captchaToken(); return c ? Object.assign({}, opts, { captchaToken: c }) : opts; };
 async function authSubmit(e) {
   e.preventDefault();
   const btn = $('authForm').querySelector('button'), v = id => ($(id)?.value || '').trim(), m = AUTH.mode;
@@ -1867,13 +1846,13 @@ async function authSubmit(e) {
   try {
     if ($('aEmail')) AUTH.email = v('aEmail');
     if (m === 'login') {
-      const { error } = await sb.auth.signInWithPassword({ email: AUTH.email, password: $('aPass').value, options: await withCaptcha({}) });
-      if (error && /confirm/i.test(error.message)) { await sb.auth.resend({ type: 'signup', email: AUTH.email, options: await withCaptcha({}) }); return authShow('verify'); }
+      const { error } = await sb.auth.signInWithPassword({ email: AUTH.email, password: $('aPass').value });
+      if (error && /confirm/i.test(error.message)) { await sb.auth.resend({ type: 'signup', email: AUTH.email }); return authShow('verify'); }
       if (error) throw error;
       await afterSignIn(true);
     } else if (m === 'signup') {
       if (/^[^@]*\+/.test(AUTH.email)) throw new Error('Email addresses with a + (like name+tag@mail.com) cannot be used. Please use your main address.');
-      const { data, error } = await sb.auth.signUp({ email: AUTH.email, password: $('aPass').value, options: await withCaptcha({}) });
+      const { data, error } = await sb.auth.signUp({ email: AUTH.email, password: $('aPass').value });
       if (error) throw error;
       if (data && data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) throw new Error('An account with this email already exists. Sign in instead.');
       if (data.session) await afterSignIn(true); else authShow('verify');
@@ -1888,7 +1867,7 @@ async function authSubmit(e) {
       if (error) throw error;
       await afterSignIn(true);
     } else if (m === 'forgot') {
-      const { error } = await sb.auth.resetPasswordForEmail(AUTH.email, await withCaptcha({}));
+      const { error } = await sb.auth.resetPasswordForEmail(AUTH.email);
       if (error) throw error;
       authShow('reset');
     } else if (m === 'reset') {
@@ -3341,3 +3320,7 @@ document.addEventListener('submit', e => { if (e.target.closest && e.target.clos
   } catch (e) { console.error(e); }
   if (!AUTH.bounced) route();   // afterSignIn already routed to the sign-in step it needs; routing again would reset it to the plain login form
 })();
+
+// Installability (manifest + a fetch handler) is what lets iOS/Android offer "Add to Home Screen", and the service worker also gives the app
+// shell a moment's offline resilience.
+if ('serviceWorker' in navigator) addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {}));

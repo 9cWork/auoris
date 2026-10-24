@@ -150,42 +150,13 @@ async function authLink(m) {
   if (m === 'signout') { await signOutApp(); return authShow('login'); }
   if (m === 'offline') return enterApp(null, null);
   if (m === 'resend') {
-    const { error } = await sb.auth.resend({ type: 'signup', email: AUTH.email, options: await withCaptcha({}) });
+    const { error } = await sb.auth.resend({ type: 'signup', email: AUTH.email });
     return authErr(error ? error.message : 'Sent a new code.', !error);
   }
   authShow(m);
 }
 $('authMin').onclick = () => api().win_minimize();
 $('authClose').onclick = () => api().win_close();
-const CAPTCHA_URL = 'https://auoris.org/captcha.html';
-// Bot check (Cloudflare Turnstile via auoris.org/captcha.html, see site/captcha.js). Resolves to a token, or null when the check is
-// switched off or can't load - Supabase then decides (it only refuses a missing token once CAPTCHA is switched on there).
-function captchaToken() {
-  return new Promise(res => {
-    const f = document.createElement('iframe'), url = new URL(CAPTCHA_URL, location.href);
-    f.src = url.href; f.title = 'Bot check'; f.style.cssText = 'border:0;width:100%;height:72px;display:block;margin:6px 0';
-    let t = 0;
-    const done = v => { clearTimeout(t); removeEventListener('message', onMsg); f.remove(); res(v); };
-    const onMsg = e => {
-      if (e.origin !== url.origin || e.source !== f.contentWindow || !e.data || typeof e.data.auorisCaptcha !== 'string') return;
-      const v = e.data.auorisCaptcha;
-      done(v === 'off' || v === 'error' || v === 'expired' ? null : v);
-    };
-    addEventListener('message', onMsg);
-    f.onload = () => {   // a frame the browser refused (CSP, X-Frame-Options) fires load too, but never answers: wait long only once the check shows
-      clearTimeout(t);
-      const t0 = Date.now(), wait = () => {
-        if (f.contentWindow && f.contentWindow.length) t = setTimeout(() => done(null), 120000);   // the Turnstile widget is up: time to answer it
-        else if (Date.now() - t0 > 10000) done(null);
-        else t = setTimeout(wait, 500);
-      };
-      wait();
-    };
-    t = setTimeout(() => done(null), 10000);                                          // auoris.org unreachable: don't hang sign-in
-    ($('authErr') || document.body).before(f);
-  });
-}
-const withCaptcha = async opts => { const c = await captchaToken(); return c ? Object.assign({}, opts, { captchaToken: c }) : opts; };
 $('authForm').onsubmit = async e => {
   e.preventDefault();
   const btn = $('authForm').querySelector('button'), v = id => ($(id)?.value || '').trim(), m = AUTH.mode;
@@ -193,14 +164,14 @@ $('authForm').onsubmit = async e => {
   try {
     if ($('aEmail')) AUTH.email = v('aEmail');
     if (m === 'login') {
-      const { error } = await sb.auth.signInWithPassword({ email: AUTH.email, password: $('aPass').value, options: await withCaptcha({}) });
-      if (error && /confirm/i.test(error.message)) { await sb.auth.resend({ type: 'signup', email: AUTH.email, options: await withCaptcha({}) }); return authShow('verify'); }
+      const { error } = await sb.auth.signInWithPassword({ email: AUTH.email, password: $('aPass').value });
+      if (error && /confirm/i.test(error.message)) { await sb.auth.resend({ type: 'signup', email: AUTH.email }); return authShow('verify'); }
       if (error) throw error;
       await afterSignIn();
     } else if (m === 'signup') {
       const ageErr = authAgeOk($('aDob') && $('aDob').value); if (ageErr) throw new Error(ageErr);
       if (/^[^@]*\+/.test(AUTH.email)) throw new Error('Email addresses with a + (like name+tag@mail.com) cannot be used. Please use your main address.');
-      const { data, error } = await sb.auth.signUp({ email: AUTH.email, password: $('aPass').value, options: await withCaptcha({}) });
+      const { data, error } = await sb.auth.signUp({ email: AUTH.email, password: $('aPass').value });
       if (error) throw error;
       if (data && data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) throw new Error('An account with this email already exists. Sign in instead.');
       if (data.session) await afterSignIn(); else authShow('verify');
@@ -215,7 +186,7 @@ $('authForm').onsubmit = async e => {
       if (error) throw error;
       await afterSignIn();
     } else if (m === 'forgot') {
-      const { error } = await sb.auth.resetPasswordForEmail(AUTH.email, await withCaptcha({}));
+      const { error } = await sb.auth.resetPasswordForEmail(AUTH.email);
       if (error) throw error;
       authShow('reset');
     } else if (m === 'reset') {
@@ -366,7 +337,7 @@ async function linkAccount(provider) {
   finally { oauthBusy = false; linkedRender(); }
 }
 async function unlinkAccount(provider) {
-  if (!confirm('Unlink this account? You can link it again later.')) return;
+  if (!(await ask({ title: 'Unlink this account?', html: 'You can link it again later.', ok: 'Unlink', danger: true, icon: '🔗' }))) return;
   try {
     const ids = ((await sb.auth.getUserIdentities()).data || {}).identities || [];
     const idn = ids.find(i => i.provider === provider);
@@ -470,6 +441,7 @@ async function enterApp(user, prof) {
     if (!annPoll.ch) annPoll.ch = sb.channel('announce:' + Date.now()).on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'announcements' }, () => annPoll()).subscribe();
   }
   setTimeout(() => { try { crashFlush(); if (!crashFlush.t) crashFlush.t = setInterval(() => { try { crashFlush(); } catch (e) {} }, 600000); } catch (e) {} }, 6000);
+  if (SOCIAL_VIEWS.has(view)) showView(view);   // signed in again while on Messages/Projects/Plus: signing out emptied it, so draw it for this account
 }
 
 async function accountsBoot() {
@@ -839,7 +811,6 @@ async function loadFriends() {
   if (!me) return $('friendsBody') && needAccount($('friendsBody'));
   try { await fetchFriends(); } catch (e) { if ($('friendsBody')) $('friendsBody').innerHTML = `<div class="fempty">Couldn't load friends: ${esc(e.message)}</div>`; return; }
   renderFriends(); renderPartyBar();
-  const cd = $('crashAdmin'); if (cd && cd.closest('details')) cd.closest('details').addEventListener('toggle', e => { if (e.target.open && window.crashAdminLoad) crashAdminLoad(); });
   if (myProfile && myProfile.is_admin) renderAdmin();  // don't fetch all accounts - just show the search box until they type
   loadReports();
 }
@@ -881,6 +852,7 @@ function renderFriends() {
   if (myProfile.is_admin) {
     $('adminBox').insertAdjacentHTML('beforebegin',
       '<div class="fsec">Admin</div><details style="margin:0 2px 8px"><summary style="cursor:pointer">Crash reports</summary><div id="crashAdmin"></div></details>' + (amOwner() ? '<details style="margin:0 2px 8px"><summary style="cursor:pointer">Owner alerts <span id="ownAlertN"></span></summary><div id="ownerAlerts"></div></details>' : '') + '<div class="row" style="padding:0 2px 8px"><input id="adminSearch" placeholder="Search username to manage…" style="flex:1"></div>');
+    $('crashAdmin').closest('details').addEventListener('toggle', e => { if (e.target.open && window.crashAdminLoad) crashAdminLoad(); });   // here, with its markup: every presence change redraws it
     const oa = $('ownerAlerts'); if (oa) { oa.closest('details').addEventListener('toggle', e => { if (e.target.open) ownerAlertsPoll(true); }); ownerAlertsPoll(false); }
     $('adminSearch').oninput = () => { clearTimeout(adminSearchT); adminSearchT = setTimeout(() => loadAdmin($('adminSearch').value.trim()), 250); };
   }
@@ -1798,13 +1770,20 @@ async function attSend(ctl, insert) {
 // ---- GIF picker (GIPHY through the gif-search Edge Function, so no API key ships in the app)
 // Category chips are just curated searches; favourites live in public.gif_favorites so they follow the account everywhere.
 const GIF_CATS = [['Trending', ''], ['Reactions', 'reaction'], ['Funny', 'funny'], ['Love', 'love'], ['Happy', 'happy'], ['Sad', 'sad'], ['Angry', 'angry'], ['Celebrate', 'celebrate'], ['Gaming', 'gaming'], ['Anime', 'anime'], ['Memes', 'meme'], ['Animals', 'animals'], ['Sports', 'sports'], ['Movies', 'movie'], ['Food', 'food']];
-let gifFavs = null, gifFavsUid = null;
+let gifFavs = null, gifFavsUid = null, gifFavsReq = null;
 async function gifFavLoad() {
   const uid = me && me.id;
   if (gifFavs && gifFavsUid === uid) return gifFavs;   // a different account (or a signed-out page) never sees another account's list
-  const { data, error } = await sb.from('gif_favorites').select('url, preview_url, title').order('created_at', { ascending: false }).limit(200);
-  if (error) return [];   // don't remember a failed lookup as "no favourites"
-  gifFavsUid = uid; return (gifFavs = data || []);
+  if (gifFavsReq && gifFavsReq.uid === uid) return gifFavsReq.p;   // every GIF tile and every GIF in a chat asks at once: share one lookup
+  const req = { uid };
+  req.p = (async () => {
+    try {
+      const { data, error } = await sb.from('gif_favorites').select('url, preview_url, title').order('created_at', { ascending: false }).limit(200);
+      if (error) return [];   // don't remember a failed lookup as "no favourites"
+      gifFavsUid = uid; return (gifFavs = data || []);
+    } finally { if (gifFavsReq === req) gifFavsReq = null; }
+  })();
+  return (gifFavsReq = req).p;
 }
 function attGifPicker(anchor, onPick) {
   document.querySelectorAll('.gifpick').forEach(x => x.remove());
@@ -1836,12 +1815,12 @@ function attGifPicker(anchor, onPick) {
     const paint = () => { const on = (gifFavs || []).some(f => f.url === url); star.textContent = on ? '★' : '☆'; star.classList.toggle('on', on); };
     star.onclick = async ev => {
       ev.stopPropagation(); await gifFavLoad();
-      const on = gifFavs.some(f => f.url === url);
+      const on = (gifFavs || []).some(f => f.url === url);
       if (on) { const { error: de } = await sb.from('gif_favorites').delete().eq('url', url); if (de) { star.title = 'Could not remove'; return; } gifFavs = gifFavs.filter(f => f.url !== url); if (mode === 'fav') t.remove(); }
       else {
         const { error } = await sb.from('gif_favorites').insert({ url, preview_url: g.preview_url, title: b.title });
         if (error) { star.title = /too many/i.test(error.message) ? 'You can keep up to 200 favourites' : 'Could not save'; return; }
-        gifFavs.unshift({ url, preview_url: g.preview_url, title: b.title });
+        (gifFavs = gifFavs || []).unshift({ url, preview_url: g.preview_url, title: b.title });
       }
       paint();
     };
@@ -2322,10 +2301,10 @@ async function getForwardTargets() {
   } catch (e) { /* forward picker just won't offer groups */ }
   try {
     const { data } = await sb.from('server_members').select('server_id, servers(id,name)').eq('user_id', me.id);
-    for (const x of (data || [])) {
-      if (!x.servers) continue;
-      const { data: chans } = await sb.from('channels').select('id,name').eq('server_id', x.server_id).order('position');
-      (chans || []).forEach(c => targets.push({ type: 'channel', id: c.id, label: x.servers.name + ' / #' + c.name }));
+    const svs = (data || []).filter(x => x.servers);
+    if (svs.length) {   // one query for every server's channels, not one round trip per server
+      const { data: chans } = await sb.from('channels').select('id,name,server_id').in('server_id', svs.map(x => x.server_id)).order('position');
+      svs.forEach(x => (chans || []).forEach(c => { if (c.server_id === x.server_id) targets.push({ type: 'channel', id: c.id, label: x.servers.name + ' / #' + c.name }); }));
     }
   } catch (e) { /* forward picker just won't offer channels */ }
   return targets;
@@ -2386,9 +2365,11 @@ async function msgShowHome() {
   $('svSide').innerHTML = '<div class="svhead">Home</div><div class="svchans"><div class="fempty">Loading…</div></div>';
   try {
     const { items, groups } = await msgLoadHomeList();
+    if (msgMode !== 'home') return;   // a server was opened while this loaded - don't draw Home over its channel list
     grCache = { groups, gid: null, g: null, members: [], profiles: new Map() };
     msgRenderHomeSide(items);
   } catch (e) {
+    if (msgMode !== 'home') return;
     $('svSide').innerHTML = `<div class="svhead">Home</div><div class="svchans"><div class="fempty">Couldn't load: ${esc(e.message)}</div></div>`;
   }
 }

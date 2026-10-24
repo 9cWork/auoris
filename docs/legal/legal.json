@@ -1,5 +1,5 @@
 {
-  "version": "2026-10-22",
+  "version": "2026-10-23",
   "operator": "Auoris",
   "contact": "support@auoris.org",
   "docs": [
@@ -30,6 +30,10 @@
     }
   ],
   "changes": [
+    {
+      "version": "2026-10-23",
+      "summary": "The Privacy Policy says what an optional crash report of a Minecraft game started by Auoris contains, and that crash reports are deleted after 90 days at most."
+    },
     {
       "version": "2026-10-22",
       "summary": "The privacy policy now explains the in-game chat translator (off by default; it uses the AI model you picked in the app), and says live health goes to the games of Auoris staff that ask for your player."
@@ -223,5 +227,5 @@
       "summary": "First version of the Terms of Service, Privacy Policy, Acceptable Use Policy, Subscription and Gift Terms, and Copyright policy."
     }
   ],
-  "hash": "ee314f3648788b733c267889aa7b2b6b92f258cc739077758e5b10fecbfe6a3d"
+  "hash": "bea014dbb02d5f34a4f0a379615018e5fb407a49eedde095df191046e5cec59e"
 }

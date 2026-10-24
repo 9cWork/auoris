@@ -33,7 +33,7 @@ const pconsole = {
 };
 window.addEventListener('message', function (ev) {
   const d = ev.data;
-  if (!d || typeof d !== 'object') return;
+  if (ev.source !== parent || !d || typeof d !== 'object') return;   // only Auoris itself: another plugin's frame can reach this one through parent.frames
   if (d.type === 'load') {
     try {
       new Function('AuorisPlugins', 'console', '"use strict";\\n' + d.src)(AuorisPlugins, pconsole);

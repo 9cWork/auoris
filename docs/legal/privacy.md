@@ -57,7 +57,7 @@ Server status: the launcher's Play and Servers tabs ask each server in your Mine
 - **Chat from anywhere (phone relay):** if you turn this on, the chat you type on auoris.org and your PC's answers pass through our realtime service between your own signed-in devices. They are not stored, and only your own account can use that connection. Your PC's AI handles the chat as described above for local models and cloud providers.
 - **Uploads quota data:** the size and time of your uploads, used to apply upload limits.
 - **auoris.md:** if you create an auoris.md file (in a project folder, or your own one in `%APPDATA%\Auoris`), its text is added to the instructions of each chat in that folder, so it goes to the model you use there - your local model, or a cloud provider under its privacy policy. The file stays on your computer; we never receive it.
-- **Crash reports (optional):** if you switch this on, an error message, a trimmed technical trace with your user folder, file paths and e-mail addresses removed, the Auoris version and your Windows version. If you are a Tester, your reports are marked as coming from a Tester.
+- **Crash reports (optional):** if you switch this on, an error message, a trimmed technical trace with your user folder, file paths and e-mail addresses removed, the Auoris version and your Windows version. When a Minecraft game that Auoris started crashes, the report also has the game's version and mod loader, the Auoris mod version and the file names in its mods folder. From the game's crash files only the error and its trace are taken, with your player names and IP addresses removed; the game's system details (which name your worlds, servers and other players) and your chat are never included. If you are a Tester, your reports are marked as coming from a Tester.
 
 We do not collect your browsing history, and the browser extension only sends a page to Auoris when you press its button.
 
@@ -78,7 +78,7 @@ Our providers may process data in the United States and other countries. Where t
 
 ## 7. How long we keep it
 
-We keep account data while your account exists (network hashes are limited to your last few networks).  Messages and files stay until you or the other participants delete them or the account is deleted. When you delete your account we delete or anonymise your profile and content within a reasonable time, apart from what we must keep for legal, billing or abuse-prevention reasons. Crash reports are kept only as long as needed to fix the bug, and are deleted with your account.
+We keep account data while your account exists (network hashes are limited to your last few networks).  Messages and files stay until you or the other participants delete them or the account is deleted. When you delete your account we delete or anonymise your profile and content within a reasonable time, apart from what we must keep for legal, billing or abuse-prevention reasons. Crash reports are kept only as long as needed to fix the bug (90 days at most), and are deleted with your account.
 
 ## 8. Your choices and rights
 

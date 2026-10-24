@@ -640,9 +640,10 @@ async function crashAdminLoad() {
   const fromTester = g => g.some(c => c.tester);   // Testers' reports are read first
   const list = [...groups.values()].sort((a, b) => fromTester(b) - fromTester(a) || b.length - a.length || Date.parse(b[0].created_at) - Date.parse(a[0].created_at));
   const vers = g => [...new Set(g.map(c => c.app_version))].slice(0, 6).join(', ');
+  const kindName = c => /^Minecraft crash/.test(c.message) ? 'Game crash' : /^Minecraft mod:/.test(c.message) ? 'Mod error' : c.kind;   // game reports are kind 'other'
   box.innerHTML = list.length ? `<div class="vsub" style="margin:4px 0 8px">${data.length} report${data.length === 1 ? '' : 's'} in ${list.length} group${list.length === 1 ? '' : 's'} (latest 500)</div>` + list.map((g, i) => {
     const c = g[0], users = new Set(g.map(x => x.user_id)).size;
-    return `<div class="crashrow">${fromTester(g) ? `<b style="color:${ROLES.find(r => r.k === 'tester').c}">Tester</b> · ` : ''}<b>${esc(c.kind)}</b> · <b>${g.length}×</b> · ${users} user${users === 1 ? '' : 's'} · v${esc(vers(g))} · last ${esc(new Date(c.created_at).toLocaleString())}
+    return `<div class="crashrow">${fromTester(g) ? `<b style="color:${ROLES.find(r => r.k === 'tester').c}">Tester</b> · ` : ''}<b>${esc(kindName(c))}</b> · <b>${g.length}×</b> · ${users} user${users === 1 ? '' : 's'} · v${esc(vers(g))} · last ${esc(new Date(c.created_at).toLocaleString())}
       <button class="btn sm danger" style="float:right" data-delg="${i}">Delete ${g.length === 1 ? '' : 'all ' + g.length}</button><div>${esc(c.message)}</div>
       <details><summary style="cursor:pointer">Latest trace · ${esc(c.os)}</summary><pre>${esc(c.stack)}</pre></details></div>`;
   }).join('') : '<div class="fempty">No crash reports.</div>';

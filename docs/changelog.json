@@ -1,6 +1,21 @@
 {
   "releases": [
     {
+      "version": "1.9.19",
+      "date": "2026-10-24",
+      "notes": [
+        "Hits you time right as the other player can be hurt again now count for the Hit sound, the combo counter, Nametags health and the hit log; before, many real hits were missed.",
+        "The instant Hit sound now plays once for each hit that can land instead of on every click.",
+        "Your held item now shakes with the camera when you take damage, at every Hurt camera amount.",
+        "Minecraft now quits properly when its window is closed by Task Manager or another program, instead of running on without a window.",
+        "Emotes no longer use up more graphics memory each time they play, and the HUD's TPS now shows how fast the server really runs.",
+        "The Bow draw HUD element has been removed; Bow sync stays.",
+        "If you send crash reports, Minecraft crashes are now included too, and Auoris tells you when Java itself crashed, which is often a graphics driver problem.",
+        "New replies, notifications and dialogs no longer stay invisible while Auoris is in the background, and signing in is faster.",
+        "On 1.7.10 and Fabric, the HUD's TPS is fixed and more settings now match 1.8.9."
+      ]
+    },
+    {
       "version": "1.9.18",
       "date": "2026-10-23",
       "notes": [

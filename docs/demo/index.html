@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'unsafe-inline'; img-src 'self' data: blob: https:; media-src 'self' data: blob: https:; font-src data:; connect-src 'self'; frame-src about: blob: data:; base-uri 'none'; form-action 'none'"><script src="demo.js" data-version="1.9.18"></script>
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'unsafe-inline'; img-src 'self' data: blob: https:; media-src 'self' data: blob: https:; font-src data:; connect-src 'self'; frame-src about: blob: data:; base-uri 'none'; form-action 'none'"><script src="demo.js" data-version="1.9.19"></script>
 <title>Auoris</title>
 <style>
   :root {
@@ -2188,8 +2188,9 @@
 #badgeTip { position: fixed; z-index: 99999; display: none; pointer-events: none; max-width: 250px; padding: 9px 12px; border-radius: 10px; background: var(--panel2, #1d2331); border: 1px solid var(--border2, #33405a); box-shadow: 0 10px 30px #000a; font-size: 12px; line-height: 1.45; color: var(--text, #e9edf5); animation: tipIn .08s ease-out; }
 #badgeTip b { display: block; font-size: 13px; margin-bottom: 2px; } #badgeTip span { display: block; color: var(--muted, #8b93a7); }
 @keyframes tipIn { from { opacity: 0; transform: translateY(2px); } to { opacity: 1; transform: none; } }
-/* the window is in the background (you're playing): every animation stands still, so Auoris doesn't take frames from the game */
-.appasleep *, .appasleep *::before, .appasleep *::after { animation-play-state: paused !important; }
+/* the window is in the background (you're playing): every animation jumps to its end and stays there, so Auoris doesn't take frames from the
+   game. Pausing instead held new replies, toasts and dialogs on their first, invisible frame until the window got focus again. */
+.appasleep *, .appasleep *::before, .appasleep *::after { animation-duration: 0s !important; }
 </style>
 </head>
 <body class="intro">
@@ -2863,7 +2864,7 @@
       <section data-pane="privacy" hidden>
         <div id="socialPriv"></div>
         <div class="setrow"><label class="chk"><input type="checkbox" id="hideUserIn"> <span><span data-i18n="s.hideUser">Hide my username</span><small data-i18n="s.hideUserHint">Shows paths as C:\Users\*****\ everywhere on screen (the AI still uses the real paths)</small></span></label></div>
-        <div class="setrow"><label class="chk"><input type="checkbox" id="crashIn"> <span><span>Send crash reports</span><small>When something breaks, send the error text and your Auoris and Windows versions so it can be fixed. Never chats, files or personal info. Off by default.</small></span></label></div>
+        <div class="setrow"><label class="chk"><input type="checkbox" id="crashIn"> <span><span>Send crash reports</span><small>When Auoris or a Minecraft game it started crashes, send the error text, your Auoris and Windows versions, and the game's version and mod list, so it can be fixed. Never chats, files or personal info. Off by default.</small></span></label></div>
         <div class="dangerzone">
           <div><b>Crash log</b><div class="vsub" id="crashInfo"></div></div>
           <button class="btn" id="crashOpen">Open folder</button>

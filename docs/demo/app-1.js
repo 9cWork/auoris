@@ -1298,7 +1298,9 @@ function renderAtts(list) {
 }
 async function addBlobs(files) {
   for (const f of files) {
-    const b64 = await new Promise(r => { const fr = new FileReader(); fr.onload = () => r(fr.result.split(',')[1]); fr.readAsDataURL(f); });
+    // a dropped folder (or a file that can't be read) only fires onerror: without it the loop stopped there for good
+    const b64 = await new Promise(r => { const fr = new FileReader(); fr.onload = () => r(fr.result.split(',')[1]); fr.onerror = () => r(null); fr.readAsDataURL(f); });
+    if (b64 == null) { toast('Attach', `Couldn't read ${f.name || 'that file'} - for a folder, use the folder button.`); continue; }
     renderAtts(await api().add_dropped(f.name || 'pasted.png', b64));
   }
 }
@@ -4171,7 +4173,7 @@ async function mcpRefresh() {
   mcpState = await api().mcp_state();
   const L = mcpState.servers;
   $('mcpList').innerHTML = L.length ? L.map(x => `<div class="mcprow" data-id="${esc(x.id)}">
-      <div class="mcphead"><i class="mcpdot ${x.error ? 'bad' : x.connected ? 'ok' : ''}"></i><b>${esc(x.name)}</b><small>${x.transport === 'http' ? esc(x.url) : esc([x.command, ...x.args].join(' ')).slice(0, 80)}</small>
+      <div class="mcphead"><i class="mcpdot ${x.error ? 'bad' : x.connected ? 'ok' : ''}"></i><b>${esc(x.name)}</b><small>${x.transport === 'http' ? esc(x.url) : esc([x.command, ...x.args].join(' ').slice(0, 80))}</small>
         <label class="chk"><input type="checkbox" class="mcpon" ${x.enabled ? 'checked' : ''}> <span>On</span></label></div>
       <div class="mcpmeta">${x.error ? `<span class="mcperr">${esc(x.error)}</span>` : x.connected ? `${x.tools.length} tool${x.tools.length === 1 ? '' : 's'}: ${esc(x.tools.slice(0, 8).join(', '))}${x.tools.length > 8 ? '…' : ''}` : (x.enabled ? 'Connects when you next use Code mode' : 'Off')}</div>
       <div class="mcpact"><select class="mcppol">${Object.entries(POLICY).map(([k, v]) => `<option value="${k}" ${x.approve === k ? 'selected' : ''}>${v}</option>`).join('')}</select>
@@ -4181,11 +4183,11 @@ async function mcpRefresh() {
     const id = row.dataset.id;
     row.querySelector('.mcpon').onchange = async e => { await api().mcp_enable(id, e.target.checked); mcpRefresh(); };
     row.querySelector('.mcppol').onchange = async e => {
-      if (e.target.value === 'all' && !confirm('With "Never ask" this connector can act without checking with you first - post, edit or delete things in the service it is connected to. Continue?')) { mcpRefresh(); return; }
+      if (e.target.value === 'all' && !(await ask({ title: 'Never ask?', html: 'With "Never ask" this connector can act without checking with you first - post, edit or delete things in the service it is connected to.', ok: 'Continue', danger: true, icon: '⚠️' }))) { mcpRefresh(); return; }
       await api().mcp_approve(id, e.target.value);
     };
     row.querySelector('.mcptest').onclick = async e => { e.target.textContent = 'Connecting…'; e.target.disabled = true; await api().mcp_test(id); mcpRefresh(); };
-    row.querySelector('.mcprm').onclick = async () => { if (confirm('Remove this connector and its saved tokens?')) { await api().mcp_remove(id); mcpRefresh(); } };
+    row.querySelector('.mcprm').onclick = async () => { if (await ask({ title: 'Remove this connector?', html: 'Its saved tokens are removed too.', ok: 'Remove', danger: true })) { await api().mcp_remove(id); mcpRefresh(); } };
   });
   const have = new Set(L.map(x => x.name));
   $('mcpCat').innerHTML = mcpState.catalog.map(k => `<div class="mcpcard"><b>${esc(k.name)}</b><small>${esc(k.desc)}</small><button class="btn" data-k="${k.id}" ${have.has(k.name) ? 'disabled' : ''}>${have.has(k.name) ? 'Added' : 'Add'}</button></div>`).join('');
@@ -4210,7 +4212,7 @@ function mcpCatalogAdd(k, btn) {
       spec.url = k.url;
       if (k.ask_secret) { const v = ($('mcpAskVal').value || '').trim(); if (!v) { toast('Connector', 'Fill that in first.'); return; } headers = { [k.ask_secret.header]: k.ask_secret.prefix + v }; }
     }
-    if (k.transport === 'stdio' && !confirm(`"${k.name}" is a program that will run on this PC with your account's rights (${k.command} ${spec.args.join(' ')}). Add it?`)) return;
+    if (k.transport === 'stdio' && !(await ask({ title: `Add ${k.name}?`, html: `<b>${esc(k.name)}</b> is a program that will run on this PC with your account's rights:<br><code>${esc(k.command + ' ' + spec.args.join(' '))}</code>`, ok: 'Add it', danger: true, icon: '⚠️' }))) return;
     $('mcpStatus').textContent = 'Connecting…';
     const r = await api().mcp_save(spec, env, headers);
     if (!r.ok) { $('mcpStatus').textContent = r.error; return; }
@@ -4237,8 +4239,8 @@ async function mcpAddOwn() {
   for (const line of $('mcpSecrets').value.split('\n')) { const i = line.indexOf('='); if (i > 0) secrets[line.slice(0, i).trim()] = line.slice(i + 1).trim(); }
   const spec = { name: $('mcpName').value, transport: $('mcpType').value, approve: $('mcpPolicy').value, enabled: true };
   if (http) spec.url = $('mcpUrl').value; else { spec.command = $('mcpCmd').value; spec.args = $('mcpArgs').value.split('\n').map(x => x.trim()).filter(Boolean); }
-  if (!http && !confirm(`This program will run on your PC with your account's rights:\n\n${spec.command} ${spec.args.join(' ')}\n\nOnly continue if you trust it.`)) return;
-  if (spec.approve === 'all' && !confirm('"Never ask" lets this connector act without checking with you first. Continue?')) return;
+  if (!http && !(await ask({ title: 'Run this program?', html: `It will run on your PC with your account's rights:<br><code>${esc(spec.command + ' ' + spec.args.join(' '))}</code><br>Only continue if you trust it.`, ok: 'Continue', danger: true, icon: '⚠️' }))) return;
+  if (spec.approve === 'all' && !(await ask({ title: 'Never ask?', html: '"Never ask" lets this connector act without checking with you first.', ok: 'Continue', danger: true, icon: '⚠️' }))) return;
   const r = await api().mcp_save(spec, http ? null : secrets, http ? secrets : null);
   if (!r.ok) { $('mcpStatus').textContent = r.error; return; }
   ['mcpName', 'mcpCmd', 'mcpArgs', 'mcpUrl', 'mcpSecrets'].forEach(i => $(i).value = '');

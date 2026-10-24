@@ -3427,23 +3427,9 @@ function mcSwitchTab(tab) {
   if (tab === 'servers') mcServersLoad();
   if (tab === 'news') mcNewsLoad();
   if (tab === 'versions') mcVerRender();
-  mcShopFab();
   if (tab === 'shop') { mcShopRender(); mcCosmAccess(); }
 }
 document.querySelectorAll('.mctab[data-mctab]').forEach(b => b.onclick = () => mcSwitchTab(b.dataset.mctab));
-// The round Shop button: on every tab but the Shop, and on Play only while the Shop card is scrolled (or squeezed) out of sight
-function mcShopFab() {
-  const pane = n => !document.querySelector(`.mcpane[data-mcpane="${n}"]`).hidden;
-  let seen = false;
-  if (pane('play')) {
-    const r = document.querySelector('.mcshopcard').getBoundingClientRect(), w = document.querySelector('.mcpanewrap').getBoundingClientRect();
-    seen = r.top + r.height / 2 < w.bottom && r.bottom - r.height / 2 > w.top;   // at least half of it shows
-  }
-  $('mcShopBtn').hidden = pane('shop') || seen;
-}
-document.querySelector('.mcpanewrap').addEventListener('scroll', mcShopFab, { passive: true });
-window.addEventListener('resize', mcShopFab);
-new ResizeObserver(mcShopFab).observe(document.querySelector('.mcplayside'));   // friends and news fill in after the tab opens
 document.querySelectorAll('#minecraftView [data-goto]').forEach(b => b.onclick = () => mcSwitchTab(b.dataset.goto));
 
 // ---- Cosmetics: catalog + art come from the same generated files the Minecraft mod carries (tools/gen_cosmetics.py)
@@ -3964,7 +3950,7 @@ $('mcShowEmotes').onchange = () => { prefs.mc_show_emotes = $('mcShowEmotes').ch
 
 // ---- Minecraft presence: lets two Auoris players see the logo on each other's nametags (and each other's cosmetics).
 let mcPresTimer = null, mcPresWings = true;   // false once the database turned out to have no wings column
-let mcUsers = [], mcUsersAt = 0, mcEmoteCh = null;
+let mcUsers = [], mcUsersAt = 0, mcEmoteCh = null, mcEmoteLive = false, mcEmotePoll = null;
 // How far this PC's clock is from the database's (which stamps last_seen and created_at). "Online in the last 100 s" has to be
 // measured on the database's clock: a PC clock running a minute fast made everyone drop offline every few seconds.
 let mcSkew = 0;
@@ -3985,18 +3971,38 @@ async function mcEmoteOut(id, force) {
 // The newest emote change that came live for each player. A presence refresh that was already on its way when someone stopped (or changed)
 // an emote can arrive AFTER that change and carry the old emote: it must not bring the old emote back on everyone's screen.
 const mcEmoteSeen = {};
+function mcEmoteApply(r) {   // true when this row changes a listed player's emote
+  const u = mcUsers.find(x => x.uid === r.user_id);
+  if (!u) return false;   // not in the current list: the next presence poll picks them up
+  if (u.emote === (r.emote || '') && u.n === (r.emote_n || 0)) return false;   // a plain presence refresh
+  u.emote = r.emote || ''; u.n = r.emote_n || 0;
+  mcEmoteSeen[r.user_id] = { emote: u.emote, n: u.n, at: Date.now() };
+  return true;
+}
 function mcEmoteWatch() {
   if (mcEmoteCh || !sb || !me) return;
-  mcEmoteCh = sb.channel('mc-emotes:' + me.id + ':' + Date.now())
+  const ch = mcEmoteCh = sb.channel('mc-emotes:' + me.id + ':' + Date.now())
     .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'mc_presence' }, ({ new: r }) => {
-      if (!r || r.user_id === me.id) return;
-      const u = mcUsers.find(x => x.uid === r.user_id);
-      if (!u) return;   // not in the current list: the next presence poll picks them up
-      if (u.emote === (r.emote || '') && u.n === (r.emote_n || 0)) return;   // a plain presence refresh
-      u.emote = r.emote || ''; u.n = r.emote_n || 0;
-      mcEmoteSeen[r.user_id] = { emote: u.emote, n: u.n, at: Date.now() };
-      mcWriteUsers();
-    }).subscribe();
+      if (r && r.user_id !== me.id && mcEmoteApply(r)) mcWriteUsers();
+    }).subscribe(status => {
+      if (ch !== mcEmoteCh) return;   // an old channel closing
+      mcEmoteLive = status === 'SUBSCRIBED';
+      // a channel that failed or closed was kept forever, so emotes stopped arriving: drop it, the next presence tick opens a new one
+      if (!mcEmoteLive) { mcEmoteCh = null; try { sb.removeChannel(ch); } catch (e) {} }
+    });
+}
+// While Realtime isn't connected, the 25 s presence poll alone missed every short emote (seen live: a player's app with no Realtime
+// connection at all, so nobody's wave, clap or spin reached them). Then the emote columns are read every 2 s instead.
+async function mcEmotePollTick() {
+  if (mcEmoteLive || mcEmotePollTick.busy || !sb || !me || !mcUsers.length) return;
+  mcEmotePollTick.busy = true;
+  try {
+    const { data } = await sb.from('mc_presence').select('user_id,emote,emote_n')
+      .gt('last_seen', new Date(mcSrvNow() - 100000).toISOString()).neq('user_id', me.id).limit(500);
+    let changed = false;
+    (data || []).forEach(r => { if (mcEmoteApply(r)) changed = true; });
+    if (changed) mcWriteUsers();
+  } catch (e) {} finally { mcEmotePollTick.busy = false; }
 }
 // Proves (once a week per account) that this Minecraft account is ours, with Minecraft's own server-join handshake (mcJoinProof): the
 // access token never leaves this PC. After that, nobody else can show presence (logo, cosmetics, emotes) for this player. Offline
@@ -4080,10 +4086,11 @@ async function mcPresenceTick() {
     await api().mc_write_friends(fr, typeof unreadFrom !== 'undefined' ? unreadFrom.size : 0, myProfile ? myProfile.username : '');
   } catch (e) {}
 }
-function mcPresenceStart() { mcPresenceStop(true); mcPresenceTick(); mcPresTimer = setInterval(mcPresenceTick, 25000); }
+function mcPresenceStart() { mcPresenceStop(true); mcPresenceTick(); mcPresTimer = setInterval(mcPresenceTick, 25000); mcEmotePoll = setInterval(mcEmotePollTick, 2000); }
 function mcPresenceStop(keepRow) {
   if (mcPresTimer) { clearInterval(mcPresTimer); mcPresTimer = null; }
-  if (!keepRow && mcEmoteCh && sb) { try { sb.removeChannel(mcEmoteCh); } catch (e) {} mcEmoteCh = null; }
+  if (mcEmotePoll) { clearInterval(mcEmotePoll); mcEmotePoll = null; }
+  if (!keepRow && mcEmoteCh && sb) { const ch = mcEmoteCh; mcEmoteCh = null; mcEmoteLive = false; try { sb.removeChannel(ch); } catch (e) {} }
   if (keepRow) return;
   mcUsers = [];
   try { api().mc_write_users([]); api().mc_set_own_badges('', ''); } catch (e) {}

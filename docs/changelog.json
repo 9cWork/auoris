@@ -1,6 +1,19 @@
 {
   "releases": [
     {
+      "version": "1.9.17",
+      "date": "2026-10-23",
+      "notes": [
+        "Bow sync (Settings > General, on by default): your bow now looks fully drawn exactly when the shot is full power and a critical hit, at the same moment the Bow draw HUD shows FULL.",
+        "Changing worlds, like a delayed teleport, no longer closes the chat you are typing in: it opens again with your text once the new world has loaded (Chat tweaks > Keep your chat open when you change worlds).",
+        "Armor follows your emotes again instead of staying in the normal pose.",
+        "Other players see your emotes again even when their app loses its live connection.",
+        "Hide foliage can no longer hide leaves.",
+        "In the launcher, the Shop now opens from the Shop card on the Play tab.",
+        "Fixed a blank 404 page that could show after an update until Auoris was restarted."
+      ]
+    },
+    {
       "version": "1.9.16",
       "date": "2026-10-23",
       "notes": [

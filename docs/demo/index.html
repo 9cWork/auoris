@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'unsafe-inline'; img-src 'self' data: blob: https:; media-src 'self' data: blob: https:; font-src data:; connect-src 'self'; frame-src about: blob: data:; base-uri 'none'; form-action 'none'"><script src="demo.js" data-version="1.9.16"></script>
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'unsafe-inline'; img-src 'self' data: blob: https:; media-src 'self' data: blob: https:; font-src data:; connect-src 'self'; frame-src about: blob: data:; base-uri 'none'; form-action 'none'"><script src="demo.js" data-version="1.9.17"></script>
 <title>Auoris</title>
 <style>
   :root {
@@ -1878,17 +1878,9 @@
   .mchud-note { margin-top: 12px; padding: 12px 14px; border-radius: 12px; background: var(--accbg); border: 1px solid var(--accline); color: var(--text2); font-size: 12.5px; }
   .mccosmcard.locked > canvas, .mccosmcard.locked > .mccosmname { opacity: .45; }
   .mclock { display: flex; align-items: center; gap: 4px; font-size: 10.5px; font-weight: 650; color: var(--mcacctext); text-align: center; line-height: 1.2; }
-  .mclock svg, .mcshopbtn svg { flex: none; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .mclock svg { flex: none; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
   .mclock svg { width: 12px; height: 12px; }
-  /* Shop: a round button at the launcher's bottom right, and its page */
-  .mcmain { position: relative; }
-  .mcpanewrap { padding-bottom: 56px; }
-  .mcshopbtn { position: absolute; right: 22px; bottom: 18px; z-index: 5; display: flex; align-items: center; gap: 8px; padding: 11px 20px 11px 16px; border: 0;
-    border-radius: 999px; background: var(--acc); color: #08111f; font-size: 14px; font-weight: 700; box-shadow: 0 6px 22px #0008; }
-  .mcshopbtn:hover { filter: brightness(1.08); background: var(--acc); }
-  .mcshopbtn[hidden] { display: none; }
-  .mcshopbtn svg { width: 19px; height: 19px; }
-  /* the Play tab's Shop card at the bottom of the right column: Alex showing Shop items and playing emotes (mcShopCardDraw) */
+  /* the Play tab's Shop card (the only way into the Shop page) at the bottom of the right column: Alex showing Shop items and playing emotes (mcShopCardDraw) */
   .mcshopcard { position: relative; flex: none; width: 100%; height: 196px; margin-top: auto; padding: 0; border: 0; border-radius: 16px; overflow: hidden;
     cursor: pointer; text-align: left; color: #fff; transition: transform .2s var(--ease), box-shadow .2s;
     background: radial-gradient(90% 80% at 78% 30%, color-mix(in srgb, var(--acc) 50%, transparent), transparent 70%), linear-gradient(150deg, #1d1840, #101624 55%, #0b1020);
@@ -2458,7 +2450,6 @@
       </div>
     </header>
 
-    <button class="mcshopbtn" id="mcShopBtn" data-goto="shop" title="Shop"><svg viewBox="0 0 24 24"><path d="M5 8h14l-1.2 11.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8z"/><path d="M9 10V7a3 3 0 0 1 6 0v3"/></svg>Shop</button>
     <div class="mcpanewrap">
       <section class="mcpane" data-mcpane="play">
         <div class="mcplaymain">

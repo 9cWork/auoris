@@ -23,6 +23,8 @@ Skins: the Minecraft client's account switcher and the skin previews in the app 
 
 Server status: the launcher's Play and Servers tabs ask each server in your Minecraft server list (up to 40) for its player count and ping, the same request the game's Multiplayer screen makes. Each of those servers sees your IP address and the address you saved for it; nothing about your Minecraft or Auoris account is sent, and the answers are not stored.
 
+Game downloads: to start Minecraft, the launcher downloads the game from Mojang, its mod loader from Forge, NeoForge, Fabric or Quilt, OptiFine from optifine.net, Sodium and Fabric API from Modrinth, and the Java it needs once from Eclipse Adoptium (files hosted on GitHub) or Mojang. Each of those services sees your IP address like any download; nothing about your Auoris account is sent to them.
+
 ## 3. What we collect when you have an account
 
 - **Age check:** when you sign up we ask for your date of birth only to check that you are old enough. We do not store it.

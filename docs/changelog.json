@@ -1,6 +1,18 @@
 {
   "releases": [
     {
+      "version": "1.9.20",
+      "date": "2026-10-25",
+      "notes": [
+        "1.8.9 now runs on Java 17, which Auoris downloads by itself.",
+        "If one of your own mods needs Java 8, Auoris starts the game on Java 8 instead and remembers that until your mods change.",
+        "1.7.10, 1.12.2 and Fabric now have much more of 1.8.9: the main menu account switcher, the resource pack browser with folders and search, many more modules, and on 1.7.10 emotes and cosmetics too.",
+        "Resource packs you pick from a folder now stay picked after a restart, Done on the pack screen no longer reloads packs that didn't change, and the folder pack counts are right.",
+        "You can now show your own pet in first person (Settings > Nametags & pet), and Fly boost also works when a server gives you /fly.",
+        "The Privacy Policy now lists where the launcher downloads Minecraft, its mod loaders and Java from."
+      ]
+    },
+    {
       "version": "1.9.19",
       "date": "2026-10-24",
       "notes": [

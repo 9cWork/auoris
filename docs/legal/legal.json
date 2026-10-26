@@ -1,5 +1,5 @@
 {
-  "version": "2026-10-23",
+  "version": "2026-10-25",
   "operator": "Auoris",
   "contact": "support@auoris.org",
   "docs": [
@@ -30,6 +30,10 @@
     }
   ],
   "changes": [
+    {
+      "version": "2026-10-25",
+      "summary": "The Privacy Policy now lists where the launcher downloads Minecraft, its mod loaders and Java from, and that those sites see your IP address like any download."
+    },
     {
       "version": "2026-10-23",
       "summary": "The Privacy Policy says what an optional crash report of a Minecraft game started by Auoris contains, and that crash reports are deleted after 90 days at most."
@@ -227,5 +231,5 @@
       "summary": "First version of the Terms of Service, Privacy Policy, Acceptable Use Policy, Subscription and Gift Terms, and Copyright policy."
     }
   ],
-  "hash": "bea014dbb02d5f34a4f0a379615018e5fb407a49eedde095df191046e5cec59e"
+  "hash": "d902490d6831c10b3cfb7924386dc2c9e92c0f52adf631bb55e72e4e073c7962"
 }

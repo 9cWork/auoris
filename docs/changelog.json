@@ -1,6 +1,14 @@
 {
   "releases": [
     {
+      "version": "1.9.22",
+      "date": "2026-11-01",
+      "notes": [
+        "Armor switch is now available to everyone on 1.8.9 and 1.12.2: turn it on in the Auoris menu under Utility and pick a key.",
+        "Server-safe mode now also turns off Armor switch, because some servers don't allow automatic inventory moves."
+      ]
+    },
+    {
       "version": "1.9.21",
       "date": "2026-11-01",
       "notes": [

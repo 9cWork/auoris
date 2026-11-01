@@ -1,6 +1,14 @@
 {
   "releases": [
     {
+      "version": "1.9.23",
+      "date": "2026-11-01",
+      "notes": [
+        "New in Settings > General: Mute server dings and Hide server crit stars, for the ding and the bursts of crit stars some servers play when an ability goes off, like your sword hitting back when someone hits you.",
+        "Both are off until you turn them on."
+      ]
+    },
+    {
       "version": "1.9.22",
       "date": "2026-11-01",
       "notes": [

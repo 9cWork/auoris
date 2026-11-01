@@ -1,6 +1,14 @@
 {
   "releases": [
     {
+      "version": "1.9.21",
+      "date": "2026-11-01",
+      "notes": [
+        "If the Auoris servers can't be reached, the sign-in screen now offers Continue offline, so you can still launch Minecraft and use the launcher without signing in.",
+        "Friends, messages and the other account features come back once you can sign in again."
+      ]
+    },
+    {
       "version": "1.9.20",
       "date": "2026-10-25",
       "notes": [

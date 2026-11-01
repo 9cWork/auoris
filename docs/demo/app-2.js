@@ -205,6 +205,7 @@ $('authForm').onsubmit = async e => {
     }
   } catch (err) {
     const msg = err.message || String(err);
+    if (err.status === 402) { AUTH.offline = true; return authShow(m, 'Can\'t reach the Auoris servers right now.'); }   // the project is blocked: no sign-in works, Continue offline does
     authErr(/fetch|network/i.test(msg) ? 'Can\'t reach the Auoris servers - check your internet connection.' : msg);
   }
   finally { btn.disabled = false; }
@@ -444,6 +445,14 @@ async function enterApp(user, prof) {
   if (SOCIAL_VIEWS.has(view)) showView(view);   // signed in again while on Messages/Projects/Plus: signing out emptied it, so draw it for this account
 }
 
+// Sign-in can't work when the Auoris servers don't answer, or answer everything with 402 (Supabase blocked the whole project, as when
+// its storage filled up on 2026-11-01) or a server error: the sign-in screen then offers Continue offline.
+async function authServersDown() {
+  try {
+    const r = await fetch(attCfg.url + '/auth/v1/health', { headers: { apikey: attCfg.key }, signal: AbortSignal.timeout(5000) });
+    return r.status === 402 || r.status >= 500;
+  } catch (e) { return true; }
+}
 async function accountsBoot() {
   const cfg = await api().acct_config();
   if (!cfg || !window.supabase) return;  // accounts not set up in this build - the app works as before
@@ -488,7 +497,7 @@ async function accountsBoot() {
     mcCosmAccess();
     $('profSub').textContent = 'Signed out'; AUTH.offline = false; authShow('login');
   });
-  if (!session) { AUTH.offline = stored && !navigator.onLine; return authShow('login'); }
+  if (!session) { AUTH.offline = (stored && !navigator.onLine) || await authServersDown(); return authShow('login', AUTH.offline ? 'Can\'t reach the Auoris servers right now.' : ''); }
   try { await afterSignIn(); }
   catch (e) { AUTH.offline = true; authShow('login', 'Can\'t reach the Auoris servers right now.'); }
 }

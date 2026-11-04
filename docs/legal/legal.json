@@ -1,5 +1,5 @@
 {
-  "version": "2026-10-25",
+  "version": "2026-11-04",
   "operator": "Auoris",
   "contact": "support@auoris.org",
   "docs": [
@@ -30,6 +30,10 @@
     }
   ],
   "changes": [
+    {
+      "version": "2026-11-04",
+      "summary": "Until we take payments for them, everyone can use the Shop's wings, hats and pets and the Plus Minecraft cosmetics for free."
+    },
     {
       "version": "2026-10-25",
       "summary": "The Privacy Policy now lists where the launcher downloads Minecraft, its mod loaders and Java from, and that those sites see your IP address like any download."
@@ -231,5 +235,5 @@
       "summary": "First version of the Terms of Service, Privacy Policy, Acceptable Use Policy, Subscription and Gift Terms, and Copyright policy."
     }
   ],
-  "hash": "d902490d6831c10b3cfb7924386dc2c9e92c0f52adf631bb55e72e4e073c7962"
+  "hash": "b88e482cbbb86fe1bf239784bec5fa6a2e9689822ee7a52b4436d98ebc0fc770"
 }

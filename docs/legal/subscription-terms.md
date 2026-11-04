@@ -4,7 +4,7 @@ These terms apply to Auoris Plus, whether you subscribe or are given Plus as a g
 
 ## 1. What Plus gives you
 
-Plus unlocks extra features and cosmetic perks, such as profile banner images, profile effects, a badge whose colour shows how long you have had Plus, and these Minecraft cosmetics: the Auoris Moon, Aurora Wave and Nether Portal capes, Auoris Wings, the Jewelled Crown, and the Axolotl and Bee pets. The features that come with Plus can change over time. Free features may move to Plus only for new features, and we will tell you before taking away a paid feature you already have where we reasonably can.
+Plus unlocks extra features and cosmetic perks, such as profile banner images, profile effects, a badge whose colour shows how long you have had Plus, and these Minecraft cosmetics: the Auoris Moon, Aurora Wave and Nether Portal capes, Auoris Wings, the Jewelled Crown, and the Axolotl and Bee pets. Until we take payments for them, everyone can use these Minecraft cosmetics for free (see the Terms of Service). The features that come with Plus can change over time. Free features may move to Plus only for new features, and we will tell you before taking away a paid feature you already have where we reasonably can.
 
 ## 2. Price, billing and renewal
 

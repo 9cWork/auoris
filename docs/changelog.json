@@ -1,6 +1,15 @@
 {
   "releases": [
     {
+      "version": "1.9.24",
+      "date": "2026-11-04",
+      "notes": [
+        "Wings, hats, pets and the Plus cosmetics are free for everyone until the Shop takes payments.",
+        "Fly boost now works only while you hold the sprint key, so Toggle sprint no longer keeps it on.",
+        "On 1.8.9, joining a server by a short address that leads to its real one works again."
+      ]
+    },
+    {
       "version": "1.9.23",
       "date": "2026-11-01",
       "notes": [

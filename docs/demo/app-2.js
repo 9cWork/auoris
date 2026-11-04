@@ -3427,8 +3427,9 @@ const MC_COSM = { data: null, tab: 'cape', zoom: .8, skin: null, imgs: {}, raf: 
 const MC_COSM_TABS = [['cape', 'Capes'], ['wings', 'Wings'], ['hat', 'Hats'], ['pet', 'Pets']];   // wings are their own slot, worn with or without a cape
 const MC_KIND_KEY = { cape: 'capes', wings: 'wings', hat: 'hats', pet: 'pets' };
 const MC_SEASONS = { spring: ['Spring', '#6bd66b'], summer: ['Summer', '#ffc93b'], autumn: ['Autumn', '#e8761f'], winter: ['Winter', '#7fc8ff'] };
-// What you may wear (app.py _cosm_locks): wings, hats and pets from the Shop, the Plus items with Auoris Plus, everything for staff. The
-// database checks the same rule on everyone's presence. Asked again on sign-in / out, with each presence check-in and when the Shop opens.
+// What you may wear (app.py _cosm_locks): wings, hats and pets from the Shop, the Plus items with Auoris Plus, everything for staff (and
+// for everyone while the Shop is free). The database checks the same rule on everyone's presence. Asked again on sign-in / out, with each
+// presence check-in and when the Shop opens.
 async function mcCosmAccess() {
   let owned = [];
   if (sb && me) try { const { data } = await sb.from('cosmetics_owned').select('kind,item'); owned = (data || []).map(r => r.kind + ':' + r.item); } catch (e) {}
@@ -3621,6 +3622,7 @@ async function mcSelectCosmetic(cat, id) {
   if (mcPresTimer) mcPresenceTick();
 }
 // ---- Shop: wings, hats and pets for sale, and what Auoris Plus includes. Stripe isn't set up yet: Buy only says so (nothing is charged).
+// Until it is, every item is free for everyone (app.py _SHOP_FREE): the cards say so instead of showing a price.
 const MC_SHOP_PRICE = { wings: '$4.99', hat: '$2.99', pet: '$3.99' };
 const MC_LOCK_SVG = '<svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';
 function mcShopOpen(kind, id) { MC_COSM.shopFocus = kind + ':' + id; mcSwitchTab('shop'); }
@@ -3629,14 +3631,15 @@ function mcShopRender() {
   if (box.closest('.mcpane').hidden) return;
   const d = MC_COSM.data;
   if (!d) { box.innerHTML = '<div class="mcempty">Loading…</div>'; return; }
+  if (d.free) $('mcShopNote').textContent = 'The Shop doesn\'t take payments yet, so every item here is free to use for now.';
   const p = me ? myProfile : null, staff = !!(p && (p.is_admin || p.is_mod)), plus = isPlus(p);
   const card = (kind, it, sale) => {
     const c = document.createElement('div'), lock = mcLock(kind, it.id);
     c.className = 'mccosmcard'; c.dataset.k = kind + ':' + it.id;
     c.appendChild(mcThumb(kind, it.id));
     c.insertAdjacentHTML('beforeend', `<div class="mccosmname">${esc(it.name)}</div>`);
-    if (!sale) c.insertAdjacentHTML('beforeend', `<div class="mcshopown">${lock ? 'Comes with Plus' : plus ? 'Yours with Plus' : 'Unlocked for staff'}</div>`);
-    else if (!lock) c.insertAdjacentHTML('beforeend', `<div class="mcshopown">${staff ? 'Unlocked for staff' : 'Owned'}</div>`);
+    if (!sale) c.insertAdjacentHTML('beforeend', `<div class="mcshopown">${lock ? 'Comes with Plus' : plus ? 'Yours with Plus' : d.free && !staff ? 'Free for now' : 'Unlocked for staff'}</div>`);
+    else if (!lock) c.insertAdjacentHTML('beforeend', `<div class="mcshopown">${staff ? 'Unlocked for staff' : d.free ? 'Free for now' : 'Owned'}</div>`);
     else {
       c.insertAdjacentHTML('beforeend', `<div class="mcshopprice">${MC_SHOP_PRICE[kind]}</div><button type="button" class="btn sm primary">Buy</button>`);
       c.querySelector('button').onclick = () => toast('Shop', 'Payments aren\'t available yet, so nothing was bought or charged. Check back soon.');

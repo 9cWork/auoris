@@ -1,6 +1,16 @@
 {
   "releases": [
     {
+      "version": "1.9.25",
+      "date": "2026-11-05",
+      "notes": [
+        "Motion blur now leaves a fading trail behind bright things, and you can pick the trail colour.",
+        "Motion blur is now on 1.21.11 and 26.3 too.",
+        "The CPS counter shows left and right clicks apart, and either one can be turned off.",
+        "The regeneration timer shown above other players now goes away when they die."
+      ]
+    },
+    {
       "version": "1.9.24",
       "date": "2026-11-04",
       "notes": [

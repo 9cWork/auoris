@@ -1,6 +1,17 @@
 {
   "releases": [
     {
+      "version": "1.9.27",
+      "date": "2026-11-06",
+      "notes": [
+        "New: Inventory search. Press Ctrl+F in a chest, your inventory or a server menu and type: items that don't match go dark and the ones that do get a gold frame.",
+        "New: Ping numbers in tab shows each player's ping as a number, green to red, instead of the bars.",
+        "New: Hunger bar info adds a gold saturation line under your hunger bar and shows what the food in your hand will fill.",
+        "The menu lists scroll more smoothly, and Settings > Menu look has a Scroll amount and a Scroll smoothness. On 1.8.9 a touchpad scrolls as far as you swipe.",
+        "Turn the new modules on in the Mods tab."
+      ]
+    },
+    {
       "version": "1.9.26",
       "date": "2026-11-06",
       "notes": [

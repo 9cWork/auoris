@@ -1624,7 +1624,7 @@ $('saveSet').onclick = async () => {
     browser_home: $('bwHomeIn').value.trim() || 'https://duckduckgo.com', proxy_url: $('proxyUrl').value.trim(), proxy_enabled: $('proxyOn').checked,
     notif_dms: $('notifDmsIn').checked, notif_mentions: $('notifMentionsIn').checked, notif_groups: $('notifGroupsIn').checked, sfx_volume: parseInt($('sfxVolIn').value, 10),
     tts_auto: $('ttsAutoIn').checked, tts_voice: $('ttsVoiceIn').value, tts_rate: parseFloat($('ttsRateIn').value) || 1,
-    tts_engine: $('ttsEngineIn').value, tts_piper_voice: $('ttsPiperVoiceIn').value || 'us-natural',
+    tts_engine: $('ttsEngineIn').value, tts_piper_voice: $('ttsPiperVoiceIn').value || 'us-natural', discord_line: $('dpLine').value.trim(),
   };
   for (const [k, v] of Object.entries(vals)) { await api().set_setting(k, v); prefs[k] = v; }
   if (me) {  // push the cloud-visible subset (bio/color/banner/effect) - these used to stay local-only and never sync
@@ -2214,6 +2214,7 @@ function openSettings(tab) {
                name_effect: prefs.name_effect || 'none', avatar_deco: prefs.avatar_deco || 'none', profile_effect: prefs.profile_effect || 'none' };
   linkedRender(); creatorRender();
   $('profName').value = prefs.profile_name || ''; $('callMe').value = prefs.call_me || ''; $('profBio').value = prefs.bio || ''; $('profPron').value = prefs.pronouns || '';
+  $('dpLine').value = prefs.discord_line || '';
   $('instrIn').value = prefs.custom_instructions || '';
   $('uiLang').innerHTML = Object.entries(LANGS).map(([k, v]) => `<option value="${k}">${esc(v)}</option>`).join(''); $('uiLang').value = LANG;
   $('replyLang').value = prefs.reply_lang || 'auto'; $('sendKey').value = prefs.send_key || 'enter'; $('startupIn').checked = !!prefs.start_with_windows;

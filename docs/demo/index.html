@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'unsafe-inline'; img-src 'self' data: blob: https:; media-src 'self' data: blob: https:; font-src data:; connect-src 'self'; frame-src about: blob: data:; base-uri 'none'; form-action 'none'"><script src="demo.js" data-version="1.9.25"></script>
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'unsafe-inline'; img-src 'self' data: blob: https:; media-src 'self' data: blob: https:; font-src data:; connect-src 'self'; frame-src about: blob: data:; base-uri 'none'; form-action 'none'"><script src="demo.js" data-version="1.9.26"></script>
 <title>Auoris</title>
 <style>
   :root {
@@ -209,7 +209,7 @@
   .app-auoris #ctxMeter, .app-auoris #ttsStop, .app-auoris #incogBtn, .app-auoris #tasksBtn, .app-auoris #callBtn, .app-auoris #cwdBtn,
   .app-auoris .settabs [data-tab="model"], .app-auoris .settabs [data-tab="providers"], .app-auoris .settabs [data-tab="browser"],
   .app-auoris .settabs [data-tab="personas"], .app-auoris .settabs [data-tab="prompts"],
-  .app-mind #navMinecraft, .app-mind #navMessages, .app-mind #navMind, .app-mind #mcMindBtn { display: none !important; }
+  .app-mind #navMinecraft, .app-mind #navMessages, .app-mind #navMind, .app-mind #mcMindBtn, .app-mind .settabs [data-tab="discord"] { display: none !important; }
   .app-auoris .sidefoot { margin-top: auto; }   /* the chat list that filled the sidebar is hidden */
   .snav b { font-weight: 500; }
   .snav kbd { margin-left: auto; font: 11px "Segoe UI", sans-serif; color: var(--dim); opacity: 0; transition: opacity .15s; }
@@ -2717,6 +2717,7 @@
       <button data-tab="providers"><span>☁</span><b>AI providers</b></button>
       <button data-tab="browser"><span>🌐</span><b>Browser</b></button>
       <button data-tab="privacy"><span>🔒</span><b data-i18n="s.privacy">Privacy &amp; data</b></button>
+      <button data-tab="discord"><span>🎮</span><b>Discord</b></button>
       <button data-tab="personas"><span>🎭</span><b>Personas</b></button>
       <button data-tab="prompts"><span>📝</span><b>Prompts</b></button>
       <button data-tab="plugins"><span>🧩</span><b>Plugins</b></button>
@@ -2884,6 +2885,13 @@
           <div><b data-i18n="s.clearChats">Delete all chats</b><div class="vsub" data-i18n="s.clearChatsHint">Permanently deletes your whole chat history.</div></div>
           <button class="dangerbtn" id="clearChats" data-i18n="s.deleteAll">Delete all</button>
         </div>
+      </section>
+      <section data-pane="discord" hidden>
+        <div class="provnote">🎮 While you play, your Discord profile shows <b>Playing Auoris Client</b> and the server you're on. Add your own line under it.</div>
+        <label>Your line under the server</label>
+        <input id="dpLine" maxlength="120" placeholder="e.g. insert text here">
+        <div class="vsub">It shows a few seconds after you save, also in a game that's already open. Leave it empty to show your Minecraft version
+          there. It needs at least 2 letters. Turn the whole Discord status on or off in the game's menu, under Settings &gt; Discord.</div>
       </section>
       <section data-pane="personas" hidden>
         <div class="provnote">🎭 A persona is a saved set of instructions (a tone, a role, a style). The active persona is added <b>after</b> your custom instructions. Choose one per chat with <b>/persona</b> or the chip beside the model button; the default is none. Personas save immediately (no need to press Save).</div>

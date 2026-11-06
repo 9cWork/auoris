@@ -1,5 +1,5 @@
 {
-  "version": "2026-11-04",
+  "version": "2026-11-05",
   "operator": "Auoris",
   "contact": "support@auoris.org",
   "docs": [
@@ -30,6 +30,10 @@
     }
   ],
   "changes": [
+    {
+      "version": "2026-11-05",
+      "summary": "The Privacy Policy now says the Minecraft client's Discord status can show a line of your own, typed in the app, in place of the Minecraft version."
+    },
     {
       "version": "2026-11-04",
       "summary": "Until we take payments for them, everyone can use the Shop's wings, hats and pets and the Plus Minecraft cosmetics for free."
@@ -235,5 +239,5 @@
       "summary": "First version of the Terms of Service, Privacy Policy, Acceptable Use Policy, Subscription and Gift Terms, and Copyright policy."
     }
   ],
-  "hash": "b88e482cbbb86fe1bf239784bec5fa6a2e9689822ee7a52b4436d98ebc0fc770"
+  "hash": "83dd87978872295842eb570e84b0eaaca3e2dfcfdb6ee681db0de2f33fd7e695"
 }

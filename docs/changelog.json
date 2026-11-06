@@ -1,6 +1,16 @@
 {
   "releases": [
     {
+      "version": "1.9.26",
+      "date": "2026-11-06",
+      "notes": [
+        "Armor switch puts the pieces it takes off back where the new ones were, also on servers that close your inventory when a helmet with a mask comes off.",
+        "Armor switch ranks sets by damage, then Protection, then Mask Protector, then the least Decreased Damage, and uses your best spare pieces.",
+        "A renamed Snowstalker set still counts as Snowstalker.",
+        "A new Discord tab in the app settings lets you add your own line under the server in your Discord status."
+      ]
+    },
+    {
       "version": "1.9.25",
       "date": "2026-11-05",
       "notes": [

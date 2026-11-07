@@ -1,5 +1,5 @@
 {
-  "version": "2026-11-05",
+  "version": "2026-11-07",
   "operator": "Auoris",
   "contact": "support@auoris.org",
   "docs": [
@@ -30,6 +30,10 @@
     }
   ],
   "changes": [
+    {
+      "version": "2026-11-07",
+      "summary": "The Privacy Policy now covers the Minecraft client's new Change skin screen: a skin you apply goes from your computer straight to Mojang, and a skin link's website sees your IP address."
+    },
     {
       "version": "2026-11-05",
       "summary": "The Privacy Policy now says the Minecraft client's Discord status can show a line of your own, typed in the app, in place of the Minecraft version."
@@ -239,5 +243,5 @@
       "summary": "First version of the Terms of Service, Privacy Policy, Acceptable Use Policy, Subscription and Gift Terms, and Copyright policy."
     }
   ],
-  "hash": "83dd87978872295842eb570e84b0eaaca3e2dfcfdb6ee681db0de2f33fd7e695"
+  "hash": "d82f83f1286659b9252d5eb4d473d96047a70218ef271caf729a6829f4f601ec"
 }

@@ -1,6 +1,17 @@
 {
   "releases": [
     {
+      "version": "1.9.28",
+      "date": "2026-11-07",
+      "notes": [
+        "New: Change skin. The account card on the title screen has a Change skin button: copy a player's skin by name, paste a skin link or pick a PNG file, with a 3D preview first. A Microsoft account's real skin changes (your old one is saved first); an offline account's skin shows on your PC only.",
+        "New: an Edit HUD button at the bottom left of the Right Shift screen.",
+        "Nick hider and Streamer mode now swap your name in every text on screen, the scoreboard too. Settings > Streamer mode has a Name to show box.",
+        "Chat scrolls smoothly (Chat tweaks: Smooth scrolling, and how many lines one scroll notch moves), and chat logs are saved as one file per game.",
+        "Armor switch puts your old pieces back where the new ones were, also in fights, and closes the inventory sooner."
+      ]
+    },
+    {
       "version": "1.9.27",
       "date": "2026-11-06",
       "notes": [

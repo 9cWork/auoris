@@ -1,6 +1,14 @@
 {
   "releases": [
     {
+      "version": "1.10.1",
+      "date": "2026-11-08",
+      "notes": [
+        "Microsoft sign-in no longer fails when it is finished in a browser tab left open from an earlier try.",
+        "That tab now says to close it, and the sign-in keeps waiting for the newest one."
+      ]
+    },
+    {
       "version": "1.10.0",
       "date": "2026-11-08",
       "notes": [

@@ -1,6 +1,16 @@
 {
   "releases": [
     {
+      "version": "1.9.29",
+      "date": "2026-11-08",
+      "notes": [
+        "New: a Spotify widget for the HUD. It shows the song playing in the Spotify app on your PC with its cover and time, and has buttons to play, pause, skip, shuffle and repeat. Its colors and looks are in its settings, and it has keys for play/pause, next and previous.",
+        "New: on cracked servers, players wear the skin they put on launcher skin sites. Settings > General > Launcher skins on cracked servers.",
+        "Fly boost now builds up while you keep flying instead of jumping to full speed, and eases off when you let go. Settings has the build-up time (0 makes it instant like before).",
+        "Change skin's Choose"
+      ]
+    },
+    {
       "version": "1.9.28",
       "date": "2026-11-07",
       "notes": [

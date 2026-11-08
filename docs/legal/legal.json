@@ -1,5 +1,5 @@
 {
-  "version": "2026-11-07",
+  "version": "2026-11-07.2",
   "operator": "Auoris",
   "contact": "support@auoris.org",
   "docs": [
@@ -30,6 +30,10 @@
     }
   ],
   "changes": [
+    {
+      "version": "2026-11-07.2",
+      "summary": "The Privacy Policy now covers the Minecraft client's skins on cracked servers: it asks the public skin sites of other launchers for the skins of the players in your tab list, so those sites see those names and your IP address."
+    },
     {
       "version": "2026-11-07",
       "summary": "The Privacy Policy now covers the Minecraft client's new Change skin screen: a skin you apply goes from your computer straight to Mojang, and a skin link's website sees your IP address."
@@ -243,5 +247,5 @@
       "summary": "First version of the Terms of Service, Privacy Policy, Acceptable Use Policy, Subscription and Gift Terms, and Copyright policy."
     }
   ],
-  "hash": "d82f83f1286659b9252d5eb4d473d96047a70218ef271caf729a6829f4f601ec"
+  "hash": "c5b5912d428da5d5db4bd14cf8e521f2060040bbef7c4284fd2f42ceed753def"
 }

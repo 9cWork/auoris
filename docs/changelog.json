@@ -7,7 +7,10 @@
         "New: a Spotify widget for the HUD. It shows the song playing in the Spotify app on your PC with its cover and time, and has buttons to play, pause, skip, shuffle and repeat. Its colors and looks are in its settings, and it has keys for play/pause, next and previous.",
         "New: on cracked servers, players wear the skin they put on launcher skin sites. Settings > General > Launcher skins on cracked servers.",
         "Fly boost now builds up while you keep flying instead of jumping to full speed, and eases off when you let go. Settings has the build-up time (0 makes it instant like before).",
-        "Change skin's Choose"
+        "In Change skin, picking a PNG file now opens Windows' modern file picker.",
+        "Chat scrolls 7 lines per scroll notch for new players, as fast as the normal game but smooth.",
+        "Nick hider only changes your name in the game: the account switcher and title screen show real names, and the Auoris menu shows what you type.",
+        "Privacy Policy updated: on cracked servers, the launcher skin sites see your IP address and the names in your tab list."
       ]
     },
     {

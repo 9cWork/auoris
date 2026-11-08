@@ -1,6 +1,15 @@
 {
   "releases": [
     {
+      "version": "1.10.0",
+      "date": "2026-11-08",
+      "notes": [
+        "Hide foliage no longer hides lily pads, because you can stand on them. Its Vines and lily pads switch is now just Vines.",
+        "The launcher shows an offline account's own skin, the one set on the in-game Change skin screen, in the account list and on the Play tab.",
+        "Setup no longer opens an empty window on Windows in German and some other languages."
+      ]
+    },
+    {
       "version": "1.9.29",
       "date": "2026-11-08",
       "notes": [

@@ -4345,7 +4345,10 @@ function mcHeadFrom(skinUrl) {   // 8x8 face + hat layer, drawn from the skin im
 async function mcHeadFor(a) {
   if (mcHeadCache.has(a.id)) return mcHeadCache.get(a.id);
   let url = '';
-  if (!a.offline) { try { const s = await api().mc_skin_by_name(a.name); if (s && s.data) url = await mcHeadFrom(s.data); } catch (e) {} }
+  try {   // an offline account: the skin it wears in game, from the game's Change skin screen (Steve without one)
+    const s = await (a.offline ? api().mc_offline_skin(a.id) : api().mc_skin_by_name(a.name));
+    if (s && s.data) url = await mcHeadFrom(s.data);
+  } catch (e) {}
   // a failed lookup is retried next time; the signed-in account's head from its own up-to-date skin (mcLoadSkin) wins over this one
   if (url && !mcHeadCache.has(a.id)) mcHeadCache.set(a.id, url);
   return mcHeadCache.get(a.id) || '';

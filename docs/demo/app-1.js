@@ -2821,7 +2821,7 @@ const MIND_ONLY = new Set(['chat', 'explore', 'routines', 'browser', 'artifacts'
 function appMode(mode) {
   MIND_APP = mode === 'mind';
   document.body.classList.add(MIND_APP ? 'app-mind' : 'app-auoris');
-  if (MIND_APP) { document.querySelector('#side .brand b').textContent = 'Auoris Mind'; return; }
+  if (MIND_APP) { const t = document.querySelector('#side .brand b'); t.textContent = 'Auoris Mind'; t.hidden = false; return; }   // only Auoris Mind names itself next to the logo
   document.querySelector('.navgroup[data-g="social"]').prepend($('navMinecraft'));   // Minecraft, Messages, Auoris Plus, Auoris Mind
   setNavGroup('social');
   $('mcBackBtn').title = 'Messages and friends';

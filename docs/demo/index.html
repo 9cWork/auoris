@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'unsafe-inline'; img-src 'self' data: blob: https:; media-src 'self' data: blob: https:; font-src data:; connect-src 'self'; frame-src about: blob: data:; base-uri 'none'; form-action 'none'"><script src="demo.js" data-version="1.10.1"></script>
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'unsafe-inline'; img-src 'self' data: blob: https:; media-src 'self' data: blob: https:; font-src data:; connect-src 'self'; frame-src about: blob: data:; base-uri 'none'; form-action 'none'"><script src="demo.js" data-version="1.10.2"></script>
 <title>Auoris</title>
 <style>
   :root {
@@ -1694,6 +1694,10 @@
   .mcacctitem .mchead { width: 30px; height: 30px; }
   .mcacctitem small { display: block; color: var(--muted); font-weight: 500; font-size: 11.5px; margin-top: 2px; }
   .mcacctitem .ck { margin-left: auto; color: var(--acc); }
+  .mcacctitem .mcrm { margin-left: auto; padding: 0 6px; border-radius: 6px; color: var(--muted); font-size: 12px; font-weight: 400; line-height: 20px; opacity: .5; }
+  .mcacctitem .ck + .mcrm { margin-left: 0; }
+  .mcacctitem:hover .mcrm { opacity: 1; }
+  .mcacctitem .mcrm:hover { color: var(--text); background: var(--border2); }
   .mcacctitem.act { font-weight: 500; padding: 7px 10px; font-size: 13px; color: var(--text2); }
   .mcacctitem .grip { width: 8px; margin-right: -5px; opacity: 0; font-size: 11px; letter-spacing: -2px; cursor: grab; }
   .mcacctitem:hover .grip { opacity: .45; }

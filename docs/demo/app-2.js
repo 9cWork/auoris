@@ -4318,7 +4318,7 @@ async function mcAcctSel() {
   const cur = list.find(a => a.current);
   mcAcctCurName = cur ? cur.name : '';
   try { const r = sb && me ? await sb.from('badge_claims').select('mc_uuid').eq('user_id', me.id).maybeSingle() : null; mcClaim = r && r.data ? r.data.mc_uuid : null; } catch (e) {}
-  sel.innerHTML = (list.length ? '' : '<option value="">Not signed in</option>') + list.map(a => `<option value="${esc(a.id)}"${a.current ? ' selected' : ''}>${esc(a.name)}${a.offline ? ' (offline)' : ''}</option>`).join('') + '<option value="__add">+ Add account…</option>' + (hasPremium ? '<option value="__offline">+ Add offline account…</option>' : '') + (cur ? '<option value="__remove">− Remove this account…</option>' : '');
+  sel.innerHTML = (list.length ? '' : '<option value="">Not signed in</option>') + list.map(a => `<option value="${esc(a.id)}"${a.current ? ' selected' : ''}>${esc(a.name)}${a.offline ? ' (offline)' : ''}</option>`).join('') + '<option value="__add">+ Add account…</option>' + (hasPremium ? '<option value="__offline">+ Add offline account…</option>' : '');
   mcAcctUi(list, hasPremium, cur);
 }
 
@@ -4362,11 +4362,11 @@ function mcAcctUi(list, hasPremium, cur) {
   const setHead = (img, a) => { img.src = mcSteveHeadUrl(); if (a) mcHeadFor(a).then(u => { if (u) img.src = u; }); };
   setHead($('mcAcctHead'), cur);
   const pop = $('mcAcctPop');
-  pop.innerHTML = list.map(a => `<div class="mcacctitem" data-id="${esc(a.id)}"${list.length > 1 ? ' draggable="true" title="Drag to reorder"' : ''}>${list.length > 1 ? '<span class="grip">⋮⋮</span>' : ''}<img class="mchead" alt=""><span>${esc(a.name)}<span class="mcbadges">${mcClaim && norm(a.id) === mcClaim ? bdg : ''}</span><small>${a.offline ? 'Offline account' : 'Microsoft account'}</small></span>${a.current ? '<span class="ck">✓</span>' : ''}</div>`).join('')
+  pop.innerHTML = list.map(a => `<div class="mcacctitem" data-id="${esc(a.id)}"${list.length > 1 ? ' draggable="true" title="Drag to reorder"' : ''}>${list.length > 1 ? '<span class="grip">⋮⋮</span>' : ''}<img class="mchead" alt=""><span>${esc(a.name)}<span class="mcbadges">${mcClaim && norm(a.id) === mcClaim ? bdg : ''}</span><small>${a.offline ? 'Offline account' : 'Microsoft account'}</small></span>${a.current ? '<span class="ck">✓</span>' : ''}<button type="button" class="mcrm" title="Remove ${esc(a.name)}">✕</button></div>`).join('')
     + (list.length ? '<div class="mcacctsep"></div>' : '')
     + '<div class="mcacctitem act" data-act="__add">+ Add account…</div>'
     + (hasPremium ? '<div class="mcacctitem act" data-act="__offline">+ Add offline account…</div>' : '')
-    + (cur ? '<div class="mcacctitem act" data-act="__remove">− Remove this account…</div><div class="mcacctitem act" data-act="__signout">Sign out</div>' : '');
+    + (cur ? '<div class="mcacctitem act" data-act="__signout">Sign out</div>' : '');
   [...pop.querySelectorAll('.mcacctitem[data-id]')].forEach((el, i) => setHead(el.querySelector('.mchead'), list[i]));
   mcAcctDrag(pop);
 }
@@ -4427,11 +4427,24 @@ document.addEventListener('click', async e => {
   } catch (err) { toast('Badges', String(err && err.message || err)); }
   mcClaimRender();
 });
+$('mcAcctPop').onmousedown = e => { if (e.target.closest('.mcrm')) e.preventDefault(); };   // pressing an account's ✕ never starts dragging the account
 $('mcAcctPop').onclick = async e => {
   const it = e.target.closest('.mcacctitem'); if (!it) return;
   mcAcctClose();
   const sel = $('mcAcctSel');
   if (it.dataset.act === '__signout') { await api().mc_sign_out(); mcAcctSel(); renderMcAcct(); mcLoadSkin(); return; }
+  if (e.target.closest('.mcrm')) {   // an account's ✕: remove that account (it asks first, so a stray click can't drop a saved sign-in)
+    const list = await api().mc_accounts().catch(() => []);
+    const a = (list || []).find(x => x.id === it.dataset.id);
+    if (!a) return mcAcctSel();
+    const ok = await ask({ title: 'Remove account', html: `<p class="muted small" style="margin:0 0 8px">Removes <b>${esc(a.name)}</b>${a.offline ? ' (offline)' : ''} from this PC and forgets its saved sign-in. You can sign in again at any time.</p>`, ok: 'Remove', icon: '🗑' });
+    if (!ok) return;
+    const r = await api().mc_remove_account(a.id);
+    if (r && r.status === 'error') { toast('Minecraft', r.error || 'Could not remove that account.'); renderMcAcct(); return; }
+    toast('Minecraft', a.name + ' removed.' + (r && r.switched ? ' Another account is now selected.' : (r && r.current ? ' You are signed out now.' : '')));
+    mcAcctSel(); renderMcAcct(); mcLoadSkin();
+    return;
+  }
   const v = it.dataset.act || it.dataset.id;
   if (!sel.querySelector(`option[value="${CSS.escape(v)}"]`)) return;
   sel.value = v; sel.dispatchEvent(new Event('change'));
@@ -4440,19 +4453,6 @@ document.addEventListener('click', e => { if (!e.target.closest('#mcAcctPop') &&
 $('mcAcctSel').onchange = async () => {
   const v = $('mcAcctSel').value;
   if (v === '__add') { mcAcctSel(); return mcDoSignIn(); }
-  if (v === '__remove') {
-    const list = await api().mc_accounts().catch(() => []);
-    const cur = (list || []).find(a => a.current);
-    mcAcctSel();
-    if (!cur) return;
-    const ok = await ask({ title: 'Remove account', html: `<p class="muted small" style="margin:0 0 8px">Removes <b>${esc(cur.name)}</b>${cur.offline ? ' (offline)' : ''} from this PC and forgets its saved sign-in. You can sign in again at any time.</p>`, ok: 'Remove', icon: '🗑' });
-    if (!ok) return;
-    const r = await api().mc_remove_account(cur.id);
-    if (r && r.status === 'error') { toast('Minecraft', r.error || 'Could not remove that account.'); renderMcAcct(); return; }
-    toast('Minecraft', cur.name + ' removed.' + (r && r.switched ? ' Another account is now selected.' : (r && r.current ? ' You are signed out now.' : '')));
-    mcAcctSel(); renderMcAcct(); mcLoadSkin();
-    return;
-  }
   if (v === '__offline') {
     mcAcctSel();
     const ok = await ask({ title: 'Add an offline account', html: '<p class="muted small" style="margin:0 0 8px">A username-only account for offline-mode servers and singleplayer. It has no skin or cape from Mojang and can\'t join normal online servers.</p><input id="offName" class="setsel" maxlength="16" placeholder="Username (3-16 letters, numbers, _)" style="width:100%">', ok: 'Add', icon: '👤' });

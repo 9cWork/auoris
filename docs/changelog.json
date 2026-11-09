@@ -1,6 +1,17 @@
 {
   "releases": [
     {
+      "version": "1.10.2",
+      "date": "2026-11-09",
+      "notes": [
+        "Armor switch no longer leaves ghost items: after a switch every slot shows what the server really has, so an item no longer looks like it is in the wrong slot until you click it or rejoin.",
+        "Armor switch no longer stops you sneaking or walking after it swaps your armor, for example right after you eat a golden apple. Keys you are still holding work again as soon as it closes the inventory.",
+        "Hold Shift and right-click a chat message to copy it with its colour codes, written with & (bold, underline and the other formats too). A plain right-click still copies only the text.",
+        "Nick hider's Replace other players' names too option now works in the tab list as well.",
+        "Each account in the launcher's account menu now has a small X to remove it, in place of the Remove this account entry."
+      ]
+    },
+    {
       "version": "1.10.1",
       "date": "2026-11-08",
       "notes": [

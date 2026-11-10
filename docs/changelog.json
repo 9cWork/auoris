@@ -1,6 +1,14 @@
 {
   "releases": [
     {
+      "version": "1.10.3",
+      "date": "2026-11-09",
+      "notes": [
+        "Hide overlays has new switches, all off by default: flames on other players and mobs, poison hearts, wither hearts and the screen vignette.",
+        "Nametags no longer reads PikaNetwork item lore. The PikaNetwork item stats and Pika combo bonus settings are gone. The gapple and Totem Of Regeneration timers are unchanged."
+      ]
+    },
+    {
       "version": "1.10.2",
       "date": "2026-11-09",
       "notes": [

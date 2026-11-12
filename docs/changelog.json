@@ -1,6 +1,19 @@
 {
   "releases": [
     {
+      "version": "1.10.4",
+      "date": "2026-11-12",
+      "notes": [
+        "Skin Mod is a new module: hide your own armor pieces one by one, hide parts of your own skin, stand upside down or wear a rainbow tint. It only changes how you see yourself, other players see you as always (1.8.9, 1.12.2 and 1.7.10).",
+        "Chat tweaks has chat tabs above the open chat: All, Faction, Ally, Truce and Global, with a switch for whether the tabs also show system messages (1.8.9 and 1.12.2).",
+        "TNT countdown is a new module: the seconds left above primed TNT (1.8.9 and 1.12.2).",
+        "Mute server dings now only mutes dings while you play. Dings you hear while a menu is open stay.",
+        "Two new settings in Settings, General, both off by default and off in server-safe mode: Accurate iron bars hitbox (1.8.9) and Click rails through minecarts (1.8.9 and 1.12.2).",
+        "The F3 screen's version line now names Auoris.",
+        "The resource pack screen's toggles are now in a column under the Selected list."
+      ]
+    },
+    {
       "version": "1.10.3",
       "date": "2026-11-09",
       "notes": [

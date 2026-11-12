@@ -329,11 +329,11 @@ window.pywebview = {
     };
   } }),
 };
-// ui.html cancels every navigation of its page; the demo page's switch between Auoris and Auoris Mind reloads this page, so that one
-// goes through (this listener runs before the app's)
+// ui.html cancels every navigation of its page; the demo page's switch between Auoris and Auoris Mind reloads this page, and the Download
+// links go to the site's own front page (/#dl), so those go through (this listener runs before the app's)
 if (window.navigation) navigation.addEventListener('navigate', e => {
   const u = new URL(e.destination.url);
-  if (u.origin === location.origin && u.pathname === location.pathname) e.stopImmediatePropagation();
+  if (u.origin === location.origin && (u.pathname === location.pathname || u.pathname === '/')) e.stopImmediatePropagation();
 });
 // the app starts when pywebview says its bridge is ready
 window.addEventListener('DOMContentLoaded', () => setTimeout(() => window.dispatchEvent(new Event('pywebviewready')), 0));

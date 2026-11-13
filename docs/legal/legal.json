@@ -1,5 +1,5 @@
 {
-  "version": "2026-11-07.2",
+  "version": "2026-11-13",
   "operator": "Auoris",
   "contact": "support@auoris.org",
   "docs": [
@@ -30,6 +30,14 @@
     }
   ],
   "changes": [
+    {
+      "version": "2026-11-13",
+      "summary": "The Privacy Policy now also says that while a proxy is on, your computer still looks up each server's address from its name itself, so your internet provider can see which server names you look up."
+    },
+    {
+      "version": "2026-11-12",
+      "summary": "The Privacy Policy now covers the Minecraft client's optional proxy setting: with a proxy you picked switched on, your connection to Minecraft servers goes through it and whoever runs it can see that traffic, while its address and sign-in details stay on your computer; the Acceptable Use Policy says it must not be used to get around a server's ban."
+    },
     {
       "version": "2026-11-07.2",
       "summary": "The Privacy Policy now covers the Minecraft client's skins on cracked servers: it asks the public skin sites of other launchers for the skins of the players in your tab list, so those sites see those names and your IP address."
@@ -247,5 +255,5 @@
       "summary": "First version of the Terms of Service, Privacy Policy, Acceptable Use Policy, Subscription and Gift Terms, and Copyright policy."
     }
   ],
-  "hash": "c5b5912d428da5d5db4bd14cf8e521f2060040bbef7c4284fd2f42ceed753def"
+  "hash": "f1daf17d20aa1b705a05fac7d3b0d7ea2311a23fa399875fdeb869913871847b"
 }

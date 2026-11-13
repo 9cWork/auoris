@@ -1,6 +1,24 @@
 {
   "releases": [
     {
+      "version": "1.10.5",
+      "date": "2026-11-13",
+      "notes": [
+        "Multiplayer has a new Proxy button on 1.8.9 and 1.12.2: the game can join and ping servers through a SOCKS5 proxy you add, and a line on the Multiplayer and connecting screens shows when one is on. If the proxy fails you get a clear message and the game never joins without it. The proxy is off in server-safe mode, also when that is on for one server only, and Streamer mode hides a proxy's address.",
+        "New Live ping setting in Settings, General (off by default, 1.8.9 and 1.12.2): your own ping on the HUD and in the tab list updates every 2 seconds instead of every 30. One slow server tick does not change it, and it is off in server-safe mode.",
+        "Chat tabs have a Private tab. Private messages now show only there and in All, and more private message formats are found.",
+        "Chat search has a Jump label on the result under the mouse: click it to see that message in the whole chat.",
+        "Waypoints can be moved: click Edit on a waypoint in the menu's Waypoints tab and type new numbers or use Move here, or type /waypoint move <name> [x y z]. On Fabric, links in chat can no longer change your waypoints.",
+        "On Fabric 26.3 you can now type in the Auoris menu's text boxes.",
+        "Skin Mod no longer hides your armor as soon as you turn it on: the four Hide armor switches start off.",
+        "Skin Mod fixes: name tags stay upright when you stand upside down, your held item stays in your hand with the arm hidden, hats follow your head, and Rainbow skin works on 1.7.10.",
+        "Chat tab fixes: messages a tab hides no longer move the chat while you read older lines, right-click copy gives the whole message in a tab, and on narrow screens the tabs move up a row so they stay on the screen.",
+        "TNT countdown no longer changes the screen's lighting in third person. Click rails through minecarts now works at full reach.",
+        "Mute server dings now keeps the ding only in menus with slots, like chests and server menus.",
+        "The Privacy Policy and the Acceptable Use Policy have a short new part about the proxy, including that your PC still looks up server names itself."
+      ]
+    },
+    {
       "version": "1.10.4",
       "date": "2026-11-12",
       "notes": [

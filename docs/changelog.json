@@ -1,6 +1,14 @@
 {
   "releases": [
     {
+      "version": "1.10.6",
+      "date": "2026-11-15",
+      "notes": [
+        "Set walking and sprint FOV separately, adjust potion and flying effects, and keep or remove bow zoom.",
+        "Armor Switch will not start below seven hearts."
+      ]
+    },
+    {
       "version": "1.10.5",
       "date": "2026-11-13",
       "notes": [

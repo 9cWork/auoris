@@ -1,11 +1,10 @@
 {
   "releases": [
     {
-      "version": "1.10.6",
-      "date": "2026-11-15",
+      "version": "1.10.7",
+      "date": "2026-11-18",
       "notes": [
-        "Set walking and sprint FOV separately, adjust potion and flying effects, and keep or remove bow zoom.",
-        "Armor Switch will not start below seven hearts."
+        "Add an adjustable screen-edge vignette module."
       ]
     },
     {

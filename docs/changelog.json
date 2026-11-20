@@ -1,6 +1,13 @@
 {
   "releases": [
     {
+      "version": "1.10.12",
+      "date": "2026-11-20",
+      "notes": [
+        "Fixes the saved Hotbar Order account editor so each account order is visible and editable."
+      ]
+    },
+    {
       "version": "1.10.11",
       "date": "2026-11-20",
       "notes": [

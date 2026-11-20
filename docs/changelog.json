@@ -1,6 +1,15 @@
 {
   "releases": [
     {
+      "version": "1.10.13",
+      "date": "2026-11-20",
+      "notes": [
+        "New module Auto Goblin: when the Greedy Goblin Shop restocks at 11:00 AM New York time it buys the items you want, best first, skipping sold out ones.",
+        "It warns you a minute before, opens the shop at 10:59:55, and you can edit the buy order from the module.",
+        "The saved accounts screen of Hotbar Order no longer draws the selected name over the order box."
+      ]
+    },
+    {
       "version": "1.10.12",
       "date": "2026-11-20",
       "notes": [

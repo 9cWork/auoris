@@ -1,6 +1,13 @@
 {
   "releases": [
     {
+      "version": "1.10.11",
+      "date": "2026-11-20",
+      "notes": [
+        "Hotbar Order now lets you add and manage saved Minecraft usernames, with a separate slot order and macro setting for each."
+      ]
+    },
+    {
       "version": "1.10.10",
       "date": "2026-11-20",
       "notes": [

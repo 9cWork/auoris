@@ -4,7 +4,13 @@
       "version": "1.10.15",
       "date": "2026-11-21",
       "notes": [
-        "Auto Goblin faster and safer plus test buttons, HUD armor pieces, FOV adds degrees, Hotbar Order trimmed"
+        "Auto Goblin is faster: it reacts the moment the shop's items arrive and keeps clicking while the shop stays open.",
+        "Auto Goblin only trusts your balance from the server's own balance message, read right after its own /bal, with exact numbers.",
+        "Auto Goblin has two test buttons: Update list (reads every item name from the shop's View All pages) and Test shop (pretend buys, nothing is sent to the server).",
+        "HUD: armor pieces and the held item can each be placed on their own, and right-clicking a piece can line up all pieces by height or left-right spot.",
+        "HUD: the Potion effects list has a switch for colouring effect names, and text shadows no longer look doubled when resizing.",
+        "FOV changer: the sliders now add degrees to your FOV instead of setting it, and effect FOV is included.",
+        "Hotbar Order now only shows Manage saved accounts."
       ]
     },
     {

@@ -1,6 +1,14 @@
 {
   "releases": [
     {
+      "version": "1.10.14",
+      "date": "2026-11-20",
+      "notes": [
+        "Auto Goblin now checks your balance with /bal just before the shop opens and skips items you cannot afford.",
+        "When you turn Auto Goblin on it opens /settings and switches Transfer Confirmation off if it is on, so purchases do not stop to ask."
+      ]
+    },
+    {
       "version": "1.10.13",
       "date": "2026-11-20",
       "notes": [

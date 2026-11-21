@@ -1,6 +1,13 @@
 {
   "releases": [
     {
+      "version": "1.10.15",
+      "date": "2026-11-21",
+      "notes": [
+        "Auto Goblin faster and safer plus test buttons, HUD armor pieces, FOV adds degrees, Hotbar Order trimmed"
+      ]
+    },
+    {
       "version": "1.10.14",
       "date": "2026-11-20",
       "notes": [

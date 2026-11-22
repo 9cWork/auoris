@@ -1,6 +1,19 @@
 {
   "releases": [
     {
+      "version": "1.10.16",
+      "date": "2026-11-22",
+      "notes": [
+        "New module Passwords Manager: when a server asks you to /login, it sends the password you saved for the account you play as. The passwords are blurred until you press Show passwords and stay only on your PC.",
+        "New module Tooltip scroll: when an item has more lines than fit on the screen (for example lots of enchants), scroll them with the mouse wheel.",
+        "New module Chat text select: select text in the chat box with the mouse, and paste from Windows clipboard history (Win + V).",
+        "Auto Goblin now counts your Goblin Tokens, skips items it cannot pay for, and stops trying when the server says tokens are missing.",
+        "Clicking anywhere on the Auto Goblin row opens its settings.",
+        "Fixes Minecraft not starting for some players (a game file entry with no path), retries downloads that drop, and never gives the game more memory than the PC has.",
+        "When Minecraft cannot start, the message now says what went wrong."
+      ]
+    },
+    {
       "version": "1.10.15",
       "date": "2026-11-21",
       "notes": [

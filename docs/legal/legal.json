@@ -1,5 +1,5 @@
 {
-  "version": "2026-11-13",
+  "version": "2026-11-22",
   "operator": "Auoris",
   "contact": "support@auoris.org",
   "docs": [
@@ -30,6 +30,10 @@
     }
   ],
   "changes": [
+    {
+      "version": "2026-11-22",
+      "summary": "The Minecraft client has an optional Passwords Manager that sends a saved /login password to a server for you; the passwords stay on your computer."
+    },
     {
       "version": "2026-11-13",
       "summary": "The Privacy Policy now also says that while a proxy is on, your computer still looks up each server's address from its name itself, so your internet provider can see which server names you look up."
@@ -255,5 +259,5 @@
       "summary": "First version of the Terms of Service, Privacy Policy, Acceptable Use Policy, Subscription and Gift Terms, and Copyright policy."
     }
   ],
-  "hash": "f1daf17d20aa1b705a05fac7d3b0d7ea2311a23fa399875fdeb869913871847b"
+  "hash": "470f24ef7c39b7f952b1296236a73350e80be2b83b5ccdcd905b582ede5f7d50"
 }

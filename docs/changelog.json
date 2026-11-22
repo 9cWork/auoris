@@ -1,6 +1,16 @@
 {
   "releases": [
     {
+      "version": "1.10.17",
+      "date": "2026-11-22",
+      "notes": [
+        "Pet cooldowns: a new Utility module that shows a timer ring around each pet you use, with its head and the time left.",
+        "Move and resize it in Edit HUD.",
+        "Auto Goblin now reads the shops own answers, so the next buy no longer waits and the final message counts real purchases.",
+        "Hotbar order: an account with no saved order now starts with the games own order instead of another accounts."
+      ]
+    },
+    {
       "version": "1.10.16",
       "date": "2026-11-22",
       "notes": [

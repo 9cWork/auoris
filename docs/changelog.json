@@ -1,6 +1,13 @@
 {
   "releases": [
     {
+      "version": "1.10.22",
+      "date": "2026-11-23",
+      "notes": [
+        "* Nick hider: the chat bar and other text boxes show exactly what you type, your own name included.\\n* Pet cooldowns: the timer keeps each pet head instead of sometimes showing a plain head.\\n* Auto Goblin: new default buy order."
+      ]
+    },
+    {
       "version": "1.10.21",
       "date": "2026-11-23",
       "notes": [

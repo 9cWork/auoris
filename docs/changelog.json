@@ -1,6 +1,14 @@
 {
   "releases": [
     {
+      "version": "1.10.21",
+      "date": "2026-11-23",
+      "notes": [
+        "* Totem tracker: a timer for each totem you use (Strength, Regeneration, Resistance...), with the effect and time left.",
+        "Move it in Edit HUD.\\n* Resource packs added to the Auoris game folder are no longer moved away on launch."
+      ]
+    },
+    {
       "version": "1.10.20",
       "date": "2026-11-22",
       "notes": [

@@ -1,6 +1,14 @@
 {
   "releases": [
     {
+      "version": "1.10.19",
+      "date": "2026-11-22",
+      "notes": [
+        "Crash fix: closing a chest and pressing a number key or clicking at the same moment no longer crashes the game on 1.8.9 and 1.12.2.",
+        "The game now ignores clicks and hotbar keys on a chest screen that is already closed."
+      ]
+    },
+    {
       "version": "1.10.18",
       "date": "2026-11-22",
       "notes": [

@@ -1,6 +1,15 @@
 {
   "releases": [
     {
+      "version": "1.10.20",
+      "date": "2026-11-22",
+      "notes": [
+        "Chat: the chat tabs toggle is now called System Messages with a dropdown under it, and armor set and mask lines (You are now wearing, their boosts) no longer count as system messages.",
+        "Pet cooldowns: the timer now matches the server to the second, and shows a seconds counter while a pet is active.",
+        "New Keep armor on module: number keys over a worn armor piece no longer take it off."
+      ]
+    },
+    {
       "version": "1.10.19",
       "date": "2026-11-22",
       "notes": [

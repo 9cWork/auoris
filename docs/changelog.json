@@ -1,6 +1,14 @@
 {
   "releases": [
     {
+      "version": "1.10.18",
+      "date": "2026-11-22",
+      "notes": [
+        "New Modern Water Movement module: sprint in water to swim fast in the direction you look, like newer versions.",
+        "Typing a command word like ai or waypoint in chat without the slash now sends it as normal chat instead of being swallowed."
+      ]
+    },
+    {
       "version": "1.10.17",
       "date": "2026-11-22",
       "notes": [

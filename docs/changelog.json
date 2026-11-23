@@ -1,6 +1,13 @@
 {
   "releases": [
     {
+      "version": "1.10.23",
+      "date": "2026-11-23",
+      "notes": [
+        "* Armor switch: a piece taken off goes back only if it is the same piece, so two sets of one name no longer mix up your rows."
+      ]
+    },
+    {
       "version": "1.10.22",
       "date": "2026-11-23",
       "notes": [

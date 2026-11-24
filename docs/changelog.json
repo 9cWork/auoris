@@ -1,6 +1,13 @@
 {
   "releases": [
     {
+      "version": "1.10.24",
+      "date": "2026-11-23",
+      "notes": [
+        "Pet timer: Bat Pet is now recognised (its Pet Abilities lore wording), and a finished pet stays on screen as READY! until you use it again."
+      ]
+    },
+    {
       "version": "1.10.23",
       "date": "2026-11-23",
       "notes": [

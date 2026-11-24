@@ -1,6 +1,13 @@
 {
   "releases": [
     {
+      "version": "1.10.31",
+      "date": "2026-11-24",
+      "notes": [
+        "Keep armor on now lets a number key swap armor when the hotbar item is the same type (helmet on helmet, chestplate on chestplate and so on) and blocks everything else."
+      ]
+    },
+    {
       "version": "1.10.30",
       "date": "2026-11-24",
       "notes": [

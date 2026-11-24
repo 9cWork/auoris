@@ -1,6 +1,15 @@
 {
   "releases": [
     {
+      "version": "1.10.25",
+      "date": "2026-11-24",
+      "notes": [
+        "Bat Pet (Right Click) now finds its head in the pet timer.",
+        "A Ready pet ignores other cooldown messages.",
+        "The totem box is wider so long names like Weakness no longer run into the time."
+      ]
+    },
+    {
       "version": "1.10.24",
       "date": "2026-11-23",
       "notes": [

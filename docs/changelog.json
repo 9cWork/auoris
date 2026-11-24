@@ -1,6 +1,14 @@
 {
   "releases": [
     {
+      "version": "1.10.26",
+      "date": "2026-11-24",
+      "notes": [
+        "New module Gear inspect: look at a player to see the item in their hand and their armor set.",
+        "Pet timer only shows pets in your inventory, and each account keeps its own pet cooldowns."
+      ]
+    },
+    {
       "version": "1.10.25",
       "date": "2026-11-24",
       "notes": [

@@ -1,6 +1,14 @@
 {
   "releases": [
     {
+      "version": "1.10.29",
+      "date": "2026-11-24",
+      "notes": [
+        "Auto Goblin no longer clicks or closes a Goblin Shop page you already had open: it opens its own and keeps trying until the shop restocks.",
+        "The buy order now accepts item:diamond_axe style rules to buy a kind of item."
+      ]
+    },
+    {
       "version": "1.10.28",
       "date": "2026-11-24",
       "notes": [

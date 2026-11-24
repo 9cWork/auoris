@@ -1,6 +1,14 @@
 {
   "releases": [
     {
+      "version": "1.10.27",
+      "date": "2026-11-24",
+      "notes": [
+        "Gear inspect now shows Sword: type and Armor: type (every piece when the set does not match).",
+        "Totem tracker no longer counts a totem as used when you change slot right after clicking."
+      ]
+    },
+    {
       "version": "1.10.26",
       "date": "2026-11-24",
       "notes": [

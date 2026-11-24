@@ -1,6 +1,14 @@
 {
   "releases": [
     {
+      "version": "1.10.28",
+      "date": "2026-11-24",
+      "notes": [
+        "Totem tracker now shows other players totems above their head, and has switches to hide icons, names, time and bar.",
+        "Pet cooldowns now adds the pets in your inventory by itself (Ready until used)."
+      ]
+    },
+    {
       "version": "1.10.27",
       "date": "2026-11-24",
       "notes": [

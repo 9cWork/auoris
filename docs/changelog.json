@@ -1,6 +1,13 @@
 {
   "releases": [
     {
+      "version": "1.10.30",
+      "date": "2026-11-24",
+      "notes": [
+        "Auto Goblin now sends its buy clicks as plain packets with no pretend item move, so it can no longer leave your cursor or Goblin Shop page broken or stop your own clicks from working."
+      ]
+    },
+    {
       "version": "1.10.29",
       "date": "2026-11-24",
       "notes": [
